@@ -15,7 +15,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -97,8 +100,9 @@ class AuthServiceTest extends JerseyTest {
 		AuthFixtures.setUpValidTokenAuth(DUMMY_USER_IDENTIFIER, remoteGitManagerRestrictedFactoryMock);
 		
 		Response response = target(AUTH_TARGET)
-				.queryParam(AuthConstants.AUTH_ENDPOINT_TOKEN_PARAMETER_NAME, DUMMY_PERSONAL_ACCESS_TOKEN)
-				.request().get();
+				.request()
+//				.header(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded") // is implied by the below
+				.post(Entity.form(new Form(AuthConstants.AUTH_ENDPOINT_TOKEN_FORM_PARAMETER_NAME, DUMMY_PERSONAL_ACCESS_TOKEN)));
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		
@@ -120,8 +124,9 @@ class AuthServiceTest extends JerseyTest {
 		
 		Response response = target(AUTH_TARGET)
 				.request()
-				.header(AuthConstants.AUTHORIZATION_HEADER_NAME, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + DUMMY_PERSONAL_ACCESS_TOKEN)
-				.get();
+				.header(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
+				.header(HttpHeaders.AUTHORIZATION, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + DUMMY_PERSONAL_ACCESS_TOKEN)
+				.post(null);
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		
@@ -143,12 +148,13 @@ class AuthServiceTest extends JerseyTest {
 		
 		Response response = target(AUTH_TARGET)
 				.request()
+				.header(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
 				.header(
-						AuthConstants.AUTHORIZATION_HEADER_NAME,
+						HttpHeaders.AUTHORIZATION,
 						AuthConstants.AUTHENTICATION_SCHEME_BASIC_PREFIX
 								+ new String(Base64.getEncoder().encode("dummyUsername:dummyPassword".getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)
 				)
-				.get();
+				.post(null);
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		
@@ -170,8 +176,9 @@ class AuthServiceTest extends JerseyTest {
 				new IOException(new GitLabApiException("401 Unauthorized")));
 
 		Response response = target(AUTH_TARGET)
-				.queryParam(AuthConstants.AUTH_ENDPOINT_TOKEN_PARAMETER_NAME, DUMMY_PERSONAL_ACCESS_TOKEN)
-				.request().get();
+				.request()
+//				.header(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded") // is implied by the below
+				.post(Entity.form(new Form(AuthConstants.AUTH_ENDPOINT_TOKEN_FORM_PARAMETER_NAME, DUMMY_PERSONAL_ACCESS_TOKEN)));
 		
 		assertEquals(Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
 	}
@@ -181,9 +188,9 @@ class AuthServiceTest extends JerseyTest {
 		AuthFixtures.setUpValidUsernamePasswordAuth(DUMMY_USER_IDENTIFIER, remoteGitManagerRestrictedFactoryMock);
 		
 		Response response = target(AUTH_TARGET)
-				.queryParam("username", "dummyUsername")
-				.queryParam("password", "dummyPassword")
-				.request().get();
+				.request()
+//				.header(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded") // is implied by the below
+				.post(Entity.form(new Form().param("username", "dummyUsername").param("password", "dummyPassword")));
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
 		

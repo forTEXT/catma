@@ -23,7 +23,6 @@ import javax.ws.rs.core.Response.Status;
 
 import org.eclipse.jgit.lib.Constants;
 
-import de.catma.api.v1.AuthConstants;
 import de.catma.api.v1.serialization.ProjectExportSerializer;
 import de.catma.api.v1.backend.interfaces.RemoteGitManagerRestrictedProvider;
 import de.catma.api.v1.cache.CollectionAnnotationCountCache;
@@ -140,7 +139,6 @@ public class ProjectService {
 						serializer.serializeProjectResources(
 								// strips any query params that should not be present in URLs built based on this one
 								uriInfo.getRequestUriBuilder()
-										.replaceQueryParam(AuthConstants.API_TOKEN_PARAMETER_NAME)
 										.replaceQueryParam("forcePull")
 										.build(),
 								// only include extended metadata on the first page by default

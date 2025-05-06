@@ -13,11 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.Status;
 
@@ -69,12 +65,13 @@ public class AuthService {
 	private UriInfo uriInfo;
 
 	
+	@POST
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces(MediaType.TEXT_PLAIN)
-	@GET
 	public Response authenticate(
-			@HeaderParam(AuthConstants.AUTHORIZATION_HEADER_NAME) String authorization, // basic (username/password) or bearer (token) auth schemes
-			@QueryParam(AuthConstants.AUTH_ENDPOINT_TOKEN_PARAMETER_NAME) String accessToken, // 'accessToken'
-			@QueryParam("username") String username, @QueryParam("password") String password)
+			@HeaderParam(HttpHeaders.AUTHORIZATION) String authorization, // basic (username/password) or bearer (token) auth schemes
+			@FormParam(AuthConstants.AUTH_ENDPOINT_TOKEN_FORM_PARAMETER_NAME) String accessToken,
+			@FormParam("username") String username, @FormParam("password") String password)
 	{
 		try {
 			if (authorization != null) {

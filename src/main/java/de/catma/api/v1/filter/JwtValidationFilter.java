@@ -11,6 +11,7 @@ import javax.inject.Inject;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.PreMatching;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
@@ -54,19 +55,15 @@ public class JwtValidationFilter implements ContainerRequestFilter {
 			return;
 		}
 
-		String authorization = requestContext.getHeaderString(AuthConstants.AUTHORIZATION_HEADER_NAME);
+		String authorization = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
-		if (authorization != null && authorization.toLowerCase().startsWith(AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX.toLowerCase())) {
-			String bearerToken = authorization.substring(AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX.length());
-			handleJwtToken(bearerToken, requestContext, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX.trim());
-		}
-		else if (requestContext.getUriInfo().getQueryParameters().containsKey(AuthConstants.API_TOKEN_PARAMETER_NAME)) { // 'apiToken'
-			String apiToken = requestContext.getUriInfo().getQueryParameters().getFirst(AuthConstants.API_TOKEN_PARAMETER_NAME);
-			handleJwtToken(apiToken, requestContext, AuthConstants.API_TOKEN_PARAMETER_NAME);
-		}
-		else {
+		if (authorization == null || !authorization.toLowerCase().startsWith(AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX.toLowerCase())) {
 			requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
+			return;
 		}
+
+		String bearerToken = authorization.substring(AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX.length());
+		handleJwtToken(bearerToken, requestContext, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX.trim());
 	}
 
 	private void logSecurityWarningAndAbort(String failureType, Exception exception, ContainerRequestContext requestContext, String token) {

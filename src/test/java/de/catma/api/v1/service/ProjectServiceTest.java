@@ -12,9 +12,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.IOUtils;
@@ -81,38 +79,23 @@ public class ProjectServiceTest extends JerseyTest {
 		
 		assertEquals(Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
 	}
-	
-	@Test
-	void shouldProduceProjectListWithJwtAccessTokenQueryParam() throws Exception {
-		List<ProjectReference> expectedList = ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, DUMMY_PERSONAL_ACCESS_TOKEN);
 
-		Response authResponse = target(AUTH_TARGET).queryParam(AuthConstants.AUTH_ENDPOINT_TOKEN_PARAMETER_NAME, DUMMY_PERSONAL_ACCESS_TOKEN).request().get();
-		
-		String apiToken = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
-
-		Response response = target("projects").queryParam(AuthConstants.API_TOKEN_PARAMETER_NAME, apiToken).request(MediaType.APPLICATION_JSON).get();
-		
-		assertEquals(Status.OK.getStatusCode(), response.getStatus());
-		
-		String serializedList = IOUtils.toString((InputStream)response.getEntity(), StandardCharsets.UTF_8);
-		Type listType = new TypeToken<ArrayList<ProjectReference>>(){}.getType();
-		ArrayList<ProjectReference> resultList = new SerializationHelper<ArrayList<ProjectReference>>().deserialize(serializedList, listType);
-
-		assertEquals(expectedList, resultList);
-	}
-	
 	@Test
 	void shouldProduceProjectListWithJwtAccessTokenInBearerHeader() throws Exception {
 		List<ProjectReference> expectedList = ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, DUMMY_PERSONAL_ACCESS_TOKEN);
 
-		Response authResponse = target(AUTH_TARGET).queryParam(AuthConstants.AUTH_ENDPOINT_TOKEN_PARAMETER_NAME, DUMMY_PERSONAL_ACCESS_TOKEN).request().get();
+		Response authResponse = target(AUTH_TARGET)
+				.request()
+				.header(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
+				.header(HttpHeaders.AUTHORIZATION, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + DUMMY_PERSONAL_ACCESS_TOKEN)
+				.post(null);
 		
 		String apiToken = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
 
 		Response response = 
 				target("projects")
 				.request(MediaType.APPLICATION_JSON)
-				.header(AuthConstants.AUTHORIZATION_HEADER_NAME, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + apiToken)
+				.header(HttpHeaders.AUTHORIZATION, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + apiToken)
 				.get();
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
@@ -131,25 +114,7 @@ public class ProjectServiceTest extends JerseyTest {
 		Response response = 
 				target("projects")
 				.request(MediaType.APPLICATION_JSON)
-				.header(AuthConstants.AUTHORIZATION_HEADER_NAME, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + DUMMY_PERSONAL_ACCESS_TOKEN)
-				.get();
-		
-		assertEquals(Status.OK.getStatusCode(), response.getStatus());
-		
-		String serializedList = IOUtils.toString((InputStream)response.getEntity(), StandardCharsets.UTF_8);
-		Type listType = new TypeToken<ArrayList<ProjectReference>>(){}.getType();
-		ArrayList<ProjectReference> resultList = new SerializationHelper<ArrayList<ProjectReference>>().deserialize(serializedList, listType);
-
-		assertEquals(expectedList, resultList);
-	}
-	
-	@Test
-	void shouldProduceProjectListWithBackendAccessTokenQueryParam() throws Exception {
-		List<ProjectReference> expectedList = ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, DUMMY_PERSONAL_ACCESS_TOKEN);
-
-		Response response = target("projects")
-				.queryParam(AuthConstants.API_TOKEN_PARAMETER_NAME, DUMMY_PERSONAL_ACCESS_TOKEN)
-				.request(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + DUMMY_PERSONAL_ACCESS_TOKEN)
 				.get();
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
@@ -162,12 +127,12 @@ public class ProjectServiceTest extends JerseyTest {
 	}
 
 	@Test
-	void shouldProduce403UnauthorizedWithWrongBackendAccessTokenQueryParam() throws Exception {
+	void shouldProduce403UnauthorizedWithWrongBackendAccessTokenInBearerHeader() throws Exception {
 		ProjectFixtures.setUpProjectList(remoteGitManagerRestrictedFactoryMock, DUMMY_PERSONAL_ACCESS_TOKEN);
 
 		Response response = target("projects")
-				.queryParam(AuthConstants.API_TOKEN_PARAMETER_NAME, "wrong_personal_access_token")
 				.request(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + "wrong_personal_access_token")
 				.get();
 		
 		assertEquals(Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
@@ -183,19 +148,21 @@ public class ProjectServiceTest extends JerseyTest {
 
 		ProjectFixtures.setUpRemoteGitManagerThrowing404(remoteGitManagerRestrictedFactoryMock);
 		Response authResponse = target(AUTH_TARGET)
-				.queryParam(AuthConstants.AUTH_ENDPOINT_TOKEN_PARAMETER_NAME, DUMMY_PERSONAL_ACCESS_TOKEN)
-				.request().get();
+				.request()
+				.header(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
+				.header(HttpHeaders.AUTHORIZATION, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + DUMMY_PERSONAL_ACCESS_TOKEN)
+				.post(null);
 		String apiToken = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
 
 		Response response = target("projects/"+namespace+"/"+projectId+"/export")
-				.queryParam(AuthConstants.API_TOKEN_PARAMETER_NAME, apiToken)
 				.request(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + apiToken)
 				.get();
 		assertEquals(Status.NOT_FOUND.getStatusCode(), response.getStatus());
 	}
 	
 	@Test
-	void shouldProduceProjectExportWithJwtAccessTokenQueryParam() throws Exception {
+	void shouldProduceProjectExportWithJwtAccessTokenInBearerHeader() throws Exception {
 		
 		IDGenerator idGenerator = new IDGenerator();
 
@@ -230,14 +197,16 @@ public class ProjectServiceTest extends JerseyTest {
 		
 		
 		Response authResponse = target(AUTH_TARGET)
-				.queryParam(AuthConstants.AUTH_ENDPOINT_TOKEN_PARAMETER_NAME, DUMMY_PERSONAL_ACCESS_TOKEN)
-				.request().get();
+				.request()
+				.header(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
+				.header(HttpHeaders.AUTHORIZATION, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + DUMMY_PERSONAL_ACCESS_TOKEN)
+				.post(null);
 		
 		String apiToken = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
 
 		Response response = target("projects/"+namespace+"/"+projectId+"/export")
-				.queryParam(AuthConstants.API_TOKEN_PARAMETER_NAME, apiToken)
 				.request(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + apiToken)
 				.get();
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
@@ -285,9 +254,10 @@ public class ProjectServiceTest extends JerseyTest {
 
 		// explicitly NOT requesting extended metadata should work
 		Response response2 = target("projects/"+namespace+"/"+projectId+"/export")
-				.queryParam(AuthConstants.API_TOKEN_PARAMETER_NAME, apiToken)
 				.queryParam("includeExtendedMetadata", false)
-				.request(MediaType.APPLICATION_JSON).get();
+				.request(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + apiToken)
+				.get();
 		assertEquals(Status.OK.getStatusCode(), response2.getStatus());
 
 		ProjectExport projectExport2 = new SerializationHelper<ProjectExport>().deserialize(
@@ -298,7 +268,7 @@ public class ProjectServiceTest extends JerseyTest {
 	}
 	
 	@Test
-	void shouldProduceProjectExportPage2WithJwtAccessTokenQueryParam() throws Exception {
+	void shouldProduceProjectExportPage2WithJwtAccessTokenInBearerHeader() throws Exception {
 		
 		IDGenerator idGenerator = new IDGenerator();
 
@@ -327,16 +297,18 @@ public class ProjectServiceTest extends JerseyTest {
 		
 		
 		Response authResponse = target(AUTH_TARGET)
-				.queryParam(AuthConstants.AUTH_ENDPOINT_TOKEN_PARAMETER_NAME, DUMMY_PERSONAL_ACCESS_TOKEN)
-				.request().get();
+				.request()
+				.header(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
+				.header(HttpHeaders.AUTHORIZATION, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + DUMMY_PERSONAL_ACCESS_TOKEN)
+				.post(null);
 		
 		String apiToken = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
 
 		Response response = target("projects/"+namespace+"/"+projectId+"/export")
-				.queryParam(AuthConstants.API_TOKEN_PARAMETER_NAME, apiToken)
 				.queryParam("page", 2)
 				.queryParam("pageSize", 2)
 				.request(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + apiToken)
 				.get();
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
@@ -349,8 +321,6 @@ public class ProjectServiceTest extends JerseyTest {
 		assertEquals(2, projectExport.getPageNo());
 		assertEquals(2, projectExport.getPageSize());
 		assertTrue(projectExport.getPrevPage().contains("page=1"));
-		// check that returned URLs don't include the api token
-		assertFalse(projectExport.getPrevPage().contains(AuthConstants.API_TOKEN_PARAMETER_NAME));
 		assertNull(projectExport.getNextPage());
 		// page 2, so we should NOT get extended metadata by default
 		assertNull(projectExport.getExtendedMetadata());
@@ -363,11 +333,12 @@ public class ProjectServiceTest extends JerseyTest {
 
 		// explicitly requesting extended metadata should work
 		Response response2 = target("projects/"+namespace+"/"+projectId+"/export")
-				.queryParam(AuthConstants.API_TOKEN_PARAMETER_NAME, apiToken)
 				.queryParam("page", 2)
 				.queryParam("pageSize", 2)
 				.queryParam("includeExtendedMetadata", true)
-				.request(MediaType.APPLICATION_JSON).get();
+				.request(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + apiToken)
+				.get();
 		assertEquals(Status.OK.getStatusCode(), response2.getStatus());
 
 		ProjectExport projectExport2 = new SerializationHelper<ProjectExport>().deserialize(
@@ -380,7 +351,7 @@ public class ProjectServiceTest extends JerseyTest {
 	}
 	
 	@Test
-	void shouldProduceDocumentContentWithJwtAccessTokenQueryParam() throws Exception {
+	void shouldProduceDocumentContentWithJwtAccessTokenInBearerHeader() throws Exception {
 		
 		IDGenerator idGenerator = new IDGenerator();
 
@@ -397,14 +368,16 @@ public class ProjectServiceTest extends JerseyTest {
 		
 		
 		Response authResponse = target(AUTH_TARGET)
-				.queryParam(AuthConstants.AUTH_ENDPOINT_TOKEN_PARAMETER_NAME, DUMMY_PERSONAL_ACCESS_TOKEN)
-				.request().get();
+				.request()
+				.header(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
+				.header(HttpHeaders.AUTHORIZATION, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + DUMMY_PERSONAL_ACCESS_TOKEN)
+				.post(null);
 		
 		String apiToken = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
 
 		Response response = target("projects/"+namespace+"/"+projectId+"/export/doc/"+sourceDocumentUuid)
-				.queryParam(AuthConstants.API_TOKEN_PARAMETER_NAME, apiToken)
 				.request(MediaType.APPLICATION_JSON)
+				.header(HttpHeaders.AUTHORIZATION, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + apiToken)
 				.get();
 		
 		assertEquals(Status.OK.getStatusCode(), response.getStatus());
