@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.security.Principal;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -64,24 +63,18 @@ public class ProjectService {
 
 	@Context
 	private UriInfo uriInfo;
+	@Context
+	private SecurityContext securityContext;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getProjects(@Context SecurityContext securityContext) throws IOException {
-    	Principal principal = securityContext.getUserPrincipal();
-    	if (principal == null) {
-    		return Response.status(Status.UNAUTHORIZED).build();
-    	}
+    public Response getProjects() throws IOException {
     	try {
-			RemoteGitManagerRestrictedProvider remoteGitManagerRestrictedProvider = remoteGitManagerRestrictedProviderCache.get(principal.getName());
-			if (remoteGitManagerRestrictedProvider == null) { // can happen if the server is restarted
-				return Response.status(Status.UNAUTHORIZED.getStatusCode(), "Please re-authenticate").build();
-			}
+			RemoteGitManagerRestrictedProvider remoteGitManagerRestrictedProvider = remoteGitManagerRestrictedProviderCache.get(
+					securityContext.getUserPrincipal().getName()
+			);
 	    	RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitManagerRestrictedProvider.createRemoteGitManagerRestricted();
-	    	if (remoteGitManagerRestricted == null) {
-	    		return Response.status(Status.UNAUTHORIZED.getStatusCode(), "Token expired").build();
-	    	}
-	    	
+
 	    	return Response.ok(new SerializationHelper<ProjectReference>().serialize(remoteGitManagerRestricted.getProjectReferences())).build();
     	}
     	catch (Exception e) {
@@ -93,15 +86,7 @@ public class ProjectService {
 	@GET
 	@Path("/{namespace}/{catmaProjectId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getProject(
-			@Context SecurityContext securityContext,
-			@PathParam("namespace") String namespace, @PathParam("catmaProjectId") String catmaProjectId
-	) {
-		Principal principal = securityContext.getUserPrincipal();
-		if (principal == null) {
-			return Response.status(Status.UNAUTHORIZED).build();
-		}
-
+	public Response getProject(@PathParam("namespace") String namespace, @PathParam("catmaProjectId") String catmaProjectId) {
 		return Response.status(Status.NOT_IMPLEMENTED).build();
 	}
     
@@ -109,24 +94,15 @@ public class ProjectService {
     @Path("/{namespace}/{catmaProjectId}/export")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getProjectExport(
-    		@Context SecurityContext securityContext, 
     		@PathParam("namespace") String namespace, @PathParam("catmaProjectId") String catmaProjectId, 
     		@QueryParam("includeExtendedMetadata") Boolean includeExtendedMetadata, @QueryParam("page") Integer page, @QueryParam("pageSize") Integer pageSize,
     		@QueryParam("forcePull") Boolean forcePull) {
     	try {
-    		Principal principal = securityContext.getUserPrincipal();
-	    	if (principal == null) {
-	    		return Response.status(Status.UNAUTHORIZED).build();
-	    	}
+    		RemoteGitManagerRestrictedProvider remoteGitManagerRestrictedProvider = remoteGitManagerRestrictedProviderCache.get(
+					securityContext.getUserPrincipal().getName()
+			);
+			RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitManagerRestrictedProvider.createRemoteGitManagerRestricted();
 
-			RemoteGitManagerRestrictedProvider remoteGitManagerRestrictedProvider = remoteGitManagerRestrictedProviderCache.get(principal.getName());
-			if (remoteGitManagerRestrictedProvider == null) { // can happen if the server is restarted
-				return Response.status(Status.UNAUTHORIZED.getStatusCode(), "Please re-authenticate").build();
-			}
-	    	RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitManagerRestrictedProvider.createRemoteGitManagerRestricted();
-	    	if (remoteGitManagerRestricted == null) {
-	    		return Response.status(Status.UNAUTHORIZED.getStatusCode(), "Token expired").build();
-	    	}
 	    	try {
 	    		CacheKey key = new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, catmaProjectId);
 	    		if (forcePull != null && forcePull) {
@@ -167,22 +143,13 @@ public class ProjectService {
     
     @GET
     @Path("/{namespace}/{catmaProjectId}/export/doc/{documentId}")
-    public Response getProjectExportDocument(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("catmaProjectId") String catmaProjectId, @PathParam("documentId") String documentId) {
+    public Response getProjectExportDocument(@PathParam("namespace") String namespace, @PathParam("catmaProjectId") String catmaProjectId, @PathParam("documentId") String documentId) {
     	try {
-	    	Principal principal = securityContext.getUserPrincipal();
-	    	if (principal == null) {
-	    		return Response.status(Status.UNAUTHORIZED).build();
-	    	}
+	    	RemoteGitManagerRestrictedProvider remoteGitManagerRestrictedProvider = remoteGitManagerRestrictedProviderCache.get(
+					securityContext.getUserPrincipal().getName()
+			);
+			RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitManagerRestrictedProvider.createRemoteGitManagerRestricted();
 
-			RemoteGitManagerRestrictedProvider remoteGitManagerRestrictedProvider = remoteGitManagerRestrictedProviderCache.get(principal.getName());
-			if (remoteGitManagerRestrictedProvider == null) { // can happen if the server is restarted
-				return Response.status(Status.UNAUTHORIZED.getStatusCode(), "Please re-authenticate").build();
-			}
-	    	RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitManagerRestrictedProvider.createRemoteGitManagerRestricted();
-	    	if (remoteGitManagerRestricted == null) {
-	    		return Response.status(Status.UNAUTHORIZED.getStatusCode(), "Token expired").build();
-	    	}
-	    	
 	    	ProjectExportSerializer serializer = projectExportSerializerCache.get(
 					new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, catmaProjectId),
 					getProjectExportSerializerCacheLoader(remoteGitManagerRestricted, namespace, catmaProjectId));
