@@ -7,10 +7,11 @@ import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.Priority;
 import javax.inject.Inject;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
@@ -35,15 +36,14 @@ import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 
 @Provider
-@PreMatching
-public class JwtValidationFilter implements ContainerRequestFilter {
-	// https://connect2id.com/products/nimbus-jose-jwt/examples/jwt-with-hmac
-	// https://connect2id.com/products/nimbus-jose-jwt/vulnerabilities
-	// https://connect2id.com/products/nimbus-jose-jwt/examples/validating-jwt-access-tokens#claims
-	// https://www.javadoc.io/doc/com.nimbusds/nimbus-jose-jwt/latest/com/nimbusds/jwt/proc/DefaultJWTClaimsVerifier.html
+@Priority(Priorities.AUTHENTICATION)
+public class AuthorizationRequestFilter implements ContainerRequestFilter {
+	// https://eclipse-ee4j.github.io/jersey.github.io/documentation/latest/security.html#d0e13189 (18.1.1.2. Using Security Context in Container Request Filters)
+	// https://eclipse-ee4j.github.io/jersey.github.io/documentation/latest/filters-and-interceptors.html#d0e10050 (Example 10.2. Container request filter)
+	// https://eclipse-ee4j.github.io/jersey.github.io/documentation/latest/filters-and-interceptors.html#d0e10468 (10.7. Priorities)
 
-	private final Logger logger = Logger.getLogger(JwtValidationFilter.class.getName());
-	
+	private static final Logger logger = Logger.getLogger(AuthorizationRequestFilter.class.getName());
+
 	@Inject
 	private RemoteGitManagerRestrictedProviderCache remoteGitManagerRestrictedProviderCache;
 	@Inject
@@ -119,7 +119,7 @@ public class JwtValidationFilter implements ContainerRequestFilter {
 			}
 		}
 		catch (Exception e) {
-			logger.log(Level.SEVERE, "Failure in JwtValidationFilter", e);
+			logger.log(Level.SEVERE, "Failure in AuthorizationRequestFilter", e);
 			requestContext.abortWith(Response.status(Response.Status.INTERNAL_SERVER_ERROR).build());
 		}
 	}
@@ -166,6 +166,10 @@ public class JwtValidationFilter implements ContainerRequestFilter {
 		INVALID_NOT_A_JWT
 	}
 
+	// https://connect2id.com/products/nimbus-jose-jwt/examples/jwt-with-hmac
+	// https://connect2id.com/products/nimbus-jose-jwt/vulnerabilities
+	// https://connect2id.com/products/nimbus-jose-jwt/examples/validating-jwt-access-tokens#claims
+	// https://www.javadoc.io/doc/com.nimbusds/nimbus-jose-jwt/latest/com/nimbusds/jwt/proc/DefaultJWTClaimsVerifier.html
 	private JwtValidationResult validateJwt(String token, ContainerRequestContext requestContext, String scheme) {
 		try {
 			SignedJWT signedJWT = SignedJWT.parse(token);

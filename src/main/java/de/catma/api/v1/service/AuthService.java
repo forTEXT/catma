@@ -43,7 +43,7 @@ import de.catma.user.User;
 import de.catma.util.ExceptionUtil;
 import de.catma.util.Pair;
 
-@Path(AuthConstants.AUTH_SERVICE_PATH) // '/auth', defined as a constant because it's checked in JwtValidationFilter
+@Path(AuthConstants.AUTH_SERVICE_PATH) // '/auth', defined as a constant because it's checked in AuthorizationRequestFilter
 public class AuthService {
 	private static final Logger logger = Logger.getLogger(AuthService.class.getName());
 
@@ -208,7 +208,7 @@ public class AuthService {
 	
 	private String createJWToken(User user) throws JOSEException {
 		// https://connect2id.com/products/nimbus-jose-jwt/examples/jwt-with-hmac
-		// also see JwtValidationFilter
+		// also see AuthorizationRequestFilter
 
 		// HMAC signer
 		JWSSigner signer = new MACSigner(secret);
