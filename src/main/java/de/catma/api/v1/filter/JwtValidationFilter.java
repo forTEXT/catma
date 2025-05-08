@@ -57,18 +57,46 @@ public class JwtValidationFilter implements ContainerRequestFilter {
 			return;
 		}
 
-		String authorization = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+		String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
-		if (authorization == null || !authorization.toLowerCase().startsWith(AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX.toLowerCase())) {
+		if (authorizationHeader == null || !authorizationHeader.toLowerCase().startsWith(AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX.toLowerCase())) {
 			requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
 			return;
 		}
 
-		String bearerToken = authorization.substring(AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX.length());
-		boolean isTokenValid = handleJwtToken(bearerToken, requestContext, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX.trim());
+		String bearerToken = authorizationHeader.substring(AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX.length());
+		String scheme = AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX.trim();
 
-		if (!isTokenValid) {
-			return; // the token is invalid and handleJwtToken already aborted the request, we do nothing further
+		JwtValidationResult jwtValidationResult = validateJwt(bearerToken, requestContext, scheme);
+		boolean isRequestAborted = false;
+
+		switch (jwtValidationResult) {
+			case INVALID -> {
+				// generic abort
+				requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
+				isRequestAborted = true;
+			}
+			case INVALID_EXPIRED -> {
+				// token expired - this is the only case where we let the client know the reason for the failure
+				requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED.getStatusCode(), "Token expired").build());
+				isRequestAborted = true;
+			}
+			case INVALID_NOT_A_JWT -> {
+				// the token couldn't be parsed as a JWT - try to use it directly as a backend token (for convenience, we allow GitLab impersonation or
+				// personal access tokens to be used directly)
+				boolean success = attemptToUseTokenDirectlyAsBackendToken(bearerToken, requestContext, scheme);
+				if (!success) {
+					requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
+					isRequestAborted = true;
+				}
+			}
+			case VALID -> {
+				// no-op
+			}
+		}
+
+		if (isRequestAborted) {
+			return;
 		}
 
 		// the token is valid - we perform some final checks:
@@ -81,7 +109,7 @@ public class JwtValidationFilter implements ContainerRequestFilter {
 		}
 
 		// the remoteGitManagerRestrictedProviderCache should contain a provider for the authenticated user - abort if not
-		// the provider would have been added either during a previous auth request or by the special case in handleJwtToken (GitLab token used directly)
+		// the provider would have been added either during a previous auth request or by the INVALID_NOT_A_JWT special case (GitLab token used directly)
 		try {
 			RemoteGitManagerRestrictedProvider remoteGitManagerRestrictedProvider = remoteGitManagerRestrictedProviderCache.get(
 					securityContext.getUserPrincipal().getName()
@@ -96,7 +124,29 @@ public class JwtValidationFilter implements ContainerRequestFilter {
 		}
 	}
 
-	private void logSecurityWarningAndAbort(String failureType, Exception exception, ContainerRequestContext requestContext, String token) {
+	private boolean attemptToUseTokenDirectlyAsBackendToken(String token, ContainerRequestContext requestContext, String scheme) {
+		try {
+			RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitMangerRestrictedFactory.create(token);
+
+			// TODO: test what happens if the cache contains a provider with a token that was valid but that has subsequently expired
+			remoteGitManagerRestrictedProviderCache.put(
+					remoteGitManagerRestricted.getUsername(),
+					new AccessTokenRemoteGitManagerRestrictedProvider(token, remoteGitMangerRestrictedFactory)
+			);
+
+			requestContext.setSecurityContext(
+					new ApiSecurityContext(remoteGitManagerRestricted.getUsername(), requestContext.getSecurityContext().isSecure(), scheme)
+			);
+
+			return true;
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "The given token could not be used directly as a backend token.", e);
+			return false;
+		}
+	}
+
+	private void logSecurityWarning(String failureType, Exception exception, ContainerRequestContext requestContext, String token) {
 		logger.log(
 				Level.WARNING,
 				String.format(
@@ -107,28 +157,34 @@ public class JwtValidationFilter implements ContainerRequestFilter {
 				),
 				exception
 		);
-		requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
 	}
 
-	private boolean handleJwtToken(String token, ContainerRequestContext requestContext, String scheme) {
+	enum JwtValidationResult {
+		VALID,
+		INVALID,
+		INVALID_EXPIRED,
+		INVALID_NOT_A_JWT
+	}
+
+	private JwtValidationResult validateJwt(String token, ContainerRequestContext requestContext, String scheme) {
 		try {
 			SignedJWT signedJWT = SignedJWT.parse(token);
 
 			if (!AuthConstants.PERMISSIBLE_JWS_ALGORITHMS.contains(signedJWT.getHeader().getAlgorithm())) {
-				logSecurityWarningAndAbort("algorithm check", null, requestContext, token);
-				return false;
+				logSecurityWarning("algorithm check", null, requestContext, token);
+				return JwtValidationResult.INVALID;
 			}
 
 			try {
 				JWSVerifier signatureVerifier = new MACVerifier(CATMAPropertyKey.API_HMAC_SECRET.getValue());
 				if (!signedJWT.verify(signatureVerifier)) {
-					logSecurityWarningAndAbort("signature verification", null, requestContext, token);
-					return false;
+					logSecurityWarning("signature verification", null, requestContext, token);
+					return JwtValidationResult.INVALID;
 				}
 			}
 			catch (JOSEException e) {
-				logSecurityWarningAndAbort("signature verification", e, requestContext, token);
-				return false;
+				logSecurityWarning("signature verification", e, requestContext, token);
+				return JwtValidationResult.INVALID;
 			}
 
 			JWTClaimsSetVerifier<?> claimsVerifier = new DefaultJWTClaimsVerifier<>(
@@ -144,51 +200,30 @@ public class JwtValidationFilter implements ContainerRequestFilter {
 			catch (BadJWTException e) {
 				// is the token expired?
 				if (e.getMessage().toLowerCase().contains("expired")) { // "Expired JWT" was the actual message text seen at the time of writing this
-					// yes - this is the only case where we let the client know the reason for the failure
-					requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED.getStatusCode(), "Token expired").build());
-					return false;
+					return JwtValidationResult.INVALID_EXPIRED;
 				}
 
 				// is the token not yet valid?
 				// if at some point we start issuing tokens that are not immediately valid, we could also check for the message "JWT before use time" here
 
 				// some other kind of failure
-				logSecurityWarningAndAbort("claims verification", e, requestContext, token);
-				return false;
+				logSecurityWarning("claims verification", e, requestContext, token);
+				return JwtValidationResult.INVALID;
 			}
 
 			// all checks passed
 			String userIdentifier = signedJWT.getJWTClaimsSet().getSubject();
 			requestContext.setSecurityContext(new ApiSecurityContext(userIdentifier, requestContext.getSecurityContext().isSecure(), scheme));
-			return true;
+			return JwtValidationResult.VALID;
 		}
 		catch (ParseException e) {
-			// for convenience, we allow GitLab impersonation or personal access tokens to be used directly
 			logger.log(
 					Level.WARNING,
 					"The given token could not be parsed as a JWT, will try using it directly as a backend token.",
 					e
 			);
 
-			try {
-				RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitMangerRestrictedFactory.create(token);
-
-				// TODO: test what happens if the cache contains a provider with a token that was valid but that has subsequently expired
-				remoteGitManagerRestrictedProviderCache.put(
-						remoteGitManagerRestricted.getUsername(),
-						new AccessTokenRemoteGitManagerRestrictedProvider(token, remoteGitMangerRestrictedFactory)
-				);
-
-				requestContext.setSecurityContext(
-						new ApiSecurityContext(remoteGitManagerRestricted.getUsername(), requestContext.getSecurityContext().isSecure(), scheme)
-				);
-				return true;
-			}
-			catch (Exception e2) {
-				logger.log(Level.SEVERE, "The given token could not be used directly as a backend token.", e2);
-				requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
-				return false;
-			}
+			return JwtValidationResult.INVALID_NOT_A_JWT;
 		}
 	}
 }
