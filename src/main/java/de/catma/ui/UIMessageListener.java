@@ -1,7 +1,7 @@
 package de.catma.ui;
 
-import com.hazelcast.core.Message;
-import com.hazelcast.core.MessageListener;
+import com.hazelcast.topic.Message;
+import com.hazelcast.topic.MessageListener;
 import com.vaadin.ui.UI;
 
 public abstract class UIMessageListener<T> implements MessageListener<T> {

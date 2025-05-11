@@ -1,7 +1,7 @@
 package de.catma.ui.module.dashboard;
 
 import com.google.common.eventbus.EventBus;
-import com.hazelcast.core.Message;
+import com.hazelcast.topic.Message;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
@@ -34,7 +34,7 @@ public class ProjectJoinHandler extends UIMessageListener<JoinedProjectMessage> 
 			Notification.show(
 					"Joined successfully",
 					String.format("Successfully joined project \"%s\"", invitation.getName()),
-					Type.HUMANIZED_MESSAGE
+					Type.TRAY_NOTIFICATION
 			);
 			getUi().push();
 

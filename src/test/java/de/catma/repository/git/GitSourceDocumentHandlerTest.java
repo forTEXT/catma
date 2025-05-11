@@ -46,7 +46,10 @@ import de.catma.indexer.TermInfo;
 import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAProperties;
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.managers.*;
+import de.catma.repository.git.managers.GitProjectsManager;
+import de.catma.repository.git.managers.GitlabManagerPrivileged;
+import de.catma.repository.git.managers.GitlabManagerRestricted;
+import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.util.IDGenerator;
 //import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
@@ -79,8 +82,7 @@ public class GitSourceDocumentHandlerTest {
 		gitlabManagerPrivileged = new GitlabManagerPrivileged();
 		String impersonationToken = gitlabManagerPrivileged.acquireImpersonationToken(username, "catma", email, name).getSecond();
 
-		EventBus mockEventBus = mock(EventBus.class);
-		gitlabManagerRestricted = new GitlabManagerRestricted(mockEventBus, impersonationToken);
+		gitlabManagerRestricted = new GitlabManagerRestricted(impersonationToken);
 	}
 
 	@AfterEach

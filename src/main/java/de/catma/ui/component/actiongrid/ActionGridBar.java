@@ -35,6 +35,7 @@ public class ActionGridBar extends HorizontalLayout {
         btnToggleMultiselect = new IconButton(VaadinIcons.TASKS);
         searchField = new TextField();
         searchField.setPlaceholder("\u2315");
+        searchField.addStyleName("action-grid-bar__search-field");
   
         ctmAdd = new ContextMenu(btnAdd,true);
         ctmMoreOptions = new ContextMenu(btnMoreOptions,true);
@@ -100,9 +101,13 @@ public class ActionGridBar extends HorizontalLayout {
 	}
 	
 	public void addButtonAfterSearchField(Button button) {
-		addComponent(button, getComponentIndex(searchField)+1);
+		addComponentAfterSearchField(button);
 	}
-	
+
+	public void addComponentAfterSearchField(Component comp) {
+		addComponent(comp, getComponentIndex(searchField)+1);
+	}
+
 	public void setMoreOptionsBtnVisible(boolean visible) {
 		btnMoreOptions.setVisible(visible);
 	}
@@ -112,7 +117,15 @@ public class ActionGridBar extends HorizontalLayout {
 	}
 
 	public void addButtonRight(Button button) {
-        addComponent(button);
-        setComponentAlignment(button, Alignment.MIDDLE_RIGHT);		
+        addComponentRight(button);
+	}
+	
+	public void addComponentRight(Component comp) {
+        addComponent(comp);
+        setComponentAlignment(comp, Alignment.MIDDLE_RIGHT);				
+	}
+	
+	public void addTextFieldBeforeSearchField(TextField textField) {
+		addComponent(textField, getComponentIndex(searchField));
 	}
 }

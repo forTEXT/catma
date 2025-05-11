@@ -18,23 +18,26 @@ import de.catma.ui.util.Cleaner;
 
 public class CollectionQueryResultRowItem implements QueryResultRowItem {
 
-	private String collectionName;
-	private String documentId;
+	private final String collectionName;
+	private final String documentId;
 	private final String collectionId;
-	private QueryResultRowArray rows;
-	private Project project;
+	private final QueryResultRowArray rows;
+	private final Project project;
 	private final String identity;
+	private final int contextSize;
 
 	public CollectionQueryResultRowItem(
 			String parentIdentity,
 			String collectionName,
 			String documentId, String collectionId,
-			QueryResultRowArray rows, Project project) {
+			QueryResultRowArray rows, Project project,
+			int contextSize) {
 		this.collectionName = collectionName;
 		this.documentId = documentId;
 		this.collectionId = collectionId;
 		this.rows = rows;
 		this.project = project;
+		this.contextSize = contextSize;
 		this.identity = parentIdentity + collectionId;
 	}
 
@@ -95,12 +98,14 @@ public class CollectionQueryResultRowItem implements QueryResultRowItem {
 									AnnotatedTextProvider.buildAnnotatedText(
 											new ArrayList<>(tRow.getRanges()), 
 											kwicProvider, 
-											tagDefinition),
+											tagDefinition,
+											contextSize),
 									AnnotatedTextProvider.buildAnnotatedKeywordInContext(
 											new ArrayList<>(tRow.getRanges()), 
 											kwicProvider, 
 											tagDefinition, 
-											tRow.getTagDefinitionPath()),
+											tRow.getTagDefinitionPath(),
+											contextSize),
 									true
 								);
 					if (!treeData.contains(item)) {

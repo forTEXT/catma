@@ -1,30 +1,34 @@
 package de.catma.ui.module.dashboard;
 
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
+import java.util.Set;
 
+import com.vaadin.server.Page;
+import com.vaadin.ui.*;
 import org.vaadin.dialogs.ConfirmDialog;
 
 import com.google.common.eventbus.EventBus;
 import com.vaadin.icons.VaadinIcons;
-import com.vaadin.ui.CssLayout;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.UI;
+import com.vaadin.shared.ui.ContentMode;
+import com.vaadin.ui.Notification.Type;
 
-import de.catma.project.ProjectsManager;
 import de.catma.project.ProjectReference;
-import de.catma.rbac.IRBACManager;
+import de.catma.project.ProjectsManager;
 import de.catma.rbac.RBACConstraint;
 import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.ProjectsChangedEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
-import de.catma.ui.layout.FlexLayout;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.layout.VerticalFlexLayout;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.user.Member;
+import de.catma.user.SharedGroupMember;
 
 /**
  * Displays a single project reference as a card
@@ -44,28 +48,19 @@ public class ProjectCard extends VerticalFlexLayout  {
 
 	private final EventBus eventBus;
 
-	private final IRBACManager rbacManager;
+	private final RemoteGitManagerRestricted rbacManager;
 	
 	private final RBACConstraintEnforcer<RBACRole> rbacEnforcer = new RBACConstraintEnforcer<>();
 
-	private Label descriptionLabel;
-	private Label nameLabel;
-
 	private final ClickAction clickAction;
 
-	public ProjectCard(ProjectReference projectReference, ProjectsManager projectManager, EventBus eventBus, IRBACManager rbacManager) {
+	public ProjectCard(ProjectReference projectReference, ProjectsManager projectManager, EventBus eventBus, RemoteGitManagerRestricted rbacManager) {
 		this(projectReference, projectManager, eventBus, rbacManager, ref -> eventBus.post(new RouteToProjectEvent(ref)));
-	}
-
-	public ProjectCard(ProjectReference projectReference, ProjectsManager projectManager, 
-    		EventBus eventBus, ClickAction clickAction) {
-		this(projectReference, projectManager, eventBus, new NoopRBACManager(), 
-				ref -> clickAction.projectCardClicked(ref));
 	}
 
     private ProjectCard(
     		ProjectReference projectReference, ProjectsManager projectManager, 
-    		EventBus eventBus, IRBACManager rbacManager, 
+    		EventBus eventBus, RemoteGitManagerRestricted rbacManager, 
     		ClickAction clickAction){
         this.projectReference = Objects.requireNonNull(projectReference) ;
         this.projectManager = projectManager;
@@ -91,25 +86,59 @@ public class ProjectCard extends VerticalFlexLayout  {
 	protected void initComponents() {
 		addStyleName("projectlist__card");
 
-		CssLayout previewLayout = new CssLayout();
-		previewLayout.addStyleName("projectlist__card__preview");
-		previewLayout.addLayoutClickListener(layoutClickEvent -> handleOpenProjectRequest());
+		HorizontalFlexLayout hlTitle = new HorizontalFlexLayout();
+		hlTitle.addStyleName("projectlist__card__title");
+		hlTitle.addLayoutClickListener(layoutClickEvent -> handleOpenProjectRequest());
 
-		descriptionLabel = new Label(projectReference.getDescription());
-		descriptionLabel.setWidth("100%");
-		previewLayout.addComponents(descriptionLabel);
+		Label lblName = new Label(projectReference.getName());
+		lblName.setWidth("100%");
+		hlTitle.addComponent(lblName);
 
-		addComponent(previewLayout);
+		addComponent(hlTitle);
 
-		HorizontalFlexLayout titleAndActionsLayout = new HorizontalFlexLayout();
-		titleAndActionsLayout.addStyleName("projectlist__card__title-and-actions");
-		titleAndActionsLayout.setAlignItems(FlexLayout.AlignItems.BASELINE);
-		titleAndActionsLayout.setWidth("100%");
+		VerticalLayout vlContent = new VerticalLayout();
+		vlContent.addStyleName("projectlist__card__content");
+		vlContent.addLayoutClickListener(layoutClickEvent -> handleOpenProjectRequest());
 
-		nameLabel = new Label(projectReference.getName());
-		nameLabel.setWidth("100%");
+		Label lblDescription = new Label(projectReference.getDescription());
+		lblDescription.setWidth("100%");
+		vlContent.addComponent(lblDescription);
 
-		titleAndActionsLayout.addComponent(nameLabel);
+		addComponent(vlContent);
+
+		HorizontalFlexLayout hflMetadataAndActions = new HorizontalFlexLayout();
+		hflMetadataAndActions.addStyleName("projectlist__card__metadata-and-actions");
+		hflMetadataAndActions.setAlignItems(AlignItems.CENTER);
+		hflMetadataAndActions.setWidth("100%");
+
+		VerticalLayout vlMetadata = new VerticalLayout();
+		vlMetadata.setWidth("100%");
+		vlMetadata.setMargin(false);
+		vlMetadata.setSpacing(false);
+		vlMetadata.addStyleName("projectlist__card__dates");
+		vlMetadata.addLayoutClickListener(layoutClickEvent -> handleOpenProjectRequest());
+
+		Label lblCreatedDate = new Label(
+				String.format(
+						"<span>Created on:</span> %s",
+						projectReference.getCreatedAt() == null ? "n/a" : projectReference.getCreatedAt().format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
+				),
+				ContentMode.HTML
+		);
+		vlMetadata.addComponent(lblCreatedDate);
+
+		Label lblLastActivityDate = new Label(
+				String.format(
+						"<span>Last activity on:</span> %s",
+						projectReference.getLastActivityAt() == null ? "n/a" : projectReference.getLastActivityAt().format(
+								DateTimeFormatter.ofPattern("dd MMM yyyy")
+						)
+				),
+				ContentMode.HTML
+		);
+		vlMetadata.addComponent(lblLastActivityDate);
+
+		hflMetadataAndActions.addComponent(vlMetadata);
 
 		IconButton btnRemove = new IconButton(VaadinIcons.TRASH);
 		btnRemove.addClickListener(
@@ -132,7 +161,7 @@ public class ProjectCard extends VerticalFlexLayout  {
 						}
 				)
 		);
-		titleAndActionsLayout.addComponents(btnRemove);
+		hflMetadataAndActions.addComponents(btnRemove);
 
 		IconButton btnEdit = new IconButton(VaadinIcons.PENCIL);
 		btnEdit.addClickListener(
@@ -142,8 +171,8 @@ public class ProjectCard extends VerticalFlexLayout  {
 						result -> {
 							try {
 								projectManager.updateProjectMetadata(result);
-								nameLabel.setValue(result.getName());
-								descriptionLabel.setValue(result.getDescription());
+								lblName.setValue(result.getName());
+								lblDescription.setValue(result.getDescription());
 							}
 							catch (IOException e) {
 								errorLogger.showAndLogError(String.format("Failed to update project \"%s\"", projectReference.getName()), e);
@@ -151,14 +180,41 @@ public class ProjectCard extends VerticalFlexLayout  {
 						}
 				).show()
 		);
-		titleAndActionsLayout.addComponent(btnEdit);
+		hflMetadataAndActions.addComponent(btnEdit);
 
 		IconButton btnLeave = new IconButton(VaadinIcons.EXIT);
 		btnLeave.addClickListener(
-				clickEvent -> ConfirmDialog.show(
+				clickEvent -> {
+					
+					try {
+						Set<Member> members = rbacManager.getProjectMembers(projectReference);
+						Member self = members.stream().filter(m -> m.getUserId().equals(rbacManager.getUser().getUserId())).findAny().orElse(null);
+						if (self != null) {
+							if (self instanceof SharedGroupMember) {
+								Notification groupMembershipNotification = new Notification(
+										"Info", 
+										String.format(
+												"You are participating in this project because you are part of the user group '%s'.\n"
+												+ "You cannot leave the project directly, you can only leave the user group.\n"
+												+ "Leaving the user group will disconnect you from all projects shared with this group.\n"
+												+ "(click to dismiss)",
+												((SharedGroupMember)self).getSharedGroup().name()), 
+										Type.WARNING_MESSAGE
+								);
+								groupMembershipNotification.setDelayMsec(-1);
+								groupMembershipNotification.show(Page.getCurrent());
+								return;
+							}
+						}
+					} catch (IOException e) {
+						errorLogger.showAndLogError(String.format("Could not load members for project '%s'", projectReference.getName()), e);
+					}
+					
+					ConfirmDialog.show(
+				
 						UI.getCurrent(),
 						"Leave Project",
-						"Do you want to leave the project \"" + projectReference.getName() + "\"?",
+						String.format("Do you want to leave the project '%s'?", projectReference.getName()),
 						"OK",
 						"Cancel",
 						confirmDialog -> {
@@ -169,12 +225,15 @@ public class ProjectCard extends VerticalFlexLayout  {
 								}
 							}
 							catch (IOException e) {
-								errorLogger.showAndLogError(String.format("Failed to leave project \"%s\"", projectReference.getName()), e);
+								errorLogger.showAndLogError(String.format("Failed to leave project '%s'", projectReference.getName()), e);
 							}
 						}
-				)
+					);
+				}
 		);
-		titleAndActionsLayout.addComponent(btnLeave);
+		hflMetadataAndActions.addComponent(btnLeave);
+
+		addComponents(hflMetadataAndActions);
 
 		rbacEnforcer.register(
 				RBACConstraint.ifNotAuthorized(
@@ -199,15 +258,13 @@ public class ProjectCard extends VerticalFlexLayout  {
 		rbacEnforcer.register(
 				RBACConstraint.ifNotAuthorized(
 						role -> rbacManager.hasPermission(role, RBACPermission.PROJECT_LEAVE)
-								&& !rbacManager.hasPermission(role, RBACPermission.PROJECT_DELETE), // TODO: why do we care about the delete permission here?
+								&& !rbacManager.hasPermission(role, RBACPermission.PROJECT_DELETE), // only owners can delete projects and owners should not be able to leave
 						() -> {
 							btnLeave.setVisible(false);
 							btnLeave.setEnabled(false);
 						}
 				)
 		);
-
-		addComponents(titleAndActionsLayout);
 	}
 
     private void handleOpenProjectRequest() {

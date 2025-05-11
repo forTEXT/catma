@@ -1,7 +1,29 @@
 package de.catma.repository.git;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import org.apache.commons.compress.utils.Lists;
+import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.lib.Constants;
+
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+
 import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
@@ -12,6 +34,7 @@ import de.catma.document.source.SourceDocument;
 import de.catma.document.source.SourceDocumentInfo;
 import de.catma.document.source.SourceDocumentReference;
 import de.catma.indexer.TermInfo;
+import de.catma.project.BackendPager;
 import de.catma.project.CommitInfo;
 import de.catma.project.MergeRequestInfo;
 import de.catma.project.ProjectReference;
@@ -26,24 +49,16 @@ import de.catma.repository.git.resource.provider.SynchronizedResourceProvider;
 import de.catma.repository.git.resource.provider.interfaces.GitProjectResourceProvider;
 import de.catma.repository.git.resource.provider.interfaces.GitProjectResourceProviderFactory;
 import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotation;
-import de.catma.tag.*;
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagInstance;
+import de.catma.tag.TagLibrary;
+import de.catma.tag.TagsetDefinition;
 import de.catma.user.Member;
+import de.catma.user.SharedGroup;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
-import org.apache.commons.compress.utils.Lists;
-import org.eclipse.jgit.api.MergeResult;
-import org.eclipse.jgit.api.Status;
-import org.eclipse.jgit.lib.Constants;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class GitProjectHandler {
 	public static final String TAGSETS_DIRECTORY_NAME = "tagsets";
@@ -638,6 +653,101 @@ public class GitProjectHandler {
 			return projectRevision;
 		}
 	}
+	
+	
+	
+	// bulk removal of resources
+	public String removeResources(
+			final Collection<SourceDocumentReference> documents, 
+			final Collection<AnnotationCollectionReference> collections, 
+			final Collection<TagsetDefinition> tagsets, 
+			ProgressListener progressListener) throws Exception {
+		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
+			localGitRepoManager.open(projectReference.getNamespace(), projectReference.getProjectId());
+			StringBuilder commitMessageBuilder = new StringBuilder("Bulk removal of unwanted resources");
+			
+			if (!collections.isEmpty()) {
+				GitAnnotationCollectionHandler gitAnnotationCollectionHandler = new GitAnnotationCollectionHandler(
+						localGitRepoManager,
+						projectPath,
+						projectId,
+						remoteGitServerManager.getUsername(),
+						remoteGitServerManager.getEmail()
+						);
+				for (AnnotationCollectionReference collRef : collections) {
+					progressListener.setProgress("Removing collection \"%s\" ...", collRef.toString());
+					gitAnnotationCollectionHandler.removeCollectionWithoutCommit(collRef);
+					commitMessageBuilder.append("\n");
+					commitMessageBuilder.append(
+							String.format(
+									"Deleted annotation collection \"%s\" with ID %s",
+									collRef.getName(), 
+									collRef.getId()));
+
+				}
+			}	
+
+			if (!documents.isEmpty()) {
+				GitSourceDocumentHandler gitSourceDocumentHandler = new GitSourceDocumentHandler(
+						localGitRepoManager,
+						projectPath,
+						remoteGitServerManager.getUsername(),
+						remoteGitServerManager.getEmail()
+						);
+				for (SourceDocumentReference docRef : documents.stream().toList()) {
+					progressListener.setProgress("Removing document \"%s\" and its collections...", docRef.toString());
+					gitSourceDocumentHandler.removeDocumentWithoutCommit(docRef);
+					commitMessageBuilder.append("\n");
+					commitMessageBuilder.append(				
+						String.format(
+							"Deleted document \"%s\" with ID %s",
+							docRef.getSourceDocumentInfo().getContentInfoSet().getTitle(),
+							docRef.getUuid()));
+				}
+
+			}
+
+			
+			if (!tagsets.isEmpty()) {
+				GitTagsetHandler gitTagsetHandler = new GitTagsetHandler(
+						localGitRepoManager,
+						projectPath,
+						remoteGitServerManager.getUsername(),
+						remoteGitServerManager.getEmail()
+						);
+				
+				for (TagsetDefinition tagset : tagsets) {
+					progressListener.setProgress("Removing tagset \"%s\" ...", tagset.getName());
+					gitTagsetHandler.removeTagsetDefinitionWithoutCommit(tagset);											
+					commitMessageBuilder.append("\n");
+					commitMessageBuilder.append( 
+						String.format(
+							"Deleted tagset \"%s\" with ID %s",
+							tagset.getName(), 
+							tagset.getUuid()));
+				}
+			}
+
+			if (!localGitRepoManager.hasUncommittedChanges() && !localGitRepoManager.hasUntrackedChanges()) {
+				return localGitRepoManager.getRevisionHash();
+			}
+
+			String projectRevision = localGitRepoManager.commit(
+					commitMessageBuilder.toString(),
+					remoteGitServerManager.getUsername(),
+					remoteGitServerManager.getEmail(),
+					false
+			);
+
+			localGitRepoManager.push(jGitCredentialsManager);
+
+
+			return projectRevision;
+		}
+	}
+	
+	
+	
 
 	// comment operations
 	public List<Comment> getComments(String documentId) throws IOException {
@@ -693,10 +803,6 @@ public class GitProjectHandler {
 		return remoteGitServerManager.getProjectMembers(projectReference);
 	}
 
-	public List<User> findUser(String usernameOrEmail) throws IOException {
-		return remoteGitServerManager.findUser(usernameOrEmail);
-	}
-
 	public boolean hasPermission(RBACRole role, RBACPermission permission) {
 		return remoteGitServerManager.hasPermission(role, permission);
 	}
@@ -705,13 +811,24 @@ public class GitProjectHandler {
 		return remoteGitServerManager.getRoleOnProject(subject, projectReference);
 	}
 
-	public RBACSubject assignOnProject(RBACSubject subject, RBACRole role) throws IOException {
-		return remoteGitServerManager.assignOnProject(subject, role, projectReference);
+	public RBACSubject assignOnProject(RBACSubject subject, RBACRole role, LocalDate expiresAt) throws IOException {
+		return remoteGitServerManager.assignOnProject(subject, role, projectReference, expiresAt);
 	}
+	
+	public SharedGroup assignOnProject(SharedGroup group, RBACRole role, LocalDate expiresAt, boolean reassign) throws IOException {
+		return remoteGitServerManager.assignOnProject(group, role, projectReference, expiresAt, reassign);
+	}
+
 
 	public void unassignFromProject(RBACSubject subject) throws IOException {
 		remoteGitServerManager.unassignFromProject(subject, projectReference);
 	}
+	
+
+	public void unassignFromProject(SharedGroup sharedGroup) throws IOException {
+		remoteGitServerManager.unassignFromProject(sharedGroup, projectReference);
+	}
+
 
 	// synchronization related things
 	public boolean isReadOnly() {
@@ -1016,5 +1133,9 @@ public class GitProjectHandler {
 		}
 
 		return latestContributions;
+	}
+
+	public BackendPager<CommitInfo> getCommits(LocalDate after, LocalDate before, String branch, String author) throws IOException {
+		return remoteGitServerManager.getCommits(projectReference, after, before, branch, author);
 	}
 }

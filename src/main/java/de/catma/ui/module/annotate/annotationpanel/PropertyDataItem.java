@@ -1,7 +1,9 @@
 package de.catma.ui.module.annotate.annotationpanel;
 
+import java.text.Collator;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.vaadin.data.provider.TreeDataProvider;
@@ -10,16 +12,24 @@ import com.vaadin.icons.VaadinIcons;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.TagReference;
 import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagsetDefinition;
 import de.catma.ui.util.Cleaner;
 
 class PropertyDataItem implements TagsetTreeItem {
 	
-	private PropertyDefinition propertyDefinition;
+	private final PropertyDefinition propertyDefinition;
 	private boolean valuesExpanded;
+	private final TagDefinition tag;
+	private final TagsetDefinition tagset;
+	private final Collator collator;
 	
-	public PropertyDataItem(PropertyDefinition propertyDefinition) {
+	public PropertyDataItem(PropertyDefinition propertyDefinition, TagDefinition tag, TagsetDefinition tagset, Collator collator) {
 		super();
 		this.propertyDefinition = propertyDefinition;
+		this.tag = tag;
+		this.tagset = tagset;
+		this.collator = collator;
 	}
 
 	@Override
@@ -59,6 +69,7 @@ class PropertyDataItem implements TagsetTreeItem {
 			}
 			propertySummary.append(propertyDefinition.getPossibleValueList().stream()
 			.limit(2)
+			.sorted((v1, v2) -> collator.compare(Optional.ofNullable(v1).orElse(""), Optional.ofNullable(v2).orElse("")))
 			.map(pValue -> Cleaner.clean(pValue))
 			.collect(Collectors.joining(",")));
 			propertySummary.append(
@@ -144,5 +155,33 @@ class PropertyDataItem implements TagsetTreeItem {
 	@Override
 	public String getId() {
 		return propertyDefinition.getUuid();
+	}
+	
+	@Override
+	public TagsetDefinition getTagset() {
+		return tagset;
+	}
+	
+	@Override
+	public TagDefinition getTag() {
+		return tag;
+	}
+	
+	@Override
+	public int compareTo(TagsetTreeItem o) {
+		
+		if (!getTagset().getUuid().equals(o.getTagset().getUuid())) {
+			return collator.compare(Optional.ofNullable(getTagset().getName()).orElse(""), Optional.ofNullable(o.getTagset().getName()).orElse(""));
+		}
+
+		if (o.getTag() != null && !getTag().getUuid().equals(o.getTag().getUuid())) {
+			return collator.compare(Optional.ofNullable(getTag().getName()).orElse(""), Optional.ofNullable(o.getTag().getName()).orElse(""));
+		}
+		
+		if ((getTag() == null) || getPropertyDefinition() == null) {
+			return -1;
+		}
+		
+		return collator.compare(Optional.ofNullable(getPropertyDefinition().getName()).orElse(""), Optional.ofNullable(o.getPropertyDefinition().getName()).orElse(""));
 	}
 }

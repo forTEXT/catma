@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
 import com.google.common.cache.LoadingCache;
@@ -62,7 +61,9 @@ import de.catma.ui.component.IconButton;
 import de.catma.ui.component.TreeGridFactory;
 import de.catma.ui.module.analyze.CSVExportFlatStreamSource;
 import de.catma.ui.module.analyze.CSVExportGroupedStreamSource;
+import de.catma.ui.module.analyze.CSVExportPropertiesAsColumnsFlatStreamSource;
 import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider;
+import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider.ContextSizeEditCommand;
 import de.catma.ui.module.main.ErrorHandler;
 
 public class QueryResultPanel extends VerticalLayout {
@@ -83,16 +84,16 @@ public class QueryResultPanel extends VerticalLayout {
 
 	private TextField queryInfo;
 
-	private LoadingCache<String , KwicProvider> kwicProviderCache;
+	private final LoadingCache<String , KwicProvider> kwicProviderCache;
 
 	private Button caretRightBt;
 	private Button caretDownBt;
 	private Button removeBt;
 	private Button optionsBt;
 
-	private QueryResult queryResult;
+	private final QueryResult queryResult;
 
-	private Project project;
+	private final Project project;
 
 	private VerticalLayout treeGridPanel;
 
@@ -113,17 +114,17 @@ public class QueryResultPanel extends VerticalLayout {
 	
 	private DisplaySetting displaySetting;
 
-	private boolean cardStyle;
+	private final boolean cardStyle;
 
-	private ItemSelectionListener itemSelectionListener;
+	private final ItemSelectionListener itemSelectionListener;
 
-	private ItemRemovedListener itemRemovedListener;
+	private final ItemRemovedListener itemRemovedListener;
 
-	private boolean includeQueryId;
+	private final boolean includeQueryId;
 
 	private TextField searchField;
 
-	private QueryId queryId;
+	private final QueryId queryId;
 
 	private int tokenCount;
 
@@ -131,10 +132,13 @@ public class QueryResultPanel extends VerticalLayout {
 	
 	private DisplaySettingChangeListener displaySettingChangeListener;
 	
-	private ArrayList<Registration> itemSelectionListenerRegistrations;
-	private ArrayList<WeakReference<SelectionListener<QueryResultRowItem>>> itemSelectionListeners;
+	private final ArrayList<Registration> itemSelectionListenerRegistrations;
+	private final ArrayList<WeakReference<SelectionListener<QueryResultRowItem>>> itemSelectionListeners;
 	
 	private PunctuationFilter punctuationFilter;
+	private int contextSize = AnnotatedTextProvider.DEFAULT_CONTEXT_SIZE;
+	private final ContextSizeEditCommand contextSizeEditCommand;
+	
 
 	public QueryResultPanel(Project project, QueryResult result, QueryId queryId, 
 			LoadingCache<String, KwicProvider> kwicProviderCache, DisplaySetting displaySetting, 
@@ -174,7 +178,11 @@ public class QueryResultPanel extends VerticalLayout {
 		this.queryId = queryId; 
 		this.itemSelectionListenerRegistrations = new ArrayList<>();
 		this.itemSelectionListeners = new ArrayList<>();
-		
+		this.contextSizeEditCommand = new ContextSizeEditCommand((newContextSize) -> { 
+			contextSize = newContextSize;
+			clearTreeData();
+			displaySetting.init(QueryResultPanel.this);
+		});
 		initComponents();
 		initActions(resultPanelCloseListener);
 		displaySetting.init(this);
@@ -182,7 +190,7 @@ public class QueryResultPanel extends VerticalLayout {
 			caretRightBt.click();
 		}
 	}
-
+	
 	void initPhraseBasedData() {
 		displaySetting = DisplaySetting.GROUPED_BY_PHRASE;
 		
@@ -808,12 +816,26 @@ public class QueryResultPanel extends VerticalLayout {
 		}
 		
 		optionsBt.addClickListener((evt) ->  optionsMenu.open(evt.getClientX(), evt.getClientY()));
-		
+
+		optionsMenu.addItem(contextSizeEditCommand.getContextSizeMenuEntry(), contextSizeEditCommand);
+
+		MenuItem miFilterPunctuation = optionsMenu.addItem(
+				"Filter Punctuation",
+				mi -> queryResultGrid.getDataProvider().refreshAll());
+		miFilterPunctuation.setCheckable(true);
+		miFilterPunctuation.setChecked(true);
+		punctuationFilter = new PunctuationFilter(() -> miFilterPunctuation.isChecked());
+
+		optionsMenu.addSeparator();
+
 		miGroupByPhrase = optionsMenu.addItem("Group by Phrase", mi-> initPhraseBasedData());
 		miGroupByPhrase.setEnabled(false);
 		miGroupByTagPath = optionsMenu.addItem("Group by Tag Path", mi -> initTagBasedData());
 		miFlatTable = optionsMenu.addItem("Display Annotations as Flat Table", mi -> initFlatTagBasedData());
 		miPropertiesAsColumns = optionsMenu.addItem("Display Properties as Columns", mi -> initPropertiesAsColumnsTagBasedData());
+
+		optionsMenu.addSeparator();
+
 		MenuItem miExport = optionsMenu.addItem("Export");
 		MenuItem miCSVFlatExport = miExport.addItem("Export Flat as CSV");
 		
@@ -822,7 +844,8 @@ public class QueryResultPanel extends VerticalLayout {
 						() -> getFilteredQueryResult(), 
 						project, 
 						kwicProviderCache, 
-						((BackgroundServiceProvider)UI.getCurrent())),
+						((BackgroundServiceProvider)UI.getCurrent()),
+						() -> contextSize),
 					"CATMA-Query-Result_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
 		csvFlatExportResource.setCacheTime(0);
 		csvFlatExportResource.setMIMEType("text/comma-separated-values");
@@ -850,14 +873,23 @@ public class QueryResultPanel extends VerticalLayout {
 		
 		csvGroupedByPhraseExportFileDownloader.extend(miCSVGroupedByPhraseExport);
 		
+		MenuItem miCSVColumnsAsPropertiesExport = miExport.addItem("Export Properties as Columns as CSV");
 		
-		MenuItem miFilterPunctuation = optionsMenu.addItem(
-				"Filter Punctuation",
-				mi -> queryResultGrid.getDataProvider().refreshAll());
-		miFilterPunctuation.setCheckable(true);
-		miFilterPunctuation.setChecked(true);
-		punctuationFilter = new PunctuationFilter(() -> miFilterPunctuation.isChecked());
+		StreamResource csvPropertiesAsColumnsResource = new StreamResource(
+					new CSVExportPropertiesAsColumnsFlatStreamSource(
+						() -> getFilteredQueryResult(), 
+						project, 
+						kwicProviderCache, 
+						((BackgroundServiceProvider)UI.getCurrent())),
+					"CATMA-Query-Result_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
+		csvPropertiesAsColumnsResource.setCacheTime(0);
+		csvPropertiesAsColumnsResource.setMIMEType("text/comma-separated-values");
 		
+		FileDownloader csvPropertiesAsColumnsExportFileDownloader = 
+			new FileDownloader(csvPropertiesAsColumnsResource);
+		
+		csvPropertiesAsColumnsExportFileDownloader.extend(miCSVColumnsAsPropertiesExport);
+
 		if (resultPanelCloseListener != null) {
 			removeBt.addClickListener(clickEvent -> resultPanelCloseListener.closeRequest(QueryResultPanel.this));
 		}
@@ -868,6 +900,13 @@ public class QueryResultPanel extends VerticalLayout {
 		searchField.addValueChangeListener(event -> handleSearchValueInput(event.getValue()));
 	}
 
+	private void clearTreeData() {
+		this.phraseBasedTreeData = null;
+		this.flatTagBasedTreeData = null;
+		this.propertiesAsColumnsTagBasedTreeData = null;
+		this.tagBasedTreeData = null;		
+	}
+	
 	private void handleSearchValueInput(String searchValue) {
 		@SuppressWarnings("unchecked")
 		TreeDataProvider<QueryResultRowItem> dataProvider = 
@@ -977,7 +1016,7 @@ public class QueryResultPanel extends VerticalLayout {
 		tokenCount = 0;
 		for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
 			PhraseQueryResultRowItem phraseQueryResultRowItem = 
-					new PhraseQueryResultRowItem(includeQueryId, groupedQueryResult);
+					new PhraseQueryResultRowItem(includeQueryId, groupedQueryResult, contextSize);
 			if (!phraseBasedTreeData.contains(phraseQueryResultRowItem)) {
 				tokenCount += groupedQueryResult.getTotalFrequency();
 				phraseBasedTreeData.addItem(null, phraseQueryResultRowItem);
@@ -999,7 +1038,7 @@ public class QueryResultPanel extends VerticalLayout {
 		});
 		for (GroupedQueryResult groupedQueryResult : groupedQueryResults) {
 			TagQueryResultRowItem tagQueryResultRowItem = 
-					new TagQueryResultRowItem(includeQueryId, groupedQueryResult, project);
+					new TagQueryResultRowItem(includeQueryId, groupedQueryResult, project, contextSize);
 			if (!tagBasedTreeData.contains(tagQueryResultRowItem)) {
 				tokenCount += groupedQueryResult.getTotalFrequency();
 				tagBasedTreeData.addItem(null, tagQueryResultRowItem);
@@ -1027,12 +1066,14 @@ public class QueryResultPanel extends VerticalLayout {
 							AnnotatedTextProvider.buildAnnotatedText(
 									new ArrayList<>(tRow.getRanges()), 
 									kwicProvider, 
-									tagDefinition),
+									tagDefinition, 
+									contextSize),
 							AnnotatedTextProvider.buildAnnotatedKeywordInContext(
 									new ArrayList<>(tRow.getRanges()), 
 									kwicProvider, 
 									tagDefinition, 
-									tRow.getTagDefinitionPath()),
+									tRow.getTagDefinitionPath(),
+									contextSize),
 							kwicProvider.getSourceDocumentName(),
 							kwicProvider.getSourceDocumentReference()
 								.getUserMarkupCollectionReference(tRow.getMarkupCollectionId())
@@ -1092,12 +1133,14 @@ public class QueryResultPanel extends VerticalLayout {
 						AnnotatedTextProvider.buildAnnotatedText(
 								new ArrayList<>(masterRow.getRanges()), 
 								kwicProvider, 
-								tagDefinition),
+								tagDefinition,
+								contextSize),
 						AnnotatedTextProvider.buildAnnotatedKeywordInContext(
 								new ArrayList<>(masterRow.getRanges()), 
 								kwicProvider, 
 								tagDefinition, 
-								masterRow.getTagDefinitionPath()),
+								masterRow.getTagDefinitionPath(),
+								contextSize),
 						kwicProvider.getSourceDocumentName(),
 						kwicProvider.getSourceDocumentReference()
 							.getUserMarkupCollectionReference(masterRow.getMarkupCollectionId())
@@ -1188,6 +1231,7 @@ public class QueryResultPanel extends VerticalLayout {
 	}
 
 	public MenuItem addOptionsMenuItem(String caption, Command command) {
+		optionsMenu.addSeparator(); // TODO: this is a hack to add a separator before the 'Select All' / 'Remove All' items that are added, improve
 		return optionsMenu.addItem(caption, command);
 	}
 	

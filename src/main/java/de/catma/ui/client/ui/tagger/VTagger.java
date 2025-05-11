@@ -228,17 +228,6 @@ public class VTagger extends Composite {
 		}
 	}
 
-	//FIXME: reimplement with line replacement
-	public void addTagInstances(String tagInstancesJson) {
-//		List<ClientTagInstance> tagInstances = 
-//				tagInstanceJSONSerializer.fromJSONArray(tagInstancesJson);
-//		
-//		for (ClientTagInstance tagInstance : tagInstances) {
-//			logger.info("Got tag instance from server (show): " + tagInstance);
-//			taggerEditor.addTagInstance(tagInstance);
-//		}
-	}
-
 	public void addTagInstanceWith(String tagDefinitionJson) {
 		ClientTagDefinition tagDefinition = 
 				tagDefinitionJSONSerializer.fromJSON(tagDefinitionJson);
@@ -296,5 +285,9 @@ public class VTagger extends Composite {
 				commentPanel.refreshComment(uuid, line);
 			}
 		}		
+	}
+	
+	public void setCommentsVisible(boolean visible) {
+		this.commentPanel.setVisible(visible);
 	}
 }

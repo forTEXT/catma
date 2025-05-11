@@ -14,10 +14,12 @@ import com.vaadin.ui.*;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.sqlite.SqliteService;
+import de.catma.ui.CatmaApplication;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.user.UserData;
 import de.catma.util.ExceptionUtil;
 
 import java.io.IOException;
@@ -109,6 +111,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 		UI.getCurrent().setContent(mainView);
 		eventBus.post(new RouteToDashboardEvent());
 		close();
+		((CatmaApplication)UI.getCurrent()).handleRequestToken();
 	}
 
 	private void initActions() {
@@ -149,15 +152,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 			}
 		});
 
-		googleSignInLink.addClickListener(event -> {
-			try {
-				UI.getCurrent().getPage().setLocation(getGoogleOauthAuthorisationRequestUrl());
-				close();
-			}
-			catch (Exception e) {
-				((ErrorHandler) UI.getCurrent()).showAndLogError("Error during authentication", e);
-			}
-		});
+		googleSignInLink.addClickListener(this::googleLinkClickListener);
 
 		btnPatSignIn.addClickListener(event -> {
 			try {

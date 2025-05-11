@@ -11,6 +11,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.themes.ValoTheme;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
@@ -28,16 +29,18 @@ public class CatmaHeader extends HorizontalLayout {
 	private final EventBus eventBus;
 	private final LoginService loginService;
 	private final RemoteGitManagerPrivileged gitManagerPrivileged;
+	private final RemoteGitManagerRestricted remoteGitManagerRestricted;
 
 	private Button btnHome;
 	private Label lblContext;
 
-	public CatmaHeader(EventBus eventBus, LoginService loginService, RemoteGitManagerPrivileged gitManagerPrivileged){
+	public CatmaHeader(EventBus eventBus, LoginService loginService, RemoteGitManagerPrivileged gitManagerPrivileged, RemoteGitManagerRestricted remoteGitManagerRestricted){
 		super();
 
 		this.eventBus = eventBus;
 		this.loginService = loginService;
 		this.gitManagerPrivileged = gitManagerPrivileged;
+		this.remoteGitManagerRestricted = remoteGitManagerRestricted;
 
 		initComponents();
 
@@ -65,7 +68,7 @@ public class CatmaHeader extends HorizontalLayout {
 
 		ContextMenu accountMenu = new ContextMenu(btnAccount, true);
 		accountMenu.addItem("Edit Account", (menuItem) -> {
-			EditAccountDialog editAccountDialog = new EditAccountDialog(gitManagerPrivileged, loginService, eventBus);
+			EditAccountDialog editAccountDialog = new EditAccountDialog(gitManagerPrivileged, loginService, remoteGitManagerRestricted);
 			editAccountDialog.show();
 		});
 		accountMenu.addItem("Get Access Token", (menuItem) -> {
@@ -101,5 +104,9 @@ public class CatmaHeader extends HorizontalLayout {
 		}
 
 		lblContext.setValue(contextInfo);
+	}
+	
+	public void close() {
+		eventBus.unregister(this);
 	}
 }

@@ -11,11 +11,11 @@ import de.catma.ui.module.main.ErrorHandler;
 
 public class AnnotatedQueryIdQueryResultRowItem extends QueryIdQueryResultRowItem {
 
-	private Project project;
+	private final Project project;
 
 	public AnnotatedQueryIdQueryResultRowItem(
-			String parentIdentity, GroupedQueryResult groupedQueryResult, Project project) {
-		super(parentIdentity, groupedQueryResult);
+			String parentIdentity, GroupedQueryResult groupedQueryResult, Project project, int contextSize) {
+		super(parentIdentity, groupedQueryResult, contextSize);
 		this.project = project;
 	}
 
@@ -29,7 +29,8 @@ public class AnnotatedQueryIdQueryResultRowItem extends QueryIdQueryResultRowIte
 						identity,
 						documentName, documentId, 
 						groupedQueryResult.getSubResult(documentId), 
-						project);
+						project,
+						contextSize);
 				if (!treeData.contains(item)) {
 					treeData.addItem(this, item);
 					treeData.addItem(item, new DummyQueryResultRowItem());

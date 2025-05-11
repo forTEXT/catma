@@ -21,8 +21,9 @@ public final class ProjectInvitation implements Serializable {
 	private String description;
 	private int defaultRole;
 	private boolean createOwnCollection;
+	private String expiresAtDate;
 	private int key;
-	
+		
 	private static final int generateKey(){
 		return DammAlgorithm.padChecksum(new SecureRandom().nextInt(99999));
 	}
@@ -33,9 +34,10 @@ public final class ProjectInvitation implements Serializable {
 	public ProjectInvitation(
 			String projectId, int defaultRole, 
 			String name, String description, 
-			boolean createOwnCollection) {
+			boolean createOwnCollection, 
+			String expiresAtDate) {
 		
-		this(projectId, defaultRole, name, description, createOwnCollection, generateKey());
+		this(projectId, defaultRole, name, description, createOwnCollection, expiresAtDate, generateKey());
 		
 	}
 	
@@ -45,6 +47,7 @@ public final class ProjectInvitation implements Serializable {
 			String name,
 			String description,
 			boolean createOwnCollection,
+			String expiresAtDate,
 			int key) {
 		
 		this.projectId = projectId;
@@ -53,6 +56,7 @@ public final class ProjectInvitation implements Serializable {
 		this.description = description;
 		this.key = key;
 		this.createOwnCollection = createOwnCollection;
+		this.expiresAtDate = expiresAtDate;
 	}
 
 	public String getProjectId() {
@@ -84,7 +88,10 @@ public final class ProjectInvitation implements Serializable {
 		return createOwnCollection;
 	}
 
-
+	public String getExpiresAtDate() {
+		return expiresAtDate;
+	}
+	
 	@Override
 	public String toString() {
 		return "ProjectInvitation [projectId=" + projectId + ", role=" + RBACRole.forValue(defaultRole) + "]";

@@ -41,11 +41,6 @@ public class TaggerConnector extends AbstractComponentConnector {
 			}
 			
 			@Override
-			public void addTagInstances(String tagInstancesJson) {
-				getWidget().addTagInstances(tagInstancesJson);
-			}
-			
-			@Override
 			public void addTagInstanceWith(String tagDefinitionJson) {
 				getWidget().addTagInstanceWith(tagDefinitionJson);
 			}
@@ -89,6 +84,11 @@ public class TaggerConnector extends AbstractComponentConnector {
 			@Override
 			public void setReplies(String uuid, int startPos, String replies) {
 				getWidget().setReplies(uuid, startPos, new ClientCommentReplyJSONSerializer().fromJSONArray(replies));
+			}
+			
+			@Override
+			public void setCommentsVisible(boolean visible) {
+				getWidget().setCommentsVisible(visible);
 			}
 		});
 	}

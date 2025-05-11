@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -36,16 +37,13 @@ import de.catma.tag.TagDefinition;
 import de.catma.ui.client.ui.tagger.shared.ClientComment;
 import de.catma.ui.client.ui.tagger.shared.ClientTagInstance;
 import de.catma.ui.client.ui.tagger.shared.TextRange;
+import de.catma.ui.component.PagerListener;
 
 /**
  * @author marco.petris@web.de
  *
  */
-public class Pager implements Iterable<Page> {
-	
-	public static interface PagerListener {
-		public void textChanged();
-	}
+public class Pager implements Iterable<Page>, Consumer<PagerListener> {
 	
 	static final String LINE_CONTENT_PATTERN = 
 			"(\\S+)|(\\p{Blank}+)|(\r\n|[\n\r\u2028\u2029\u0085])"; //$NON-NLS-1$
@@ -406,5 +404,10 @@ public class Pager implements Iterable<Page> {
 			page.clearComments();
 		}
 		setComments(comments);
+	}
+	
+	@Override
+	public void accept(PagerListener t) {
+		setPagerListener(t);
 	}
 }

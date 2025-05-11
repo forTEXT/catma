@@ -90,7 +90,7 @@ public class Vaadin8InitializationService implements InitializationService {
 
 		return new MainView(
 				gitProjectsManager,
-				new CatmaHeader(eventBus, loginService, gitlabManagerPrivileged),
+				new CatmaHeader(eventBus, loginService, gitlabManagerPrivileged, api),
 				eventBus,
 				api,
 				loginService,

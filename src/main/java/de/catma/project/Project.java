@@ -18,6 +18,17 @@
  */
 package de.catma.project;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
+import de.catma.backgroundservice.ProgressListener;
 import de.catma.document.annotation.AnnotationCollection;
 import de.catma.document.annotation.AnnotationCollectionReference;
 import de.catma.document.annotation.TagReference;
@@ -29,18 +40,15 @@ import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.serialization.TagsetDefinitionImportStatus;
-import de.catma.tag.*;
+import de.catma.tag.Property;
+import de.catma.tag.TagInstance;
+import de.catma.tag.TagLibrary;
+import de.catma.tag.TagManager;
+import de.catma.tag.TagsetDefinition;
 import de.catma.user.Member;
+import de.catma.user.SharedGroup;
 import de.catma.user.User;
 import de.catma.util.Pair;
-
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Conceptually, and in the persistence layer, a project is a container for {@link SourceDocument}s, {@link AnnotationCollection}s
@@ -112,6 +120,9 @@ public interface Project {
 
 	String getId();
 
+	String getNamespace();
+
+	
 	String getName();
 
 	String getDescription();
@@ -331,6 +342,19 @@ public interface Project {
 	 * @throws Exception if an error occurs when deleting the document
 	 */
 	void deleteSourceDocument(SourceDocumentReference sourceDocument) throws Exception;
+	
+	/**
+	 * Bulk removal of resources
+	 * @param documents docs to be removed
+	 * @param collections collections to be removed
+	 * @param tagsets tagsets to be removed
+	 * @param progressListener the listener that gets informed about the progess
+	 * @throws Exception if an error occurs during bulk removal
+	 */
+	void removeResources(Collection<SourceDocumentReference> documents,
+			Collection<AnnotationCollectionReference> collections, Collection<TagsetDefinition> tagsets,
+			ProgressListener progressListener) throws Exception;
+
 
 	// comment operations
 	/**
@@ -415,16 +439,7 @@ public interface Project {
 	void deleteCommentReply(Comment comment, Reply reply) throws IOException;
 
 	// member, role and permissions related things
-	// TODO: strictly speaking findUser & hasPermission don't belong in this interface as they don't relate to a particular project
-	/**
-	 * Searches for users amongst all available users.
-	 *
-	 * @param usernameOrEmail the partial or complete username or email address to search for
-	 * @return a {@link List} of {@link User}s
-	 * @throws IOException if an error occurs when searching
-	 */
-	List<User> findUser(String usernameOrEmail) throws IOException;
-
+	// TODO: strictly speaking 'hasPermission' doesn't belong in this interface as they don't relate to a particular project
 	/**
 	 * Whether the given role has the given permission.
 	 *
@@ -455,11 +470,23 @@ public interface Project {
 	 *
 	 * @param subject the {@link RBACSubject} to add
 	 * @param role the {@link RBACRole} to assign
+	 * @param expiresAt optional expiration date
 	 * @return the {@link RBACSubject} that was added
 	 * @throws IOException if an error occurs when adding the member
 	 */
-	RBACSubject assignRoleToSubject(RBACSubject subject, RBACRole role) throws IOException;
+	RBACSubject assignRoleToSubject(RBACSubject subject, RBACRole role, LocalDate expiresAt) throws IOException;
 
+	/**
+	 * Shares this project with a user group.
+	 * @param group the group to share with
+	 * @param projectRole the project role for group members
+	 * @param expiresAt optional expiration date
+	 * @param reassign set to true for updates of already existing shares, for shares to be created set to false
+	 * @return the group
+	 * @throws IOException if an error occurs when sharing with the group
+	 */
+	SharedGroup assignRoleToGroup(SharedGroup group, RBACRole projectRole, LocalDate expiresAt, boolean reassign) throws IOException;
+	
 	/**
 	 * Removes a member from this project.
 	 *
@@ -467,6 +494,15 @@ public interface Project {
 	 * @throws IOException if an error occurs when removing the member
 	 */
 	void removeSubject(RBACSubject subject) throws IOException;
+	
+	/**
+	 * Remove a group from this project.
+	 * 
+	 * @param sharedGroup the group to remove
+	 * @throws IOException if an error occurs when removing the group
+	 */
+	void removeGroup(SharedGroup sharedGroup) throws IOException;
+
 
 	// synchronization related things
 	// TODO: strictly speaking none of these belong in this interface as they are implementation-specific
@@ -510,4 +546,16 @@ public interface Project {
 	 * @throws IOException if an error occurs when adding and committing the collections
 	 */
 	void addAndCommitCollections(Collection<AnnotationCollectionReference> annotationCollectionRefs, String commitMessage) throws IOException;
+
+	/**
+	 * Gets commits for the current project and the given filter criteria.
+	 * @param after commits with timestamp after or equal this date
+	 * @param before commits with timestamp before or equal this date
+	 * @param branch the branch to look at
+	 * @param author commits with this author
+	 * @return a pager for the resulting commits
+	 * @throws IOException if an error occurs during retrieval
+	 */
+	BackendPager<CommitInfo> getCommits(LocalDate after, LocalDate before, String branch, String author) throws IOException;
+
 }

@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -43,12 +42,12 @@ import de.catma.tag.TagsetDefinition;
 public class AnnotationCollection {
 
 	private final String uuid;
-	private ContentInfoSet contentInfoSet;
+	private final ContentInfoSet contentInfoSet;
 	private TagLibrary tagLibrary;
-	private ArrayListMultimap<String, TagReference> tagReferencesByInstanceId;
-	private ArrayListMultimap<String, TagReference> tagReferencesByTagId;
-	private String sourceDocumentId;
-	private String forkedFromCommitURL;
+	private final ArrayListMultimap<String, TagReference> tagReferencesByInstanceId;
+	private final ArrayListMultimap<String, TagReference> tagReferencesByTagId;
+	private final String sourceDocumentId;
+	private final String forkedFromCommitURL;
 	private String responsibleUser;
 	private transient boolean contribution = false;
 	
@@ -214,11 +213,7 @@ public class AnnotationCollection {
 	public String getForkedFromCommitURL() {
 		return forkedFromCommitURL;
 	}
-	
-	public void setForkedFromCommitURL(String forkedFromCommitURL) {
-		this.forkedFromCommitURL = forkedFromCommitURL;
-	}
-	
+
 	public String getResponsibleUser() {
 		return responsibleUser;
 	}
@@ -282,13 +277,6 @@ public class AnnotationCollection {
 		return result;
 	}
 	
-	/**
-	 * @param contentInfoSet Metadata for this collection
-	 */
-	void setContentInfoSet(ContentInfoSet contentInfoSet) {
-		this.contentInfoSet = contentInfoSet;
-	}
-
 	public Annotation getAnnotation(String tagInstanceId) {
 		List<TagReference> tagReferences = getTagReferences(tagInstanceId);
 		
@@ -389,4 +377,15 @@ public class AnnotationCollection {
 	}
 
 
+	public Set<String> getTagDefinitionIds() {
+		return Collections.unmodifiableSet(tagReferencesByTagId.keySet());
+	}
+	
+	public int getSize() {
+		return this.tagReferencesByInstanceId.keySet().size();
+	}
+	
+	public TagInstance getTagInstance(String tagInstanceId) {
+		return tagReferencesByInstanceId.get(tagInstanceId).stream().findAny().map(TagReference::getTagInstance).orElse(null);
+	}
 }

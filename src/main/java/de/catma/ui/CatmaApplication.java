@@ -18,40 +18,20 @@
  */
 package de.catma.ui;
 
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicNameValuePair;
-import org.jboss.aerogear.security.otp.Totp;
-import org.jboss.aerogear.security.otp.api.Clock;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
@@ -61,8 +41,6 @@ import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.communication.PushMode;
 import com.vaadin.shared.ui.ui.Transport;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
 
 import de.catma.backgroundservice.BackgroundService;
@@ -71,6 +49,8 @@ import de.catma.backgroundservice.ExecutionListener;
 import de.catma.backgroundservice.LogProgressListener;
 import de.catma.backgroundservice.ProgressCallable;
 import de.catma.hazelcast.HazelCastService;
+import de.catma.oauth.GoogleOauthHandler;
+import de.catma.oauth.OauthIdentity;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.GitlabManagerRestricted;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
@@ -78,22 +58,20 @@ import de.catma.sqlite.SqliteService;
 import de.catma.ui.di.RemoteGitManagerFactory;
 import de.catma.ui.dialog.ErrorDialog;
 import de.catma.ui.events.RefreshEvent;
-import de.catma.ui.events.TokenInvalidEvent;
-import de.catma.ui.events.TokenValidEvent;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.login.GitlabLoginService;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.login.Vaadin8InitializationService;
 import de.catma.ui.module.main.ErrorHandler;
-import de.catma.ui.module.main.auth.CreateUserDialog;
-import de.catma.ui.module.main.auth.SignupTokenManager;
 import de.catma.ui.util.Version;
+import de.catma.user.signup.SignupTokenManager;
+import de.catma.util.Pair;
 
 @Theme("catma")
 @PreserveOnRefresh
 @Push(value=PushMode.MANUAL, transport=Transport.WEBSOCKET_XHR )
-public class CatmaApplication extends UI implements KeyValueStorage, BackgroundServiceProvider, ErrorHandler, ParameterProvider, FocusHandler {
+public class CatmaApplication extends UI implements KeyValueStorage, BackgroundServiceProvider, ErrorHandler, ParameterProvider, FocusHandler, RequestTokenHandlerProvider {
 	private final Logger logger = Logger.getLogger(CatmaApplication.class.getName());
 
 	private final Map<String, String[]> parameters = new HashMap<>();
@@ -104,24 +82,25 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 	// bind later when the UI is ready
 	private EventBus eventBus;
 	private InitializationService initService;
-	private LoginService loginservice;
+	private LoginService loginService;
 	private HazelCastService hazelCastService;
 	private SqliteService sqliteService;
+	private RequestTokenHandler requestTokenHandler;
 
 	@Override
 	protected void init(VaadinRequest request) {
 		eventBus = new EventBus();
 		initService = new Vaadin8InitializationService();
 
-		loginservice = new GitlabLoginService(new RemoteGitManagerFactory() {
+		loginService = new GitlabLoginService(new RemoteGitManagerFactory() {
 			@Override
 			public RemoteGitManagerRestricted createFromUsernameAndPassword(String username, String password) throws IOException {
-				return new GitlabManagerRestricted(eventBus, username, password);
+				return new GitlabManagerRestricted(username, password);
 			}
 
 			@Override
 			public RemoteGitManagerRestricted createFromImpersonationToken(String userImpersonationToken) throws IOException {
-				return new GitlabManagerRestricted(eventBus, userImpersonationToken);
+				return new GitlabManagerRestricted(userImpersonationToken);
 			}
 		});
 
@@ -139,15 +118,25 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 
 		Page.getCurrent().setTitle("CATMA " + Version.LATEST);
 
-		Component entryPage = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
+		Component entryPage = initService.newEntryPage(eventBus, loginService, hazelCastService, sqliteService);
 		setContent(entryPage);
 
 		eventBus.register(this);
 		eventBus.post(new RouteToDashboardEvent());
 
-		// handle signup token and OAuth requests
-		handleRequestToken(request);
-		handleRequestOauth(request);
+		requestTokenHandler = new RequestTokenHandler(
+				signupTokenManager, eventBus, loginService, initService, 
+				hazelCastService, sqliteService, 
+				this, this, () -> this.getContent(), this);
+		
+		if (!handleRequestOauth(request)) { // handle oauth
+			// otherwise handle token actions (signup, join)
+			handleRequestToken();
+		}
+	}
+	
+	public void handleRequestToken() {
+		requestTokenHandler.handleRequestToken(getParameter(Parameter.ACTION), getParameter(Parameter.TOKEN));		
 	}
 
 	private void storeParameters(Map<String, String[]> parameters) {
@@ -157,30 +146,63 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 	@Override
 	protected void refresh(VaadinRequest request) {
 		super.refresh(request);
+		storeParameters(request.getParameterMap());
 
-		// handle signup token and OAuth requests
-		handleRequestToken(request);
-		handleRequestOauth(request);
+		if (!handleRequestOauth(request)) { // handle oauth
+			// otherwise handle token actions (signup, join)
+			handleRequestToken();
+		}
 
 		eventBus.post(new RefreshEvent());
 	}
 
-	private void handleRequestToken(VaadinRequest request) {
-		if (signupTokenManager.parseUri(request.getPathInfo())) {
-			new SignupTokenManager().handleVerify(request.getParameter("token"), eventBus);
-		}
-	}
+	private boolean handleRequestOauth(VaadinRequest request) {
+		// do we have an oauth authentication process ongoing?
+		if (request.getParameter("code") != null
+				&& VaadinSession.getCurrent().getAttribute(GoogleOauthHandler.OAUTH_CSRF_TOKEN_SESSION_ATTRIBUTE_NAME) != null
+		) {
+			// yes, handle oauth authentication result
+			Map<String, String> additionalStateParams = null;
 
-	private void handleRequestOauth(VaadinRequest request) {
-		if (request.getParameter("code") != null && VaadinSession.getCurrent().getAttribute("OAUTHTOKEN") != null) {
-			handleOauth(request);
+			try {
+				Pair<OauthIdentity, Map<String, String>> resultPair = GoogleOauthHandler.handleCallbackAndGetIdentity(
+						request.getParameter("code"),
+						request.getParameter("state"),
+						request.getParameter("error"),
+						CATMAPropertyKey.BASE_URL.getValue(),
+						HttpClients.createDefault(),
+						VaadinSession.getCurrent()::getAttribute,
+						VaadinSession.getCurrent()::setAttribute
+				);
 
-			Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
+				OauthIdentity oauthIdentity = resultPair.getFirst();
+				additionalStateParams = resultPair.getSecond();
+
+				// log the user in
+				loginService.loggedInFromThirdParty(oauthIdentity.identifier(), oauthIdentity.provider(), oauthIdentity.email(), oauthIdentity.name());
+			}
+			catch (Exception e) {
+				showAndLogError("Error during login", e);
+			}
+
+			Component mainView = initService.newEntryPage(eventBus, loginService, hazelCastService, sqliteService);
 			setContent(mainView);
 
 			eventBus.post(new RouteToDashboardEvent());
-			getPage().pushState(request.getContextPath() + "/");
+
+			// handle our own action and token parameters if present (for invitations - also see AuthenticationDialog.googleLinkClickListener)
+			if (additionalStateParams != null && additionalStateParams.containsKey(Parameter.ACTION.getKey())
+					&& additionalStateParams.containsKey(Parameter.TOKEN.getKey())
+			) {
+				requestTokenHandler.handleRequestToken(
+						additionalStateParams.get(Parameter.ACTION.getKey()),
+						additionalStateParams.get(Parameter.TOKEN.getKey())
+				);
+			}
+
+			return true; // to signal that no further request token processing should occur
 		}
+		return false;
 	}
 
 	public Map<String, String[]> getParameters() {
@@ -246,7 +268,7 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 			}
 		}
 		
-		loginservice.close();
+		loginService.close();
 		
 		initService.shutdown();
 		hazelCastService.stop();
@@ -266,7 +288,7 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 	public void showAndLogError(String message, Throwable e) {
 		RemoteGitManagerRestricted api = null;
 		try {
-			api = loginservice.getAPI();
+			api = loginService.getAPI();
 		}
 		catch (Exception ignored) {}
 
@@ -309,105 +331,16 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 		return this.attributes.get(key);
 	}
 
-	// based on: https://developers.google.com/identity/protocols/oauth2/openid-connect#authenticatingtheuser
-	// this starts at step 3: "Confirm the anti-forgery state token"
-	// prior steps are handled by AuthenticationDialog and its descendants
-	public void handleOauth(VaadinRequest request) {
-		try {
-			// extract answer
-			String authorizationCode = request.getParameter("code");
-			String state = request.getParameter("state");
-			String error = request.getParameter("error");
-			String token = (String)VaadinSession.getCurrent().getAttribute("OAUTHTOKEN");
-
-			// do we have an authorization request error?
-			if (error == null) {
-				// no, so we validate the state token
-				Totp totp = new Totp(
-						CATMAPropertyKey.OTP_SECRET.getValue() + token,
-						new Clock(CATMAPropertyKey.OTP_DURATION.getIntValue())
-				);
-				if (!totp.verify(state)) {
-					error = "state token verification failed";
-				}
-			}
-
-			// state token get validation success?
-			if (error == null) {
-				CloseableHttpClient httpclient = HttpClients.createDefault();
-
-				HttpPost httpPost = new HttpPost(CATMAPropertyKey.GOOGLE_OAUTH_ACCESS_TOKEN_REQUEST_URL.getValue());
-				List <NameValuePair> data = new ArrayList<>();
-				data.add(new BasicNameValuePair("code", authorizationCode));
-				data.add(new BasicNameValuePair("grant_type", "authorization_code"));
-				data.add(new BasicNameValuePair("client_id", CATMAPropertyKey.GOOGLE_OAUTH_CLIENT_ID.getValue()));
-				data.add(new BasicNameValuePair("client_secret", CATMAPropertyKey.GOOGLE_OAUTH_CLIENT_SECRET.getValue()));
-				data.add(new BasicNameValuePair("redirect_uri", CATMAPropertyKey.BASE_URL.getValue()));
-				httpPost.setEntity(new UrlEncodedFormEntity(data));
-
-				CloseableHttpResponse tokenRequestResponse = httpclient.execute(httpPost);
-
-				HttpEntity entity = tokenRequestResponse.getEntity();
-				InputStream content = entity.getContent();
-				ByteArrayOutputStream bodyBuffer = new ByteArrayOutputStream();
-				IOUtils.copy(content, bodyBuffer);
-
-				logger.info("Google OAuth access token request result: " + bodyBuffer.toString(StandardCharsets.UTF_8.name()));
-
-				ObjectMapper mapper = new ObjectMapper();
-
-				ObjectNode accessTokenResponseJson = mapper.readValue(bodyBuffer.toString(), ObjectNode.class);
-				String idToken = accessTokenResponseJson.get("id_token").asText();
-				String[] pieces = idToken.split("\\.");
-				// we skip the header and go ahead with the payload
-				String payload = pieces[1];
-				String decodedPayload = new String(Base64.decodeBase64(payload), StandardCharsets.UTF_8);
-				logger.info("Google OAuth access token request result (decoded): " + decodedPayload);
-
-				ObjectNode payloadJson = mapper.readValue(decodedPayload, ObjectNode.class);
-				String identifier = payloadJson.get("sub").asText();
-				String provider = "google_com";
-				String email = payloadJson.get("email").asText();
-				String name = email.substring(0, email.indexOf("@")) + "@catma" + new Random().nextInt(); 
-
-				loginservice.loggedInFromThirdParty(identifier, provider, email, name);
-
-				setAttribute("OAUTHTOKEN", null);
-			}
-			else {
-				logger.warning("Google OAuth authentication failure: " + error);
-				new Notification(
-					"Authentication failure",
-					"The authentication failed!",
-					Type.ERROR_MESSAGE
-				).show(getPage());
-			}
-		}
-		catch (Exception e) {
-			showAndLogError("Error during login", e);
-		}
-	}
-
-	@Subscribe
-	public void handleTokenValid(TokenValidEvent tokenValidEvent){
-		getUI().access(() -> {
-			CreateUserDialog createUserDialog = new CreateUserDialog("Create User", tokenValidEvent.getSignupToken());
-			createUserDialog.show();
-		});
-	}
-	
-	@Subscribe
-	public void handleTokenInvalid(TokenInvalidEvent tokenInvalidEvent){
-		getUI().access(() -> {
-			Notification.show(tokenInvalidEvent.getReason(), Type.WARNING_MESSAGE);
-		});
-	}
-	
 	public HazelCastService getHazelCastService() {
 		return hazelCastService;
 	}
 
 	public SqliteService getSqliteService() {
 		return sqliteService;
+	}
+	
+	@Override
+	public RequestTokenHandler getRequestTokenHandler() {
+		return requestTokenHandler;
 	}
 }

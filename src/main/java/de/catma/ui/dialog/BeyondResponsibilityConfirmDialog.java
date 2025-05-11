@@ -15,7 +15,7 @@ public final class BeyondResponsibilityConfirmDialog {
 			boolean needsConfirmation, boolean authorized, Action action) {
 		if (needsConfirmation) {
 			if (!authorized) {
-				Notification.show("Info", "You do not have the necessary privileges to alter this resource!", Type.HUMANIZED_MESSAGE);
+				Notification.show("Info", "You do not have the necessary privileges to alter this resource!", Type.WARNING_MESSAGE);
 			}
 			else {
 				ConfirmDialog.show(UI.getCurrent(), 

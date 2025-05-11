@@ -1,8 +1,10 @@
 package de.catma.ui.module.project;
 
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.ComponentContainer;
+import com.vaadin.ui.DateField;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
 
@@ -17,6 +19,7 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 	protected ComboBox<User> cbUsers;
 	protected ComboBox<RBACRole> cbRole; 
 	protected Label descriptionLabel;
+	protected DateField expiresAtInput;
 		
 	protected ErrorHandler errorLogger;
 	
@@ -24,11 +27,17 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 			SaveCancelListener<T> saveCancelListener) {
 		super(title, saveCancelListener);
 		this.errorLogger = (ErrorHandler) UI.getCurrent();
-		initComponents(description);
+		initComponents(description, Lists.newArrayList(RBACRole.ASSISTANT, RBACRole.MAINTAINER));
 	}
 
-
-	private void initComponents(String description) {
+	public AbstractMemberDialog(String title, String description, List<RBACRole> availableRoles,
+			SaveCancelListener<T> saveCancelListener) {
+		super(title, saveCancelListener);
+		this.errorLogger = (ErrorHandler) UI.getCurrent();
+		initComponents(description, availableRoles);
+	}
+	
+	private void initComponents(String description, List<RBACRole> availableRoles) {
 		
 		this.descriptionLabel = new Label(description);
 		descriptionLabel.setHeight("50px");
@@ -38,20 +47,17 @@ public abstract class AbstractMemberDialog<T> extends AbstractOkCancelDialog<T> 
 		cbUsers.setPageLength(20);
 		cbUsers.setItemCaptionGenerator(User::preciseName);
 		
-		cbRole = new ComboBox<RBACRole>("Role", 
-				Lists.newArrayList(RBACRole.ASSISTANT, RBACRole.MAINTAINER));
+		cbRole = new ComboBox<RBACRole>("Role", availableRoles);
 
 		cbRole.setWidth("100%");
 		cbRole.setItemCaptionGenerator(RBACRole::getRoleName);
 		cbRole.setEmptySelectionAllowed(false);
-	}
+		
+		expiresAtInput = new DateField("Membership expires at (optional)");
+		expiresAtInput.setDateFormat("yyyy/MM/dd");
+		expiresAtInput.setPlaceholder("yyyy/mm/dd");
+		expiresAtInput.setWidth("100%");
 
-
-	@Override
-	protected void addContent(ComponentContainer content) {
-		content.addComponent(descriptionLabel);
-		content.addComponent(cbUsers);
-		content.addComponent(cbRole);
 	}
 
 }

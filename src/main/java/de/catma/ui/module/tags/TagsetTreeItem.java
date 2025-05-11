@@ -2,7 +2,11 @@ package de.catma.ui.module.tags;
 
 import com.vaadin.data.provider.TreeDataProvider;
 
-interface TagsetTreeItem {
+import de.catma.tag.PropertyDefinition;
+import de.catma.tag.TagDefinition;
+import de.catma.tag.TagsetDefinition;
+
+interface TagsetTreeItem extends Comparable<TagsetTreeItem> {
 	public String getColor();
 	public String getName();
 	public String getTagsetName();
@@ -18,6 +22,10 @@ interface TagsetTreeItem {
 	
 	public default void setTagsetExpanded(boolean expanded) {};
 	
-	public default String getResponsibleUser() { return null; };
+	public default String getResponsibleUser() { return null; }
+
+	TagDefinition getTag();
+	PropertyDefinition getPropertyDefinition();
+	TagsetDefinition getTagset();
 
 }

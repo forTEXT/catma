@@ -1,19 +1,34 @@
 package de.catma.project;
 
+import com.google.gson.annotations.SerializedName;
+
+import java.time.ZonedDateTime;
+
 public class ProjectReference {
-	
+	@SerializedName("id")
 	private final String projectId;
 	private final String namespace;
 	private String name;
 	private String description;
+	private final ZonedDateTime createdAt;
+	private final ZonedDateTime lastActivityAt;
 	
 	public ProjectReference(
 			String projectId, String namespace, String name, String description) {
+		this(projectId, namespace, name, description, null, null);
+	}
+
+	
+	
+	public ProjectReference(String projectId, String namespace, String name, String description, ZonedDateTime createdAt,
+			ZonedDateTime lastActivityAt) {
 		super();
 		this.projectId = projectId;
 		this.namespace = namespace;
 		this.name = name;
 		this.description = description;
+		this.createdAt = createdAt;
+		this.lastActivityAt = lastActivityAt;
 	}
 
 	public String getProjectId() {
@@ -49,6 +64,14 @@ public class ProjectReference {
 		return String.format("%s/%s", namespace, projectId);
 	}
 
+	public ZonedDateTime getCreatedAt() {
+		return createdAt;
+	}
+	
+	public ZonedDateTime getLastActivityAt() {
+		return lastActivityAt;
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -79,6 +102,5 @@ public class ProjectReference {
 			return false;
 		return true;
 	}
-	
 	
 }

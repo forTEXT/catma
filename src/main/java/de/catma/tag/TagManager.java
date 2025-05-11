@@ -113,10 +113,10 @@ public class TagManager {
 		;
 	}
 	
-	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private final Logger logger = Logger.getLogger(this.getClass().getName());
 	private final TagLibrary tagLibrary;
 	
-	private PropertyChangeSupport propertyChangeSupport;
+	private final PropertyChangeSupport propertyChangeSupport;
 	
 	public TagManager(TagLibrary tagLibrary) {
 		this.tagLibrary = tagLibrary;

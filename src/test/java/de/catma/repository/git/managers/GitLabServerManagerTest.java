@@ -3,7 +3,6 @@ package de.catma.repository.git.managers;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.mock;
 
 import java.io.FileInputStream;
 import java.util.ArrayList;
@@ -21,8 +20,6 @@ import org.gitlab4j.api.models.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import com.google.common.eventbus.EventBus;
 
 import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAProperties;
@@ -54,8 +51,7 @@ public class GitLabServerManagerTest {
 		gitlabManagerPrivileged = new GitlabManagerPrivileged();
 		String impersonationToken = gitlabManagerPrivileged.acquireImpersonationToken(username, "catma", email, name).getSecond();
 
-		EventBus mockEventBus = mock(EventBus.class);
-		gitlabManagerRestricted = new GitlabManagerRestricted(mockEventBus, impersonationToken);
+		gitlabManagerRestricted = new GitlabManagerRestricted(impersonationToken);
 	}
 
 	@AfterEach
@@ -114,7 +110,7 @@ public class GitLabServerManagerTest {
 		List<User> users = userApi.getUsers();
 
 		// we should have an admin user, the default "ghost" user, two default bot users (support and alert) & one representing the CATMA user
-		//assertEquals(5, users.size());
+//		assertEquals(5, users.size());
 
 		// hamcrest's hasItem(T item) matcher is not behaving as documented and is expecting the
 		// users collection to contain *only* this.serverManager.getGitLabUser()

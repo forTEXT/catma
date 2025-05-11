@@ -1,28 +1,41 @@
 package de.catma.repository.git.managers;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.function.Supplier;
+
+import org.apache.commons.io.FileUtils;
+
 import com.google.common.eventbus.EventBus;
 import com.google.gson.JsonObject;
+
 import de.catma.backgroundservice.BackgroundService;
 import de.catma.project.OpenProjectListener;
 import de.catma.project.Project;
 import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager;
 import de.catma.rbac.RBACPermission;
+import de.catma.rbac.RBACRole;
+import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.GraphWorktreeProject;
 import de.catma.repository.git.graph.interfaces.GraphProjectDeletionHandler;
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.tag.TagManager;
+import de.catma.user.Group;
+import de.catma.user.Member;
 import de.catma.user.User;
 import de.catma.util.IDGenerator;
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.List;
 
 public class GitProjectsManager implements ProjectsManager {
 	private final String gitBasedRepositoryBasePath;
@@ -70,6 +83,63 @@ public class GitProjectsManager implements ProjectsManager {
 		return remoteGitServerManager.getProjectReferences();
 	}
 
+	@Override
+	public List<ProjectReference> getProjectReferences(boolean forceRefetch) throws IOException {
+		return remoteGitServerManager.getProjectReferences(forceRefetch);
+	}
+	
+	
+	@Override
+	public List<String> getOwnedProjectIds(boolean forceRefetch) throws IOException {
+		return remoteGitServerManager.getOwnedProjectIds(forceRefetch);
+	}
+	
+	@Override
+	public List<Long> getOwnedGroupIds(boolean forceRefetch) throws IOException {
+		return remoteGitServerManager.getOwnedGroupIds(forceRefetch);
+	}
+
+	@Override
+	public List<Group> getGroups(boolean forceRefetch) throws  IOException {
+		return remoteGitServerManager.getGroups(forceRefetch);
+	}
+
+	@Override
+	public List<Group> getGroups(RBACRole minRole, boolean forceRefetch) throws  IOException {
+		return remoteGitServerManager.getGroups(minRole, forceRefetch);
+	}
+
+	@Override
+	public Group createGroup(String name, String description) throws IOException {
+		String path = generateCleanNameWithIdPrefix(name, () -> idGenerator.generateGroupId());
+		return remoteGitServerManager.createGroup(name, path, description);
+	}
+
+	@Override
+	public void deleteGroup(Group group) throws IOException {
+		remoteGitServerManager.deleteGroup(group);
+	}
+
+	@Override
+	public Group updateGroup(String name, String description, Group group) throws IOException {
+		return remoteGitServerManager.updateGroup(name, description, group);
+	}
+
+	@Override
+	public void leaveGroup(Group group) throws IOException {
+		remoteGitServerManager.leaveGroup(group);
+	}
+	
+	@Override
+	public void unassignFromGroup(RBACSubject subject, Group group) throws IOException {
+		remoteGitServerManager.unassignFromGroup(subject, group);
+	}
+
+	@Override
+	public void updateAssignmentOnGroup(Long userId, Long groupId, RBACRole role, LocalDate expiresAt) throws IOException {
+		remoteGitServerManager.updateAssignmentOnGroup(userId, groupId, role, expiresAt);
+	}
+	
 	private void cloneLocallyIfNotExists(ProjectReference projectReference, OpenProjectListener openProjectListener) throws IOException {
 		if (!Paths.get(new File(gitBasedRepositoryBasePath).toURI())
 				.resolve(user.getIdentifier())
@@ -133,17 +203,22 @@ public class GitProjectsManager implements ProjectsManager {
 		return obj.toString();
 	}
 
-	@Override
-	public ProjectReference createProject(String name, String description) throws IOException {
-		String serializedProjectMetadata = serializeProjectMetadata(name, description);
-
-		// note restrictions on project path: https://docs.gitlab.com/ee/api/projects.html#create-project
+	
+	private String generateCleanNameWithIdPrefix(String name, Supplier<String> prefixGenerator) {
+		// note restrictions on project/group path: https://docs.gitlab.com/ee/api/projects.html#create-project
 		String cleanedName = name.trim()
 				.replaceAll("[\\p{Punct}\\p{Space}]", "_") // replace punctuation and whitespace characters with underscore ( _ )
 				.replaceAll("_+", "_") // collapse multiple consecutive underscores into one
 				.replaceAll("[^\\p{Alnum}_]", "x") // replace any remaining non-alphanumeric characters with x (excluding underscore)
 				.replaceAll("^_|_$", ""); // strip any leading or trailing underscore
-		String projectId = String.format("%s_%s", idGenerator.generate(), cleanedName);
+		return String.format("%s_%s", prefixGenerator.get(), cleanedName);
+	}
+	
+	@Override
+	public ProjectReference createProject(String name, String description) throws IOException {
+		String serializedProjectMetadata = serializeProjectMetadata(name, description);
+
+		String projectId = generateCleanNameWithIdPrefix(name, () -> idGenerator.generate());
 
 		try (LocalGitRepositoryManager localGitRepoManager = localGitRepositoryManager) {
 			// create the remote repository
@@ -172,8 +247,8 @@ public class GitProjectsManager implements ProjectsManager {
 			// create remote user specific branch
 			localGitRepoManager.push(jGitCredentialsManager);
 		}
-
-		return new ProjectReference(projectId, user.getIdentifier(), name, description);
+		ZonedDateTime now = ZonedDateTime.now();
+		return new ProjectReference(projectId, user.getIdentifier(), name, description, now, now);
 	}
 
 	@Override
@@ -217,16 +292,18 @@ public class GitProjectsManager implements ProjectsManager {
 		// during testing and prevented project deletion
 		// TODO: this was added before the explicit repository close call was added in JGitRepoManager.close
 		//       and can potentially be removed now
-		Files.walkFileTree(
-				projectDir,
-				new SimpleFileVisitor<Path>() {
-					public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) {
-						filePath.toFile().setWritable(true, true);
-						return FileVisitResult.CONTINUE;
+		if (projectDir.toFile().exists()) {
+			Files.walkFileTree(
+					projectDir,
+					new SimpleFileVisitor<Path>() {
+						public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) {
+							filePath.toFile().setWritable(true, true);
+							return FileVisitResult.CONTINUE;
+						}
 					}
-				}
-		);
-
+			);
+		}
+		
 		FileUtils.deleteDirectory(
 			Paths.get(
 				localGitRepositoryManager.getUserRepositoryBasePath().getAbsolutePath(),
@@ -243,5 +320,27 @@ public class GitProjectsManager implements ProjectsManager {
 		catch (Exception e) {
 			throw new IOException(e);
 		}
+	}
+	
+	@Override
+	public List<User> findUser(String usernameOrEmail) throws IOException {
+		return remoteGitServerManager.findUser(usernameOrEmail);
+	}
+	
+	@Override
+	public ProjectReference forkProject(ProjectReference projectReference, String name, String description) throws IOException {
+
+		String targetProjectId = generateCleanNameWithIdPrefix(name, () -> idGenerator.generate());
+
+		// fork the remote repository
+		remoteGitServerManager.forkProject(projectReference, targetProjectId);
+
+		ZonedDateTime now = ZonedDateTime.now();
+		return new ProjectReference(targetProjectId, user.getIdentifier(), name, description, now, now);
+	}
+	
+	@Override
+	public boolean isProjectImportFinished(ProjectReference projectReference) throws IOException {
+		return remoteGitServerManager.isProjectImportFinished(projectReference);
 	}
 }
