@@ -147,6 +147,13 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-email</artifactId>
 			<version>1.6.0</version>
+			<exclusions>
+				<!-- prefer jakarta.activation:jakarta.activation-api that comes with gitlab4j-api -->
+				<exclusion>
+					<groupId>com.sun.activation</groupId>
+					<artifactId>jakarta.activation</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>
@@ -164,6 +171,13 @@
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 			<version>4.5.14</version>
+			<exclusions>
+				<!-- prefer org.slf4j:jcl-over-slf4j implementation that comes with tika-parsers -->
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Hazelcast & caching (used for cross-session comms and caching of signup tokens and project invitation codes) -->
@@ -222,6 +236,21 @@
 				<exclusion>
 					<groupId>c3p0</groupId>
 					<artifactId>c3p0</artifactId>
+				</exclusion>
+				<!-- prefer jakarta.activation:jakarta.activation-api that comes with gitlab4j-api -->
+				<exclusion>
+					<groupId>com.sun.activation</groupId>
+					<artifactId>jakarta.activation</artifactId>
+				</exclusion>
+				<!-- prefer com.github.stephenc.jcip:jcip-annotations implementation that comes with nimbus-jose-jwt -->
+				<exclusion>
+					<groupId>net.jcip</groupId>
+					<artifactId>jcip-annotations</artifactId>
+				</exclusion>
+				<!-- prefer org.slf4j:jcl-over-slf4j implementation that comes with tika-parsers -->
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -344,6 +373,54 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
 				<version>3.8.0</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>3.5.0</version>
+				<executions>
+					<execution>
+						<id>enforce-lib-ban</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<bannedDependencies>
+									<!-- ref: https://stackoverflow.com/a/65144335/207981 -->
+									<!-- the activation framework was renamed to jakarta activation framework -->
+									<excludes>
+										<exclude>javax.activation:javax.activation-api</exclude>
+										<exclude>com.sun.activation:javax.activation</exclude>
+										<exclude>javax.activation:activation</exclude>
+									</excludes>
+									<message>use jakarta.activation:jakarta.activation-api or com.sun.activation:jakarta.activation instead of
+										javax.activation</message>
+								</bannedDependencies>
+								<!-- if you use com.sun.activation:jakarta.activation
+								<bannedDependencies>
+									<!- - the implementation com.sun.activation:jakarta.activation contains the api classes too - ->
+									<excludes>
+										<exclude>jakarta.activation:jakarta.activation-api</exclude>
+									</excludes>
+									<message>the implementation com.sun.activation:jakarta.activation is included and it contains the api classes too</message>
+								</bannedDependencies>-->
+								<bannedDependencies>
+									<excludes>
+										<exclude>net.jcip:jcip-annotations</exclude>
+									</excludes>
+									<message>prefer com.github.stephenc.jcip:jcip-annotations implementation over net.jcip:jcip-annotations</message>
+								</bannedDependencies>
+								<bannedDependencies>
+									<excludes>
+										<exclude>commons-logging:commons-logging</exclude>
+									</excludes>
+									<message>prefer org.slf4j:jcl-over-slf4j implementation over commons-logging:commons-logging</message>
+								</bannedDependencies>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 
 			<plugin>
