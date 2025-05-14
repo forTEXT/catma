@@ -1,5 +1,7 @@
 package de.catma.api.v1.serialization.model_wrappers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,10 +46,12 @@ public class ProjectExportTagDefinition {
         return name;
     }
 
+    @JsonIgnore
     public Map<String, String> getSystemProperties() {
         return systemProperties;
     }
 
+    @JsonIgnore
     public List<ProjectExportUserPropertyDefinition> getUserProperties() {
         return userProperties;
     }

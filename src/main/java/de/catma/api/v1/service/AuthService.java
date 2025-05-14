@@ -42,8 +42,18 @@ import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.user.User;
 import de.catma.util.ExceptionUtil;
 import de.catma.util.Pair;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.StringToClassMapItem;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Path(AuthConstants.AUTH_SERVICE_PATH) // '/auth', defined as a constant because it's checked in AuthorizationRequestFilter
+// swagger:
+@Tag(name = "Authentication", description = "Authenticate with the API")
 public class AuthService {
 	private static final Logger logger = Logger.getLogger(AuthService.class.getName());
 
@@ -68,6 +78,35 @@ public class AuthService {
 	@POST
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces(MediaType.TEXT_PLAIN)
+	// swagger:
+	@Operation(
+			description = "Authenticate using one of: 'Authorization' header ('Basic' or 'Bearer' schemes), 'access_token' form parameter, or 'username' and " +
+					"'password' form parameters. The options should be viewed as mutually exclusive. The form parameters are merely an alternative to using " +
+					"the 'Authorization' header with the corresponding scheme. Returns a JWT that should be used to authenticate requests to any of the " +
+					"other, non-authentication endpoints (which only accept bearer authentication). Note that you won't be able to test the header option " +
+					"in Swagger UI.",
+			requestBody = @RequestBody(
+					description = "Optional form parameters, partially required if no 'Authorization' header is supplied. Send either a CATMA access token " +
+							"or your username and password.",
+					// the content schema is detected just fine automatically if we don't define the requestBody at all, but if we define it with only the
+					// description, then the parameters aren't displayed
+					content = @Content(
+							schema = @Schema(
+									type = "object",
+									properties = {
+											@StringToClassMapItem(key = AuthConstants.AUTH_ENDPOINT_TOKEN_FORM_PARAMETER_NAME, value = String.class),
+											@StringToClassMapItem(key = "username", value = String.class),
+											@StringToClassMapItem(key = "password", value = String.class)
+									}
+							)
+					)
+			),
+			responses = {
+					@ApiResponse(responseCode = "200", description = "A JSON Web Token"),
+					@ApiResponse(responseCode = "400", description = "Missing or malformed header or parameters"),
+					@ApiResponse(responseCode = "401", description = "Invalid credentials")
+			}
+	)
 	public Response authenticate(
 			@HeaderParam(HttpHeaders.AUTHORIZATION) String authorization, // basic (username/password) or bearer (token) auth schemes
 			@FormParam(AuthConstants.AUTH_ENDPOINT_TOKEN_FORM_PARAMETER_NAME) String accessToken,
@@ -117,6 +156,15 @@ public class AuthService {
 	
 	@GET
 	@Path("/google")
+	// swagger:
+	@Operation(
+			description = "Authenticate with your Google account. Only use this if you log in to CATMA using the 'Sign in with Google' option. A browser is " +
+					"required to complete the OAuth flow. Redirects to Google and, if successfully authenticated, responds in the same way as the /auth " +
+					"endpoint. Note that you won't be able to test this in Swagger UI (but you can easily visit the URL in a separate tab to try it out).",
+			responses = {
+					@ApiResponse(responseCode = "307", description = "Redirect to Google login")
+			}
+	)
 	public Response googleOauth() {
 		try {
 			URI authorizationUri = GoogleOauthHandler.getOauthAuthorizationRequestUri(
@@ -137,6 +185,8 @@ public class AuthService {
 	@Produces(MediaType.TEXT_PLAIN)
 	@GET
 	@Path("/google/callback")
+	// swagger:
+	@Hidden
 	public Response googleOauthCallback(@QueryParam("code") String authorizationCode, @QueryParam("state") String state, @QueryParam("error") String error) {
 		try {
 			// state should always be present; if we don't get a code, we *should* get an error

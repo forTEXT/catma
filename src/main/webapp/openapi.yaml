@@ -1,0 +1,24 @@
+# Note: resource packages are automatically read from the 'jersey.config.server.provider.packages' init param in web.xml
+#       we still define them here explicitly to prevent Swagger from adding 'application.wadl' endpoints to the generated API definition
+#       (ref: https://stackoverflow.com/questions/71207342/how-to-disable-application-wadl-in-openapi-spec-with-jersey#comment125880842_71207342)
+resourcePackages:
+  - de.catma.api.v1
+
+prettyPrint: true
+cacheTTL: 3600000 # 1hr
+openAPI:
+  servers:
+    - url: ./ # ensures that the Swagger UI uses the same base path as the API definition for requests
+      description: the server hosting the API definition
+  info:
+    version: 1.0
+    title: CATMA JSON API
+    description: 'For more information see the [JSON API](https://catma.de/documentation/access-your-project-data/json-api/) page on our website.'
+    termsOfService: https://catma.de/documentation/terms-of-use/
+    contact:
+      email: support@catma.de
+  components:
+    securitySchemes:
+      BearerAuth:
+        type: http
+        scheme: bearer

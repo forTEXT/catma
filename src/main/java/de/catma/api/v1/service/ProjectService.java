@@ -19,14 +19,23 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.Status;
 
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.eclipse.jgit.lib.Constants;
 
-import de.catma.api.v1.serialization.ProjectExportSerializer;
 import de.catma.api.v1.backend.interfaces.RemoteGitManagerRestrictedProvider;
 import de.catma.api.v1.cache.CollectionAnnotationCountCache;
 import de.catma.api.v1.cache.ProjectExportSerializerCache;
 import de.catma.api.v1.cache.ProjectExportSerializerCache.CacheKey;
 import de.catma.api.v1.cache.RemoteGitManagerRestrictedProviderCache;
+import de.catma.api.v1.serialization.ProjectExportSerializer;
+import de.catma.api.v1.serialization.models.ProjectExport;
 import de.catma.backgroundservice.DefaultBackgroundService;
 import de.catma.backgroundservice.ExecutionListener;
 import de.catma.backgroundservice.ProgressListener;
@@ -48,6 +57,8 @@ import de.catma.user.User;
 import de.catma.util.ExceptionUtil;
 
 @Path("/projects")
+// swagger:
+@SecurityRequirement(name = "BearerAuth")
 public class ProjectService {
 	
     private final Logger logger = Logger.getLogger(ProjectService.class.getName());
@@ -68,6 +79,18 @@ public class ProjectService {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+	// swagger:
+	@Tag(name = "Projects", description = "List the projects you have access to")
+	@Operation(
+			responses = {
+					@ApiResponse(
+							responseCode = "200",
+							content = @Content(
+									array = @ArraySchema(schema = @Schema(implementation = ProjectReference.class))
+							)
+					)
+			}
+	)
     public Response getProjects() throws IOException {
     	try {
 			RemoteGitManagerRestrictedProvider remoteGitManagerRestrictedProvider = remoteGitManagerRestrictedProviderCache.get(
@@ -84,17 +107,39 @@ public class ProjectService {
     }
 
 	@GET
-	@Path("/{namespace}/{catmaProjectId}")
+	@Path("/{namespace}/{projectId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getProject(@PathParam("namespace") String namespace, @PathParam("catmaProjectId") String catmaProjectId) {
+	// swagger:
+	@Tag(name = "Projects")
+	@Hidden
+	public Response getProject(@PathParam("namespace") String namespace, @PathParam("projectId") String projectId) {
 		return Response.status(Status.NOT_IMPLEMENTED).build();
 	}
     
     @GET
-    @Path("/{namespace}/{catmaProjectId}/export")
+    @Path("/{namespace}/{projectId}/export")
     @Produces(MediaType.APPLICATION_JSON)
+	// swagger:
+	@Tag(name = "Project Export", description = "Export project resources in an easy-to-use JSON format")
+	@Operation(
+			description = "Namespace is a username, as projects are always owned by a particular user. Use the projects endpoint to list available projects " +
+					"with their namespace and ID. Output is paginated and 'pageSize' defaults to 100 (the no. of annotations returned per page). Links to " +
+					"previous and next pages are also returned. Extended metadata is only returned with the first page by default, unless specified with " +
+					"'includeExtendedMetadata'. Use 'forcePull' to force the server to update its copy of the project.",
+			responses = {
+					@ApiResponse(
+							responseCode = "200",
+							// too tedious to define a completely accurate response schema here, it's good enough as is:
+							description = "Note that where you see 'additionalPropN' keys in the sample output, this would actually be a resource ID in most " +
+									"cases, allowing for direct lookups by ID in the 'extendedMetadata'. Tag properties are the exception and are not " +
+									"accurately represented here. See the link to our website at the top of the page for an accurate example.",
+							content = @Content(schema = @Schema(implementation = ProjectExport.class))
+					),
+					@ApiResponse(responseCode = "404", description = "Project not found")
+			}
+	)
     public Response getProjectExport(
-    		@PathParam("namespace") String namespace, @PathParam("catmaProjectId") String catmaProjectId, 
+    		@PathParam("namespace") String namespace, @PathParam("projectId") String projectId,
     		@QueryParam("includeExtendedMetadata") Boolean includeExtendedMetadata, @QueryParam("page") Integer page, @QueryParam("pageSize") Integer pageSize,
     		@QueryParam("forcePull") Boolean forcePull) {
     	try {
@@ -103,13 +148,13 @@ public class ProjectService {
 			);
 			RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitManagerRestrictedProvider.createRemoteGitManagerRestricted();
 
-	    	CacheKey key = new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, catmaProjectId);
+	    	CacheKey key = new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, projectId);
 	    	if (forcePull != null && forcePull) {
 	    		projectExportSerializerCache.invalidate(key);
 	    	}
 		    ProjectExportSerializer serializer = projectExportSerializerCache.get(
-					new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, catmaProjectId),
-					getProjectExportSerializerCacheLoader(remoteGitManagerRestricted, namespace, catmaProjectId));
+					new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, projectId),
+					getProjectExportSerializerCacheLoader(remoteGitManagerRestricted, namespace, projectId));
 			return Response.ok(
 					serializer.serializeProjectResources(
 							// strips any query params that should not be present in URLs built based on this one
@@ -125,7 +170,7 @@ public class ProjectService {
 			).build();
     	}
     	catch (Exception e) {
-    		logger.log(Level.SEVERE, String.format("API: Failed to deliver project export for project %s/%s", namespace, catmaProjectId), e);
+    		logger.log(Level.SEVERE, String.format("API: Failed to deliver project export for project %s/%s", namespace, projectId), e);
 
 			// check for a 404 from GitLab
 			String message = ExceptionUtil.getMessageFor("org.gitlab4j.api.GitLabApiException", e);
@@ -139,8 +184,19 @@ public class ProjectService {
     
     
     @GET
-    @Path("/{namespace}/{catmaProjectId}/export/doc/{documentId}")
-    public Response getProjectExportDocument(@PathParam("namespace") String namespace, @PathParam("catmaProjectId") String catmaProjectId, @PathParam("documentId") String documentId) {
+    @Path("/{namespace}/{projectId}/export/doc/{documentId}")
+	@Produces(MediaType.TEXT_PLAIN)
+	// swagger:
+	@Tag(name = "Project Export")
+	@Operation(
+			description = "Returns the content of the specified document. Note that document URLs are returned as part of the 'extendedMetadata' of the " +
+					"project export endpoint.",
+			responses = {
+					@ApiResponse(responseCode = "200", description = "The document content as UTF-8 plain text"),
+					@ApiResponse(responseCode = "404", description = "Project or document not found")
+			}
+	)
+    public Response getProjectExportDocument(@PathParam("namespace") String namespace, @PathParam("projectId") String projectId, @PathParam("documentId") String documentId) {
     	try {
 	    	RemoteGitManagerRestrictedProvider remoteGitManagerRestrictedProvider = remoteGitManagerRestrictedProviderCache.get(
 					securityContext.getUserPrincipal().getName()
@@ -148,8 +204,8 @@ public class ProjectService {
 			RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitManagerRestrictedProvider.createRemoteGitManagerRestricted();
 
 	    	ProjectExportSerializer serializer = projectExportSerializerCache.get(
-					new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, catmaProjectId),
-					getProjectExportSerializerCacheLoader(remoteGitManagerRestricted, namespace, catmaProjectId));
+					new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, projectId),
+					getProjectExportSerializerCacheLoader(remoteGitManagerRestricted, namespace, projectId));
 	    	
 
 	    	File plainTextFile = new File(serializer.getFileUri(documentId));
@@ -157,7 +213,7 @@ public class ProjectService {
 			return Response.ok(plainTextFile, MediaType.TEXT_PLAIN_TYPE.withCharset(StandardCharsets.UTF_8.name())).build();
     	}
     	catch (Exception e) {
-    		logger.log(Level.SEVERE, String.format("API: Failed to deliver document %s for project %s/%s", documentId, namespace, catmaProjectId), e);
+    		logger.log(Level.SEVERE, String.format("API: Failed to deliver document %s for project %s/%s", documentId, namespace, projectId), e);
 
 			// check for a 404 from GitLab
 			String message = ExceptionUtil.getMessageFor("org.gitlab4j.api.GitLabApiException", e);
@@ -175,11 +231,11 @@ public class ProjectService {
     	}    	
     }
     
-    private Callable<ProjectExportSerializer> getProjectExportSerializerCacheLoader(final RemoteGitManagerRestricted remoteGitManagerRestricted, final String namespace, final String catmaProjectId) {
+    private Callable<ProjectExportSerializer> getProjectExportSerializerCacheLoader(final RemoteGitManagerRestricted remoteGitManagerRestricted, final String namespace, final String projectId) {
     	return () -> {    	
 	    	User user = remoteGitManagerRestricted.getUser();
 
-	    	ProjectReference projectReference = remoteGitManagerRestricted.getProjectReference(namespace, catmaProjectId);
+	    	ProjectReference projectReference = remoteGitManagerRestricted.getProjectReference(namespace, projectId);
 
 	    	JGitRepoManager localGitRepositoryManager = new JGitRepoManager(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.getValue(), user);
 	    	JGitCredentialsManager jGitCredentialsManager = new JGitCredentialsManager(remoteGitManagerRestricted);
@@ -311,7 +367,7 @@ public class ProjectService {
 						public void error(Throwable t) {};
 					},
 					progressListener);
-	        return new ProjectExportSerializer(user.getIdentifier(), namespace, catmaProjectId, tagManager, gitProjectHandler, graphProjectHandler, collectionAnnotationCountCache);
+	        return new ProjectExportSerializer(user.getIdentifier(), namespace, projectId, tagManager, gitProjectHandler, graphProjectHandler, collectionAnnotationCountCache);
 	    };
     }
     

@@ -50,7 +50,7 @@
 		<servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
 		<init-param>
 			<param-name>jersey.config.server.provider.packages</param-name>
-			<param-value>de.catma.api.v1</param-value>
+			<param-value>io.swagger.v3.jaxrs2.integration.resources,de.catma.api.v1</param-value>
 		</init-param>
 		<init-param>
 			<param-name>javax.ws.rs.Application</param-name>

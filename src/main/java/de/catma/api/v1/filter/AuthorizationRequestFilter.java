@@ -51,10 +51,13 @@ public class AuthorizationRequestFilter implements ContainerRequestFilter {
 
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
-		// auth requests should always pass
-		if (!requestContext.getUriInfo().getPathSegments().isEmpty()
-				&& requestContext.getUriInfo().getPathSegments().getFirst().getPath().equals(AuthConstants.AUTH_SERVICE_PATH.substring(1))) {
-			return;
+		// auth requests and openapi definitions should always pass
+		if (!requestContext.getUriInfo().getPathSegments().isEmpty()) {
+			String firstPathSegment = requestContext.getUriInfo().getPathSegments().getFirst().getPath();
+			if (firstPathSegment.equals(AuthConstants.AUTH_SERVICE_PATH.substring(1)) || firstPathSegment.equals("openapi.json")
+					|| firstPathSegment.equals("openapi.yaml")) {
+				return;
+			}
 		}
 
 		String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);

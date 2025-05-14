@@ -1,5 +1,7 @@
 package de.catma.project;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 
 import java.time.ZonedDateTime;
@@ -31,6 +33,7 @@ public class ProjectReference {
 		this.lastActivityAt = lastActivityAt;
 	}
 
+	@JsonProperty("id")
 	public String getProjectId() {
 		return projectId;
 	}
@@ -60,6 +63,7 @@ public class ProjectReference {
 		return namespace;
 	}
 
+	@JsonIgnore
 	public String getFullPath() {
 		return String.format("%s/%s", namespace, projectId);
 	}

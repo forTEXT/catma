@@ -225,6 +225,13 @@
 			<artifactId>gitlab4j-api</artifactId>
 			<!-- https://github.com/forTEXT/gitlab4j-api/releases/tag/gitlab4j-api-5.0.1-CATMA-v2 -->
 			<version>5.0.1-CATMA-v2</version>
+			<exclusions>
+				<!-- prefer the jackson version that comes with swagger-jaxrs2 -->
+				<exclusion>
+					<groupId>com.fasterxml.jackson.core</groupId>
+					<artifactId>jackson-annotations</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Apache Tika & Lucene (used for document parsing & indexing) -->
@@ -251,6 +258,19 @@
 				<exclusion>
 					<groupId>commons-logging</groupId>
 					<artifactId>commons-logging</artifactId>
+				</exclusion>
+				<!-- prefer the jackson version that comes with swagger-jaxrs2 -->
+				<exclusion>
+					<groupId>com.fasterxml.jackson.core</groupId>
+					<artifactId>jackson-core</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.fasterxml.jackson.core</groupId>
+					<artifactId>jackson-databind</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.fasterxml.jackson.core</groupId>
+					<artifactId>jackson-annotations</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -305,7 +325,7 @@
 			<version>3.41.2.2</version>
 		</dependency>
 
-		<!-- PRE-API v2 -->
+		<!-- API -->
 		<dependency>
 			<groupId>org.glassfish.jersey.containers</groupId>
 			<artifactId>jersey-container-servlet</artifactId>
@@ -326,6 +346,19 @@
 					<artifactId>jose4j</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-jaxrs2</artifactId>
+			<version>2.2.30</version>
+		</dependency>
+		<!-- Force a higher version of commons-lang3 than we would otherwise get transitively (via jsclipboard) - avoids a NoSuchMethodError for
+			 org.apache.commons.lang3.math.NumberUtils.isCreatable
+		 -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.17.0</version>
 		</dependency>
 
 		<!-- Test dependencies -->

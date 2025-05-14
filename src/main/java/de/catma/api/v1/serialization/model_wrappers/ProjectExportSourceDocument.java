@@ -1,5 +1,7 @@
 package de.catma.api.v1.serialization.model_wrappers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.net.URI;
 
 public class ProjectExportSourceDocument {
@@ -60,7 +62,8 @@ public class ProjectExportSourceDocument {
     public String getPublisher() {
 		return publisher;
 	}
-    
+
+    @JsonIgnore
     public URI getFileUri() {
 		return fileUri;
 	}

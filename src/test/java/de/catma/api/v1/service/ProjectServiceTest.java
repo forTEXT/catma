@@ -376,7 +376,7 @@ public class ProjectServiceTest extends JerseyTest {
 		String apiToken = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
 
 		Response response = target("projects/"+namespace+"/"+projectId+"/export/doc/"+sourceDocumentUuid)
-				.request(MediaType.APPLICATION_JSON)
+				.request()
 				.header(HttpHeaders.AUTHORIZATION, AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX + apiToken)
 				.get();
 		
