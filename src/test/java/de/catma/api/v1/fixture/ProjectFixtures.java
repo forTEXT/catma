@@ -112,7 +112,7 @@ public class ProjectFixtures {
 		when(remoteGitManagerRestrictedMock.getProjectReference(any(), any())).thenAnswer(new Answer<ProjectReference>() {
 			@Override
 			public ProjectReference answer(InvocationOnMock invocation) throws Throwable {
-				throw new GitLabApiException("404 Project Not Found");
+				throw new IOException("Failed to load project <namespace>/<id>", new GitLabApiException("404 Project Not Found"));
 			}
 		});
 	}

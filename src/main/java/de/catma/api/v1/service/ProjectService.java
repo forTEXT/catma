@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -46,6 +45,7 @@ import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.tag.TagLibrary;
 import de.catma.tag.TagManager;
 import de.catma.user.User;
+import de.catma.util.ExceptionUtil;
 
 @Path("/projects")
 public class ProjectService {
@@ -103,39 +103,36 @@ public class ProjectService {
 			);
 			RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitManagerRestrictedProvider.createRemoteGitManagerRestricted();
 
-	    	try {
-	    		CacheKey key = new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, catmaProjectId);
-	    		if (forcePull != null && forcePull) {
-	    			projectExportSerializerCache.invalidate(key);
-	    		}
-		    	ProjectExportSerializer serializer = projectExportSerializerCache.get(
-						new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, catmaProjectId),
-						getProjectExportSerializerCacheLoader(remoteGitManagerRestricted, namespace, catmaProjectId));
-				return Response.ok(
-						serializer.serializeProjectResources(
-								// strips any query params that should not be present in URLs built based on this one
-								uriInfo.getRequestUriBuilder()
-										.replaceQueryParam("forcePull")
-										.build(),
-								// only include extended metadata on the first page by default
-								includeExtendedMetadata == null ? (page == null || page == 1) : includeExtendedMetadata,
-								page == null ? 1 : page,
-								pageSize == null ? ProjectExportSerializer.DEFAULT_PAGE_SIZE : pageSize
-						),
-						MediaType.APPLICATION_JSON
-				).build();
+	    	CacheKey key = new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, catmaProjectId);
+	    	if (forcePull != null && forcePull) {
+	    		projectExportSerializerCache.invalidate(key);
 	    	}
-	    	catch (ExecutionException ee) {
-	    		if (ee.getMessage().contains("404")) {
-	    			return Response.status(Status.NOT_FOUND).build();
-	    		}
-	    		else {
-	    			throw new Exception(ee);
-	    		}
-	    	}
+		    ProjectExportSerializer serializer = projectExportSerializerCache.get(
+					new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, catmaProjectId),
+					getProjectExportSerializerCacheLoader(remoteGitManagerRestricted, namespace, catmaProjectId));
+			return Response.ok(
+					serializer.serializeProjectResources(
+							// strips any query params that should not be present in URLs built based on this one
+							uriInfo.getRequestUriBuilder()
+									.replaceQueryParam("forcePull")
+									.build(),
+							// only include extended metadata on the first page by default
+							includeExtendedMetadata == null ? (page == null || page == 1) : includeExtendedMetadata,
+							page == null ? 1 : page,
+							pageSize == null ? ProjectExportSerializer.DEFAULT_PAGE_SIZE : pageSize
+					),
+					MediaType.APPLICATION_JSON
+			).build();
     	}
     	catch (Exception e) {
     		logger.log(Level.SEVERE, String.format("API: Failed to deliver project export for project %s/%s", namespace, catmaProjectId), e);
+
+			// check for a 404 from GitLab
+			String message = ExceptionUtil.getMessageFor("org.gitlab4j.api.GitLabApiException", e);
+			if (message != null && message.contains("404")) {
+				return Response.status(Status.NOT_FOUND).build();
+			}
+
     		return Response.status(Status.INTERNAL_SERVER_ERROR).build();
     	}
     }
@@ -161,6 +158,19 @@ public class ProjectService {
     	}
     	catch (Exception e) {
     		logger.log(Level.SEVERE, String.format("API: Failed to deliver document %s for project %s/%s", documentId, namespace, catmaProjectId), e);
+
+			// check for a 404 from GitLab
+			String message = ExceptionUtil.getMessageFor("org.gitlab4j.api.GitLabApiException", e);
+			if (message != null && message.contains("404")) {
+				return Response.status(Status.NOT_FOUND).build();
+			}
+
+			// check for invalid document ID
+			if (e instanceof NullPointerException && e.getMessage().matches(
+					"^(?i)cannot invoke.*getSourceDocumentInfo.*because the return value of.*getSourceDocumentReference.*is null$")) {
+				return Response.status(Status.NOT_FOUND).build();
+			}
+
     		return Response.status(Status.INTERNAL_SERVER_ERROR).build();
     	}    	
     }
