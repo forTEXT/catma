@@ -27,6 +27,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.lib.Constants;
 
 import de.catma.api.v1.backend.interfaces.RemoteGitManagerRestrictedProvider;
@@ -239,24 +240,39 @@ public class ProjectService {
 
 	    	JGitRepoManager localGitRepositoryManager = new JGitRepoManager(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.getValue(), user);
 	    	JGitCredentialsManager jGitCredentialsManager = new JGitCredentialsManager(remoteGitManagerRestricted);
-	    	
-			if (!Paths.get(new File(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
+
+			File targetPath = Paths.get(new File(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
 					.resolve(user.getIdentifier())
 					.resolve(projectReference.getNamespace())
 					.resolve(projectReference.getProjectId())
-					.toFile()
-					.exists()
-			) {
-				try (LocalGitRepositoryManager localRepoManager = localGitRepositoryManager) {
-	
-					// clone the repository locally
-					localRepoManager.clone(
-							projectReference.getNamespace(),
-							projectReference.getProjectId(),
-							remoteGitManagerRestricted.getProjectRepositoryUrl(projectReference),
-							jGitCredentialsManager
-					);
+					.toFile();
+
+			if (!targetPath.exists()) {
+				// TODO: currently fresh project clones (project exists remotely but not locally) are not initialised properly -> user branch does not match
+				//       remote (see notes)
+				//       therefore, copy the repo from GIT_REPOSITORY_BASE_PATH for now (hopefully it exists there and is in a clean state)
+//				try (LocalGitRepositoryManager localRepoManager = localGitRepositoryManager) {
+//
+//					// clone the repository locally
+//					localRepoManager.clone(
+//							projectReference.getNamespace(),
+//							projectReference.getProjectId(),
+//							remoteGitManagerRestricted.getProjectRepositoryUrl(projectReference),
+//							jGitCredentialsManager
+//					);
+//				}
+
+				File sourcePath = Paths.get(new File(CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
+						.resolve(user.getIdentifier())
+						.resolve(projectReference.getNamespace())
+						.resolve(projectReference.getProjectId())
+						.toFile();
+
+				if (!sourcePath.exists()) {
+					throw new IOException(String.format("Failed to find project to copy at source path %s", sourcePath.getAbsolutePath()));
 				}
+
+				FileUtils.copyDirectory(sourcePath, targetPath);
 			}
 			else {
 				logger.info(
@@ -277,11 +293,7 @@ public class ProjectService {
 			GitProjectHandler gitProjectHandler = new GitProjectHandler(
 					user,
 					projectReference,
-					Paths.get(new File(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.getValue()).toURI())
-							.resolve(user.getIdentifier())
-							.resolve(projectReference.getNamespace())
-							.resolve(projectReference.getProjectId())
-							.toFile(),
+					targetPath,
 					localGitRepositoryManager,
 					remoteGitManagerRestricted
 			);
