@@ -211,8 +211,7 @@
 		</dependency>
 
 		<!-- JGit -->
-		<!-- TODO: update to 5.13.x (latest supported version for Java 8, 6.0.0 upwards requires Java 11) -->
-		<!--       needs review/removal of Relative... JGit classes that were required while we still used submodules but should be fine to remove now -->
+		<!-- TODO: update - needs review/removal of Relative... JGit classes that were required while we still used submodules but should be fine to remove now -->
 		<dependency>
 			<groupId>org.eclipse.jgit</groupId>
 			<artifactId>org.eclipse.jgit</artifactId>
