@@ -131,7 +131,6 @@ public class AuthorizationRequestFilter implements ContainerRequestFilter {
 		try {
 			RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitMangerRestrictedFactory.create(token);
 
-			// TODO: test what happens if the cache contains a provider with a token that was valid but that has subsequently expired
 			remoteGitManagerRestrictedProviderCache.put(
 					remoteGitManagerRestricted.getUsername(),
 					new AccessTokenRemoteGitManagerRestrictedProvider(token, remoteGitMangerRestrictedFactory)

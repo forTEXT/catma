@@ -97,6 +97,11 @@ public class ProjectService {
 			RemoteGitManagerRestrictedProvider remoteGitManagerRestrictedProvider = remoteGitManagerRestrictedProviderCache.get(
 					securityContext.getUserPrincipal().getName()
 			);
+			// TODO: the following will throw `java.io.IOException: org.gitlab4j.api.GitLabApiException` with a message indicating invalid credentials if
+			//       the cache contains a provider with backend credentials that were valid when AuthService.authenticate was called, but no longer are.
+			//       Currently this results in a 500 - see how AuthService.authenticate handles invalid credentials and consider doing something like that here
+			//       (eg: return a 401 with "Please re-authenticate", as we do for a special case in AuthorizationRequestFilter), although the window for this
+			//       to occur is relatively small (because our JWTs are short-lived).
 	    	RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitManagerRestrictedProvider.createRemoteGitManagerRestricted();
 
 	    	return Response.ok(new SerializationHelper<ProjectReference>().serialize(remoteGitManagerRestricted.getProjectReferences())).build();
@@ -147,6 +152,7 @@ public class ProjectService {
     		RemoteGitManagerRestrictedProvider remoteGitManagerRestrictedProvider = remoteGitManagerRestrictedProviderCache.get(
 					securityContext.getUserPrincipal().getName()
 			);
+			// TODO: see TODO in getProjects, same applies here
 			RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitManagerRestrictedProvider.createRemoteGitManagerRestricted();
 
 	    	CacheKey key = new CacheKey(remoteGitManagerRestricted.getUsername(), namespace, projectId);
@@ -202,6 +208,7 @@ public class ProjectService {
 	    	RemoteGitManagerRestrictedProvider remoteGitManagerRestrictedProvider = remoteGitManagerRestrictedProviderCache.get(
 					securityContext.getUserPrincipal().getName()
 			);
+			// TODO: see TODO in getProjects, same applies here
 			RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitManagerRestrictedProvider.createRemoteGitManagerRestricted();
 
 	    	ProjectExportSerializer serializer = projectExportSerializerCache.get(

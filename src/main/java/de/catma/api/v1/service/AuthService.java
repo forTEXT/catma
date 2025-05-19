@@ -215,7 +215,6 @@ public class AuthService {
 	private String authenticateWithBackendToken(String backendToken) throws IOException, JOSEException {
 		RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitMangerRestrictedFactory.create(backendToken);
 
-		// TODO: test what happens if the cache contains a provider with a token that was valid but that has subsequently expired
 		remoteGitManagerRestrictedProviderCache.put(remoteGitManagerRestricted.getUsername(), new AccessTokenRemoteGitManagerRestrictedProvider(backendToken, remoteGitMangerRestrictedFactory));
 		
 		return createJWToken(remoteGitManagerRestricted.getUser());
@@ -224,7 +223,6 @@ public class AuthService {
 	private String authenticateWithUsernamePassword(String username, String password) throws IOException, JOSEException {
 		RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitMangerRestrictedFactory.create(username, password);
 
-		// TODO: test what happens if the cache contains a provider with credentials that were valid but that are not anymore
 		remoteGitManagerRestrictedProviderCache.put(remoteGitManagerRestricted.getUsername(), new CredentialsRemoteGitManagerRestrictedProvider(username, password, remoteGitMangerRestrictedFactory));
 		
 		return createJWToken(remoteGitManagerRestricted.getUser());
