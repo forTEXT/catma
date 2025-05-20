@@ -10,6 +10,8 @@ openAPI:
   servers:
     - url: ./ # ensures that the Swagger UI uses the same base path as the API definition for requests
       description: the server hosting the API definition
+    - url: https://app.catma.de/api/v1
+      description: public CATMA server
   info:
     version: 1.0
     title: CATMA JSON API

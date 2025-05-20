@@ -86,6 +86,7 @@ public class ProjectService {
 			responses = {
 					@ApiResponse(
 							responseCode = "200",
+							description = "Project list",
 							content = @Content(
 									array = @ArraySchema(schema = @Schema(implementation = ProjectReference.class))
 							)
