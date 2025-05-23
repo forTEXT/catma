@@ -148,7 +148,7 @@
 			<artifactId>commons-email</artifactId>
 			<version>1.6.0</version>
 			<exclusions>
-				<!-- prefer jakarta.activation:jakarta.activation-api that comes with gitlab4j-api -->
+				<!-- prefer the jakarta.activation version that comes with tika-parsers -->
 				<exclusion>
 					<groupId>com.sun.activation</groupId>
 					<artifactId>jakarta.activation</artifactId>
@@ -230,6 +230,11 @@
 					<groupId>com.fasterxml.jackson.core</groupId>
 					<artifactId>jackson-annotations</artifactId>
 				</exclusion>
+				<!-- prefer com.sun.activation:jakarta.activation that comes with tika-parsers -->
+				<exclusion>
+					<groupId>jakarta.activation</groupId>
+					<artifactId>jakarta.activation-api</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 
@@ -243,17 +248,17 @@
 					<groupId>c3p0</groupId>
 					<artifactId>c3p0</artifactId>
 				</exclusion>
-				<!-- prefer jakarta.activation:jakarta.activation-api that comes with gitlab4j-api -->
+				<!-- prefer com.sun.activation:jakarta.activation, a transient dependency of this package, over direct dependency on activation-api -->
 				<exclusion>
-					<groupId>com.sun.activation</groupId>
-					<artifactId>jakarta.activation</artifactId>
+					<groupId>jakarta.activation</groupId>
+					<artifactId>jakarta.activation-api</artifactId>
 				</exclusion>
 				<!-- prefer com.github.stephenc.jcip:jcip-annotations implementation that comes with nimbus-jose-jwt -->
 				<exclusion>
 					<groupId>net.jcip</groupId>
 					<artifactId>jcip-annotations</artifactId>
 				</exclusion>
-				<!-- prefer org.slf4j:jcl-over-slf4j implementation that comes with tika-parsers -->
+				<!-- prefer org.slf4j:jcl-over-slf4j implementation, a direct dependency of this package, over transient dependency on commons-logging -->
 				<exclusion>
 					<groupId>commons-logging</groupId>
 					<artifactId>commons-logging</artifactId>
@@ -277,6 +282,13 @@
 			<groupId>org.apache.tika</groupId>
 			<artifactId>tika-langdetect</artifactId>
 			<version>1.28.5</version>
+			<exclusions>
+				<!-- prefer com.sun.activation:jakarta.activation that comes with tika-parsers -->
+				<exclusion>
+					<groupId>jakarta.activation</groupId>
+					<artifactId>jakarta.activation-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
@@ -418,8 +430,8 @@
 						</goals>
 						<configuration>
 							<rules>
+								<!-- ref: https://stackoverflow.com/a/65144335/207981 -->
 								<bannedDependencies>
-									<!-- ref: https://stackoverflow.com/a/65144335/207981 -->
 									<!-- the activation framework was renamed to jakarta activation framework -->
 									<excludes>
 										<exclude>javax.activation:javax.activation-api</exclude>
@@ -429,14 +441,15 @@
 									<message>use jakarta.activation:jakarta.activation-api or com.sun.activation:jakarta.activation instead of
 										javax.activation</message>
 								</bannedDependencies>
-								<!-- if you use com.sun.activation:jakarta.activation
+								<!-- if you use com.sun.activation:jakarta.activation -->
 								<bannedDependencies>
-									<!- - the implementation com.sun.activation:jakarta.activation contains the api classes too - ->
+									<!-- the implementation com.sun.activation:jakarta.activation contains the api classes too -->
 									<excludes>
 										<exclude>jakarta.activation:jakarta.activation-api</exclude>
 									</excludes>
 									<message>the implementation com.sun.activation:jakarta.activation is included and it contains the api classes too</message>
-								</bannedDependencies>-->
+								</bannedDependencies>
+
 								<bannedDependencies>
 									<excludes>
 										<exclude>net.jcip:jcip-annotations</exclude>
