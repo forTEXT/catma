@@ -53,7 +53,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Path(AuthConstants.AUTH_SERVICE_PATH) // '/auth', defined as a constant because it's checked in AuthorizationRequestFilter
 // swagger:
-@Tag(name = "Authentication", description = "Authenticate with the API")
+@Tag(name = "Authentication")
 public class AuthService {
 	private static final Logger logger = Logger.getLogger(AuthService.class.getName());
 

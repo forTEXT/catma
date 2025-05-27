@@ -24,3 +24,10 @@ openAPI:
       BearerAuth:
         type: http
         scheme: bearer
+  tags: # the order that they are defined in here is how they will be displayed in Swagger UI
+    - name: Authentication
+      description: Authenticate with the API
+    - name: Projects
+      description: List the projects you have access to
+    - name: Project Export
+      description: Export project resources in an easy-to-use JSON format

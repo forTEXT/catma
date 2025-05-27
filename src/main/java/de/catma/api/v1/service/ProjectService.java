@@ -81,7 +81,7 @@ public class ProjectService {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
 	// swagger:
-	@Tag(name = "Projects", description = "List the projects you have access to")
+	@Tag(name = "Projects")
 	@Operation(
 			responses = {
 					@ApiResponse(
@@ -127,7 +127,7 @@ public class ProjectService {
     @Path("/{namespace}/{projectId}/export")
     @Produces(MediaType.APPLICATION_JSON)
 	// swagger:
-	@Tag(name = "Project Export", description = "Export project resources in an easy-to-use JSON format")
+	@Tag(name = "Project Export")
 	@Operation(
 			description = "Namespace is a username, as projects are always owned by a particular user. Use the projects endpoint to list available projects " +
 					"with their namespace and ID. Output is paginated and 'pageSize' defaults to 100 (the no. of annotations returned per page). Links to " +
