@@ -215,7 +215,7 @@
 		<dependency>
 			<groupId>org.eclipse.jgit</groupId>
 			<artifactId>org.eclipse.jgit</artifactId>
-			<version>4.11.8.201904181247-r</version>
+			<version>6.10.1.202505221210-r</version>
 		</dependency>
 
 		<!-- GitLab -->
