@@ -418,7 +418,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 					group.getSharedProjects().stream().collect(Collectors.toUnmodifiableList()));
 		}
 		catch (GitLabApiException e) {
-			throw new IOException(String.format("Failed to delete group %s", group.getName()), e);
+			throw new IOException(String.format("Failed to update group %s", group.getName()), e);
 		}
 	}
 	
