@@ -166,7 +166,7 @@ public class CSVExportFlatStreamSource implements StreamSource {
     	            		}    	            		
     	            	}
     	            	else {
-	            			KeywordInSpanContext kwic = kwicProvider.getKwic(row.getRange(), 5);
+	            			KeywordInSpanContext kwic = kwicProvider.getKwic(row.getRange(), contextSizeSupplier.get());
     	            		csvPrinter.printRecord(
     	            				row.getQueryId().toSerializedString(),
     	            				row.getSourceDocumentId(),

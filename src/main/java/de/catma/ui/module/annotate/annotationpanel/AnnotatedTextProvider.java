@@ -259,7 +259,7 @@ public class AnnotatedTextProvider {
 								
 							}
 							catch (NumberFormatException ignore) {
-								contextSize = 5;
+								contextSize = DEFAULT_CONTEXT_SIZE;
 							}
 							selectedItem.setText(contextSizeMenuEntrySupplier.get());
 							contextSizeConsumer.accept(contextSize);
