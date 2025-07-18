@@ -172,10 +172,11 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 			eventBus.post(new HeaderContextChangeEvent());
 			currentRoute = routeToDashboardEvent.getClass();
 		}
-		// handle project- and group-join-tokens
-		((RequestTokenHandlerProvider)UI.getCurrent()).getRequestTokenHandler().handleRequestToken(
-				UI.getCurrent().getPage().getLocation().getPath(), 
-				((ParameterProvider)UI.getCurrent()).getParameter(Parameter.ACTION));
+
+		// ensures clearing of OAuth parameters from the URL in the browser if present
+		// TODO: seems like a strange way/place to do this? review
+		//       also see usages of CatmaApplication.handleRequestToken and RouteToDashboardEvent
+		((RequestTokenHandlerProvider) UI.getCurrent()).getRequestTokenHandler().handleRequestToken(null, null);
 	}
 
 	@Override
