@@ -22,8 +22,10 @@ import org.gitlab4j.api.Constants.IssueState;
 import org.gitlab4j.api.Constants.MergeRequestState;
 import org.gitlab4j.api.EnhancedPager;
 import org.gitlab4j.api.ExtendedCommitsApi;
+import org.gitlab4j.api.ExtendedGroupFilter;
 import org.gitlab4j.api.ExtendedProject;
 import org.gitlab4j.api.ExtendedProjectApi;
+import org.gitlab4j.api.ExtendedProjectFilter;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.GroupApi;
@@ -45,7 +47,6 @@ import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.MergeRequestFilter;
 import org.gitlab4j.api.models.Note;
 import org.gitlab4j.api.models.Project;
-import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.ProjectSharedGroup;
 import org.gitlab4j.api.models.Visibility;
 
@@ -254,10 +255,11 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			return (List<de.catma.user.Group>) gitlabModelsCache.get(cacheKey, () -> {
 				List<de.catma.user.Group> result = new ArrayList<>();
 				GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-				GroupFilter groupFilter = new GroupFilter()
+				GroupFilter groupFilter = new ExtendedGroupFilter()
+						.withActive(true) // don't fetch groups that are archived or marked for deletion
+						.withTopLevelOnly(true)
 						.withOrderBy(org.gitlab4j.api.Constants.GroupOrderBy.ID)
-						.withSortOder(org.gitlab4j.api.Constants.SortOrder.DESC)
-						.withTopLevelOnly(true);
+						.withSortOder(org.gitlab4j.api.Constants.SortOrder.DESC);
 				if (minRole != null) {
 					groupFilter = groupFilter.withMinAccessLevel(AccessLevel.forValue(minRole.getAccessLevel()));
 				}
@@ -342,11 +344,12 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			return (List<Long>) gitlabModelsCache.get(cacheKey, () -> {
 				List<Long> result = new ArrayList<>();
 				GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-				GroupFilter groupFilter = new GroupFilter()
-						.withOrderBy(org.gitlab4j.api.Constants.GroupOrderBy.ID)
-						.withSortOder(org.gitlab4j.api.Constants.SortOrder.DESC)
+				GroupFilter groupFilter = new ExtendedGroupFilter()
+						.withActive(true) // don't fetch groups that are archived or marked for deletion
+						.withOwned(true)
 						.withTopLevelOnly(true)
-						.withOwned(true);
+						.withOrderBy(org.gitlab4j.api.Constants.GroupOrderBy.ID)
+						.withSortOder(org.gitlab4j.api.Constants.SortOrder.DESC);
 
 				Pager<Group> groupPager = groupApi.getGroups(
 						groupFilter,
@@ -456,11 +459,12 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			return (List<ProjectReference>) gitlabModelsCache.get(
 					cacheKey,
 					() -> projectApi.getProjects(
-								new ProjectFilter()
-								.withMinAccessLevel(minAccessLevel)
+								new ExtendedProjectFilter()
+								.withActive(true) // don't fetch projects that are archived or marked for deletion
+								.withOwned(owned)
 								.withMembership(true)
-								.withSimple(true)
-								.withOwned(owned))
+								.withMinAccessLevel(minAccessLevel)
+								.withSimple(true))
 							.stream()
 							.filter(project -> !project.getNamespace().getName().startsWith("CATMA_")) // filter legacy projects
 							.map(project -> {
@@ -541,10 +545,11 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 			return (List<String>) gitlabModelsCache.get(
 					cacheKey,
 					() -> projectApi.getProjects(
-								new ProjectFilter()
+								new ExtendedProjectFilter()
+								.withActive(true) // don't fetch projects that are archived or marked for deletion
+								.withOwned(true)
 								.withMinAccessLevel(AccessLevel.forValue(RBACRole.ASSISTANT.getAccessLevel()))
-								.withSimple(true)
-								.withOwned(true))
+								.withSimple(true))
 							.stream()
 							.filter(project -> !project.getNamespace().getName().startsWith("CATMA_")) // filter legacy projects
 							.map(Project::getPath)

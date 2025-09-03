@@ -144,6 +144,10 @@ public class GroupListView extends VerticalLayout {
                     .stream()
         	        .filter(group -> searchField.getValue() == null || searchField.getValue().trim().isEmpty() || group.getName().contains(searchField.getValue().trim()))
                     // GitLab group deletion is a background operation, we usually still get the deleted group for some time after deletion
+                    // TODO: check if this is still relevant now that GitLab marks groups for deletion and only truly deletes them later
+                    //       also see GroupApi.getGroups calls in GitlabManagerRestricted (now also filtering on 'active')
+                    //       groups marked for deletion are not renamed (unlike projects), so this filter does work for the current session, even if not
+                    //       filtering on 'active'
                     .filter(group -> !deletedGroupIds.contains(group.getId()))
         	        .sorted(sortedByBox.getValue().getSortComparator())
                     .map(group -> new GroupCard(group, projectsManager, eventBus, remoteGitManagerRestricted))

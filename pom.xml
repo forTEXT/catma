@@ -219,6 +219,7 @@
 		</dependency>
 
 		<!-- GitLab -->
+		<!-- TODO: update and review/remove custom/extended classes, e.g. EnhancedPager -->
 		<dependency>
 			<groupId>org.gitlab4j</groupId>
 			<artifactId>gitlab4j-api</artifactId>

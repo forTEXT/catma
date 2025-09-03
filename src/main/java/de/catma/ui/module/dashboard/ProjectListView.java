@@ -182,6 +182,10 @@ public class ProjectListView extends VerticalLayout {
 	        .stream()
 	        .filter(projectRef -> searchField.getValue() == null || searchField.getValue().trim().isEmpty() || projectRef.getName().contains(searchField.getValue().trim()))
 			// GitLab project deletion is a background operation, we usually still get the deleted project for some time after deletion
+            // TODO: check if this is still relevant now that GitLab marks projects for deletion and only truly deletes them later
+            //       also see ProjectApi.getProjects calls in GitlabManagerRestricted (now also filtering on 'active')
+            //       projects marked for deletion are renamed (unlike groups), so this filter no longer works (what we call the project ID is actually the path,
+            //       we don't use the stable/fixed numeric ID)
 	        .filter(projectRef -> !deletedProjectIds.contains(projectRef.getProjectId()))
 	        .sorted(sortedByBox.getValue().getSortComparator())
 	        .map(prj -> new ProjectCard(prj, projectsManager, eventBus, remoteGitManagerRestricted))
