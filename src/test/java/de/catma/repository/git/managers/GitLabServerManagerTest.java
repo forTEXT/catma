@@ -15,20 +15,17 @@ import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.PersonalAccessToken;
-import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAProperties;
 
 public class GitLabServerManagerTest {
 	private GitlabManagerPrivileged gitlabManagerPrivileged;
 	private GitlabManagerRestricted gitlabManagerRestricted;
 
-	private ArrayList<ProjectReference> repositoriesToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<Long> usersToDeleteOnTearDown = new ArrayList<>();
 
 	public GitLabServerManagerTest() throws Exception {
@@ -60,13 +57,6 @@ public class GitLabServerManagerTest {
 		ProjectApi projectApi = adminGitLabApi.getProjectApi();
 		UserApi userApi = adminGitLabApi.getUserApi();
 
-		if (repositoriesToDeleteOnTearDown.size() > 0) {
-			for (ProjectReference projectRef : repositoriesToDeleteOnTearDown) {
-				gitlabManagerRestricted.deleteProject(projectRef);
-				await().until(() -> projectApi.getProjects(new ProjectFilter().withSimple(true)).isEmpty());
-			}
-		}
-
 		if (usersToDeleteOnTearDown.size() > 0) {
 			for (Long userId : usersToDeleteOnTearDown) {
 				userApi.deleteUser(userId);
@@ -75,7 +65,6 @@ public class GitLabServerManagerTest {
 		}
 
 		// delete the GitLab user that we created in setUp, including associated repos
-		// TODO: explicit deletion of associated repos (above) is now superfluous since we are doing a hard delete
 		userApi.deleteUser(gitlabManagerRestricted.getUser().getUserId(), true);
 //		GitLabServerManagerTest.awaitUserDeleted(userApi, gitlabManagerRestricted.getUser().getUserId());
 	}

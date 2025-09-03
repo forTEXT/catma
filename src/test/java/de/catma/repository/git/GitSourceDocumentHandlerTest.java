@@ -1,6 +1,5 @@
 package de.catma.repository.git;
 
-import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -22,8 +21,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.gitlab4j.api.UserApi;
-import org.gitlab4j.api.models.Project;
-import org.gitlab4j.api.models.ProjectFilter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,8 +56,6 @@ public class GitSourceDocumentHandlerTest {
 	private GitlabManagerRestricted gitlabManagerRestricted;
 
 	private ArrayList<File> directoriesToDeleteOnTearDown = new ArrayList<>();
-	private ArrayList<String> sourceDocumentReposToDeleteOnTearDown = new ArrayList<>();
-	private ArrayList<ProjectReference> projectsToDeleteOnTearDown = new ArrayList<>();
 
     public GitSourceDocumentHandlerTest() throws Exception {
 		String propertiesFile = System.getProperties().containsKey("prop") ?
@@ -102,50 +97,7 @@ public class GitSourceDocumentHandlerTest {
 			directoriesToDeleteOnTearDown.clear();
 		}
 
-		if (sourceDocumentReposToDeleteOnTearDown.size() > 0) {
-			for (String sourceDocumentId : sourceDocumentReposToDeleteOnTearDown) {
-				List<Project> projects = gitlabManagerPrivileged.getGitLabApi().getProjectApi().getProjects(
-						new ProjectFilter().withSearch(sourceDocumentId).withSimple(true)
-				);
-
-				for (Project project : projects) {
-					gitlabManagerRestricted.deleteProject(
-							new ProjectReference(
-									project.getName(), 
-									project.getNamespace().getName(), 
-									project.getName(), 
-									null
-							)
-					);
-				}
-
-				await().until(
-					() -> gitlabManagerPrivileged.getGitLabApi().getProjectApi().getProjects(new ProjectFilter().withSimple(true)).isEmpty()
-				);
-			}
-			sourceDocumentReposToDeleteOnTearDown.clear();
-		}
-
-		if (projectsToDeleteOnTearDown.size() > 0) {
-			BackgroundService mockBackgroundService = mock(BackgroundService.class);
-			EventBus mockEventBus = mock(EventBus.class);
-
-			GitProjectsManager gitProjectManager = new GitProjectsManager(
-					CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(),
-					gitlabManagerRestricted,
-					(projectId) -> {}, // noop deletion handler
-					mockBackgroundService,
-					mockEventBus
-			);
-
-			for (ProjectReference projectRef : projectsToDeleteOnTearDown) {
-				gitProjectManager.deleteProject(projectRef);
-			}
-			projectsToDeleteOnTearDown.clear();
-		}
-
 		// delete the GitLab user that we created in setUp, including associated groups/repos
-		// TODO: explicit deletion of associated repos (above) is now superfluous since we are doing a hard delete
 		UserApi userApi = gitlabManagerPrivileged.getGitLabApi().getUserApi();
 		userApi.deleteUser(gitlabManagerRestricted.getUser().getUserId(), true);
 //		GitLabServerManagerTest.awaitUserDeleted(userApi, gitlabManagerRestricted.getUser().getUserId());
@@ -217,7 +169,6 @@ public class GitSourceDocumentHandlerTest {
 			ProjectReference projectReference = gitProjectManager.createProject(
 				"Test CATMA Project", "This is a test CATMA project"
 			);
-			// we don't add the projectId to projectsToDeleteOnTearDown as deletion of the user will take care of that for us
 
 			// the JGitRepoManager instance should always be in a detached state after GitProjectManager calls return
 			assertFalse(jGitRepoManager.isAttached());
@@ -415,7 +366,6 @@ public class GitSourceDocumentHandlerTest {
 			ProjectReference projectReference = gitProjectManager.createProject(
 					"Test CATMA Project", "This is a test CATMA project"
 			);
-			// we don't add the projectId to projectsToDeleteOnTearDown as deletion of the user will take care of that for us
 
 			// the JGitRepoManager instance should always be in a detached state after GitProjectManager calls return
 			assertFalse(jGitRepoManager.isAttached());
