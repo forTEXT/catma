@@ -52,7 +52,6 @@ public class GitProjectHandlerTest {
 	private GitlabManagerPrivileged gitlabManagerPrivileged;
 	private GitlabManagerRestricted gitlabManagerRestricted;
 
-	private ArrayList<ProjectReference> projectsToDeleteOnTearDown = new ArrayList<>();
 	private ArrayList<File> directoriesToDeleteOnTearDown = new ArrayList<>();
 
 	public GitProjectHandlerTest() throws Exception {
@@ -74,24 +73,6 @@ public class GitProjectHandlerTest {
 
 	@AfterEach
 	public void tearDown() throws Exception {
-		if (projectsToDeleteOnTearDown.size() > 0) {
-			BackgroundService mockBackgroundService = mock(BackgroundService.class);
-			EventBus mockEventBus = mock(EventBus.class);
-
-			GitProjectsManager gitProjectManager = new GitProjectsManager(
-					CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(),
-					gitlabManagerRestricted,
-					(projectId) -> {}, // noop deletion handler
-					mockBackgroundService,
-					mockEventBus
-			);
-
-			for (ProjectReference projectRef : projectsToDeleteOnTearDown) {
-				gitProjectManager.deleteProject(projectRef);
-			}
-			projectsToDeleteOnTearDown.clear();
-		}
-
 		if (directoriesToDeleteOnTearDown.size() > 0) {
 			for (File dir : directoriesToDeleteOnTearDown) {
 				// files have read-only attribute set on Windows, which we need to clear before the call to `deleteDirectory` will work
@@ -108,7 +89,6 @@ public class GitProjectHandlerTest {
 		}
 
 		// delete the GitLab user that we created in setUp, including associated groups/repos
-		// TODO: explicit deletion of associated repos (above) is now superfluous since we are doing a hard delete
 		UserApi userApi = gitlabManagerPrivileged.getGitLabApi().getUserApi();
 		userApi.deleteUser(gitlabManagerRestricted.getUser().getUserId(), true);
 //		GitLabServerManagerTest.awaitUserDeleted(userApi, gitlabManagerRestricted.getUser().getUserId());
@@ -136,7 +116,6 @@ public class GitProjectHandlerTest {
 			ProjectReference projectReference = gitProjectManager.createProject(
 				"Test CATMA Project", "This is a test CATMA project"
 			);
-			// we don't add the projectId to projectsToDeleteOnTearDown as deletion of the user will take care of that for us
 
 			assertNotNull(projectReference.getProjectId());
 			assert projectReference.getProjectId().startsWith("CATMA_");
@@ -354,7 +333,6 @@ public class GitProjectHandlerTest {
 			ProjectReference projectReference = gitProjectManager.createProject(
 				"Test CATMA Project", "This is a test CATMA project"
 			);
-			// we don't add the projectId to projectsToDeleteOnTearDown as deletion of the user will take care of that for us
 
 			// the JGitRepoManager instance should always be in a detached state after GitProjectManager calls return
 			assertFalse(jGitRepoManager.isAttached());

@@ -55,8 +55,7 @@ class GitTagsetHandlerTest {
 
 	@AfterAll
 	static void tearDownAfterClass() throws Exception {
-//		GitlabTestHelper.deleteUserAndTraces(
-//				gitlabManagerRestricted, gitlabManagerPrivileged);
+		GitLabTestHelper.deleteUserAndLocalFiles(gitlabManagerRestricted, gitlabManagerPrivileged);
 	}
 
 	@BeforeEach

@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
@@ -29,12 +28,10 @@ class GitProjectsManagerTest {
 	private GitlabManagerPrivileged gitlabManagerPrivileged;
 	private GitlabManagerRestricted gitlabManagerRestricted;
 
-
-	public GitProjectsManagerTest() throws FileNotFoundException, IOException {
+	public GitProjectsManagerTest() throws IOException {
 		PropertiesHelper.load();
 	}
 
-	
 	@BeforeEach
 	public void setUp() throws Exception {
 		Pair<GitlabManagerRestricted, GitlabManagerPrivileged> result = 
