@@ -1,125 +1,44 @@
 package de.catma.rbac;
 
+import de.catma.project.ProjectReference;
+import de.catma.user.Group;
+import de.catma.user.SharedGroup;
+
 import java.io.IOException;
 import java.time.LocalDate;
 
-import de.catma.project.ProjectReference;
-import de.catma.user.Group;
-import de.catma.user.Member;
-import de.catma.user.SharedGroup;
-
 /**
- * Manages all access controls
- * 
- * @author db
- *
+ * Role-Based Access Control Manager
  */
 public interface IRBACManager {
-	
-	/**
-	 * Authorized a <code>RBACPermission</code> on <code>RBACSubject</code> for a projectId
-	 *
-	 * @param subject
-	 * @param permission
-	 * @param projectId
-	 * @return
-	 */
-	boolean isAuthorizedOnProject(
-			RBACSubject subject, RBACPermission permission, ProjectReference projectReference);
-
-	/**
-	 * assigns given role to subject in a given context here a CATMA project}
-	 * 
-	 * @param subject
-	 * @param role
-	 * @param projectId
-	 * @return
-	 * @throws IOException
-	 */
-	RBACSubject assignOnProject(RBACSubject subject, RBACRole role, ProjectReference projectReference, LocalDate expiresAt) throws IOException;
-
-	/**
-	 * unassigns a subject from a project
-	 * @param subject
-	 * @param projectId
-	 * @throws IOException
-	 */
-	void unassignFromProject(RBACSubject subject, ProjectReference projectReference) throws IOException;
-
-	
-	/**
-	 * checks if a role has a permission assigned
-	 * @param role
-	 * @param permission
-	 * @return
-	 */
 	default boolean hasPermission(RBACRole role, RBACPermission permission) {
-		if(role == null || permission == null) {
+		if (role == null || permission == null) {
 			return false;
-		} else {
-			return role.getAccessLevel() >= permission.getRoleRequired().getAccessLevel();
 		}
-	};
 
-	
-	/**
-	 * gets the defined Role for a subject on a specific project
-	 * 
-	 * @param subject
-	 * @param projectReference
-	 * @return
-	 * @throws IOException 
-	 */
-	RBACRole getRoleOnProject(RBACSubject subject, ProjectReference projectReference) throws IOException;
+		return role.getAccessLevel() >= permission.getRoleRequired().getAccessLevel();
+	}
 
-	/**
-	 * gets the defined Role for a subject on a specific group
-	 * @param subject
-	 * @param group
-	 * @return
-	 * @throws IOException
-	 */
 	RBACRole getRoleOnGroup(RBACSubject subject, Group group) throws IOException;
 
-	
-	/**
-	 * Assign assistant role to the given subject in the context of the given group.
-	 * @param subject 
-	 * @param groupId
-	 * @return
-	 * @throws IOException
-	 */
+	RBACRole getRoleOnProject(RBACSubject subject, ProjectReference projectReference) throws IOException;
+
+	boolean isAuthorizedOnProject(RBACSubject subject, RBACPermission permission, ProjectReference projectReference);
+
+
+	// TODO: consider renaming 'assign' functions - rather use the same language as GitLab (also see callers)
 	RBACSubject assignOnGroup(RBACSubject subject, Long groupId, LocalDate expiresAt) throws IOException;
-	
-	/**
-	 * Assign the given role to the given group in the context of the given project.
-	 * @param sharedGroup
-	 * @param projectReference
-	 * @return
-	 * @throws IOException
-	 */
-	SharedGroup assignOnProject(SharedGroup sharedGroup, RBACRole role, ProjectReference projectReference, LocalDate expiresAt, boolean reassign) throws IOException;
 
-
-	
-	/**
-	 * Unassign the given group from the given project.
-	 * @param sharedGroup
-	 * @param projectReference
-	 * @throws IOException
-	 */
-	void unassignFromProject(SharedGroup sharedGroup, ProjectReference projectReference) throws IOException;
-
-	
-	/**
-	 * Updates role and/or expiration date of a member of a group.
-	 * @param userId the ID of the member of the group
-	 * @param groupId the ID of the group
-	 * @param role the new role
-	 * @param expiresAt new expiration date
-	 * @return the updated member
-	 * @throws IOException
-	 */
 	RBACSubject updateAssignmentOnGroup(Long userId, Long groupId, RBACRole role, LocalDate expiresAt) throws IOException;
-	
+
+
+	RBACSubject assignOnProject(RBACSubject subject, RBACRole role, ProjectReference projectReference, LocalDate expiresAt) throws IOException;
+
+	void unassignFromProject(RBACSubject subject, ProjectReference projectReference) throws IOException;
+
+
+	SharedGroup assignOnProject(SharedGroup sharedGroup, RBACRole role, ProjectReference projectReference, LocalDate expiresAt, boolean reassign)
+			throws IOException;
+
+	void unassignFromProject(SharedGroup sharedGroup, ProjectReference projectReference) throws IOException;
 }

@@ -44,6 +44,50 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 	}
 
 	@Override
+	public final RBACRole getRoleOnGroup(RBACSubject subject, Group group) throws IOException {
+		try {
+			org.gitlab4j.api.models.Group gitlabGroup = getGitLabApi().getGroupApi().getGroup(group.getId());
+
+			if (gitlabGroup == null) {
+				throw new IOException(String.format("Unknown group \"%s\"", group.getName()));
+			}
+
+			Member member = getGitLabApi().getGroupApi().getMember(group.getId(), subject.getUserId(), true);
+			if (member == null ) {
+				throw new IOException(String.format("Member \"%s\" not found in group \"%s\"", subject, group.getName()));
+			}
+
+			return RBACRole.forValue(member.getAccessLevel().value);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+					String.format("Failed to get role on group \"%s\" for member \"%s\"", group.getName(), subject),
+					e
+			);
+		}
+	}
+
+	@Override
+	public final RBACRole getRoleOnProject(RBACSubject subject, ProjectReference projectReference) throws IOException {
+		try {
+			Project project = fetchProject(projectReference);
+
+			Member member = getGitLabApi().getProjectApi().getMember(project.getId(), subject.getUserId(), true);
+			if (member == null ) {
+				throw new IOException(String.format("Member \"%s\" not found in project \"%s\"", subject, projectReference.getName()));
+			}
+
+			return RBACRole.forValue(member.getAccessLevel().value);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+					String.format("Failed to get role on project \"%s\" for member \"%s\"", projectReference.getName(), subject),
+					e
+			);
+		}
+	}
+
+	@Override
 	public final boolean isAuthorizedOnProject(RBACSubject subject, RBACPermission permission, ProjectReference projectReference) {
 		try {
 			Project project = fetchProject(projectReference);
@@ -70,7 +114,6 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 		}
 	}
 
-	// TODO: consider renaming 'assign' functions - rather use the same language as GitLab (also see callers)
 	@Override
 	public final RBACSubject assignOnGroup(RBACSubject subject, Long groupId, LocalDate expiresAt) throws IOException {
 		try {
@@ -107,6 +150,44 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 		catch (GitLabApiException e) {
 			throw new IOException(
 					String.format("Failed to update member with ID %d in group with ID %d", userId, groupId),
+					e
+			);
+		}
+	}
+
+	private RBACSubject addProjectMember(RBACSubject subject, RBACRole role, Long projectId, Date expiresAt) throws IOException {
+		try {
+			return new GitMember(
+					getGitLabApi().getProjectApi().addMember(
+							projectId,
+							subject.getUserId(),
+							AccessLevel.forValue(role.getAccessLevel()),
+							expiresAt
+					)
+			);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+					String.format("Failed to add member \"%s\" to project with ID %s", subject, projectId),
+					e
+			);
+		}
+	}
+
+	private RBACSubject updateProjectMember(RBACSubject subject, RBACRole role, long projectId, Date expiresAt) throws IOException {
+		try {
+			return new GitMember(
+					getGitLabApi().getProjectApi().updateMember(
+							projectId,
+							subject.getUserId(),
+							AccessLevel.forValue(role.getAccessLevel()),
+							expiresAt
+					)
+			);
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+					String.format("Failed to update member \"%s\" in project with ID %s", subject, projectId),
 					e
 			);
 		}
@@ -159,6 +240,21 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 	}
 
 	@Override
+	public final void unassignFromProject(RBACSubject subject, ProjectReference projectReference) throws IOException {
+		try {
+			Project project = fetchProject(projectReference);
+
+			getGitLabApi().getProjectApi().removeMember(project.getId(), subject.getUserId());
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+					String.format("Failed to remove member \"%s\" from project \"%s\"", subject, projectReference.getName()),
+					e
+			);
+		}
+	}
+
+	@Override
 	public SharedGroup assignOnProject(SharedGroup sharedGroup, RBACRole role, ProjectReference projectReference, LocalDate expiresAt, boolean reassign)
 			throws IOException {
 		try {
@@ -194,21 +290,6 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 	}
 
 	@Override
-	public final void unassignFromProject(RBACSubject subject, ProjectReference projectReference) throws IOException {
-		try {
-			Project project = fetchProject(projectReference);
-
-			getGitLabApi().getProjectApi().removeMember(project.getId(), subject.getUserId());
-		}
-		catch (GitLabApiException e) {
-			throw new IOException(
-					String.format("Failed to remove member \"%s\" from project \"%s\"", subject, projectReference.getName()),
-					e
-			);
-		}
-	}
-
-	@Override
 	public void unassignFromProject(SharedGroup sharedGroup, ProjectReference projectReference) throws IOException {
 		try {
 			Project project = fetchProject(projectReference);
@@ -218,88 +299,6 @@ public abstract class GitlabManagerCommon implements IRBACManager {
 		catch (GitLabApiException e) {
 			throw new IOException(
 					String.format("Failed to remove group \"%s\" from project \"%s\"", sharedGroup.name(), projectReference.getName()),
-					e
-			);
-		}
-	}
-
-	private RBACSubject addProjectMember(RBACSubject subject, RBACRole role, Long projectId, Date expiresAt) throws IOException {
-		try {
-			return new GitMember(
-					getGitLabApi().getProjectApi().addMember(
-							projectId,
-							subject.getUserId(),
-							AccessLevel.forValue(role.getAccessLevel()),
-							expiresAt
-					)
-			);
-		}
-		catch (GitLabApiException e) {
-			throw new IOException(
-					String.format("Failed to add member \"%s\" to project with ID %s", subject, projectId),
-					e
-			);
-		}
-	}
-
-	private RBACSubject updateProjectMember(RBACSubject subject, RBACRole role, long projectId, Date expiresAt) throws IOException {
-		try {
-			return new GitMember(
-					getGitLabApi().getProjectApi().updateMember(
-							projectId,
-							subject.getUserId(),
-							AccessLevel.forValue(role.getAccessLevel()),
-							expiresAt
-					)
-			);
-		}
-		catch (GitLabApiException e) {
-			throw new IOException(
-					String.format("Failed to update member \"%s\" in project with ID %s", subject, projectId),
-					e
-			);
-		}
-	}
-
-	@Override
-	public final RBACRole getRoleOnProject(RBACSubject subject, ProjectReference projectReference) throws IOException {
-		try {
-			Project project = fetchProject(projectReference);
-
-			Member member = getGitLabApi().getProjectApi().getMember(project.getId(), subject.getUserId(), true);
-			if (member == null ) {
-				throw new IOException(String.format("Member \"%s\" not found in project \"%s\"", subject, projectReference.getName()));
-			}
-
-			return RBACRole.forValue(member.getAccessLevel().value);
-		}
-		catch (GitLabApiException e) {
-			throw new IOException(
-					String.format("Failed to get role on project \"%s\" for member \"%s\"", projectReference.getName(), subject),
-					e
-			);
-		}
-	}
-
-	@Override
-	public final RBACRole getRoleOnGroup(RBACSubject subject, Group group) throws IOException {
-		try {
-			org.gitlab4j.api.models.Group gitlabGroup = getGitLabApi().getGroupApi().getGroup(group.getId());
-
-			if (gitlabGroup == null) {
-				throw new IOException(String.format("Unknown group \"%s\"", group.getName()));
-			}
-
-			Member member = getGitLabApi().getGroupApi().getMember(group.getId(), subject.getUserId(), true);
-			if (member == null ) {
-				throw new IOException(String.format("Member \"%s\" not found in group \"%s\"", subject, group.getName()));
-			}
-
-			return RBACRole.forValue(member.getAccessLevel().value);
-		}
-		catch (GitLabApiException e) {
-			throw new IOException(
-					String.format("Failed to get role on group \"%s\" for member \"%s\"", group.getName(), subject),
 					e
 			);
 		}
