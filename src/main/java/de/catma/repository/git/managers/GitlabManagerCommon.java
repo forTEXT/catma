@@ -1,7 +1,7 @@
 package de.catma.repository.git.managers;
 
 import de.catma.project.ProjectReference;
-import de.catma.rbac.IRBACManager;
+import de.catma.rbac.RBACManager;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
@@ -22,7 +22,7 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class GitlabManagerCommon implements IRBACManager {
+public abstract class GitlabManagerCommon implements RBACManager {
 	protected abstract Logger getLogger();
 
 	public abstract GitLabApi getGitLabApi();

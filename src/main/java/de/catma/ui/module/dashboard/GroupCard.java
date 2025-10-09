@@ -28,7 +28,7 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager;
-import de.catma.rbac.IRBACManager;
+import de.catma.rbac.RBACManager;
 import de.catma.rbac.RBACConstraint;
 import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
@@ -61,7 +61,7 @@ public class GroupCard extends VerticalFlexLayout {
 	
 	private final ErrorHandler errorHandler;
 	
-	private final IRBACManager rbacManager;
+	private final RBACManager rbacManager;
     private final RBACConstraintEnforcer<RBACRole> rbacEnforcer = new RBACConstraintEnforcer<>();
     
     private Grid<Member> memberGrid;
@@ -74,7 +74,7 @@ public class GroupCard extends VerticalFlexLayout {
 	private IconButton btnLeave;
 
 
-    public GroupCard(Group group, ProjectsManager projectsManager, EventBus eventBus, IRBACManager rbacManager) {
+    public GroupCard(Group group, ProjectsManager projectsManager, EventBus eventBus, RBACManager rbacManager) {
         this.group = group;
         this.projectsManager = projectsManager;
         this.eventBus = eventBus;

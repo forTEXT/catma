@@ -10,7 +10,7 @@ import java.time.LocalDate;
 /**
  * Role-Based Access Control Manager
  */
-public interface IRBACManager {
+public interface RBACManager {
 	default boolean hasPermission(RBACRole role, RBACPermission permission) {
 		if (role == null || permission == null) {
 			return false;
