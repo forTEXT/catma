@@ -167,7 +167,7 @@ public class ProjectListView extends VerticalLayout {
 					.stream()
 					.filter(
 							projectRef -> searchField.getValue() == null || searchField.getValue().trim().isEmpty()
-									|| projectRef.getName().contains(searchField.getValue().trim())
+									|| projectRef.getName().toLowerCase().contains(searchField.getValue().trim().toLowerCase())
 					)
 					.sorted(sortedByBox.getValue().getSortComparator())
 					.map(projectRef -> new ProjectCard(projectRef, projectsManager, eventBus, remoteGitManagerRestricted))

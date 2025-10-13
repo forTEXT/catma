@@ -141,7 +141,7 @@ public class GroupListView extends VerticalLayout {
 					.stream()
 					.filter(
 							group -> searchField.getValue() == null || searchField.getValue().trim().isEmpty()
-									|| group.getName().contains(searchField.getValue().trim())
+									|| group.getName().toLowerCase().contains(searchField.getValue().trim().toLowerCase())
 					)
 					.sorted(sortedByBox.getValue().getSortComparator())
 					.map(group -> new GroupCard(group, projectsManager, eventBus, remoteGitManagerRestricted))
