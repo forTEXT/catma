@@ -13,7 +13,6 @@ import de.catma.ui.events.ProjectsChangedEvent;
 import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.module.main.ErrorHandler;
 
-import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.*;
 
@@ -59,20 +58,14 @@ public class ProjectListView extends VerticalLayout {
 			new Comparator<>() {
 				@Override
 				public int compare(ProjectReference o1, ProjectReference o2) {
-					try {
-						List<String> ownedProjectIds = projectsManager.getOwnedProjectIds(false);
-						if (ownedProjectIds.contains(o1.getProjectId()) && !ownedProjectIds.contains(o2.getProjectId())) {
-							return -1;
-						}
-						else if (ownedProjectIds.contains(o2.getProjectId()) && !ownedProjectIds.contains(o1.getProjectId())) {
-							return 1;
-						}
-						else {
-							return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
-						}
+					if (ownedProjectIds.contains(o1.getProjectId()) && !ownedProjectIds.contains(o2.getProjectId())) {
+						return -1;
 					}
-					catch (IOException e) {
-						throw new RuntimeException(e);
+					else if (ownedProjectIds.contains(o2.getProjectId()) && !ownedProjectIds.contains(o1.getProjectId())) {
+						return 1;
+					}
+					else {
+						return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
 					}
 				}
 			},
@@ -83,20 +76,14 @@ public class ProjectListView extends VerticalLayout {
 			new Comparator<>() {
 				@Override
 				public int compare(ProjectReference o1, ProjectReference o2) {
-					try {
-						List<String> ownedProjectIds = projectsManager.getOwnedProjectIds(false);
-						if (ownedProjectIds.contains(o1.getProjectId()) && !ownedProjectIds.contains(o2.getProjectId())) {
-							return 1;
-						}
-						else if (ownedProjectIds.contains(o2.getProjectId()) && !ownedProjectIds.contains(o1.getProjectId())) {
-							return -1;
-						}
-						else {
-							return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
-						}
+					if (ownedProjectIds.contains(o1.getProjectId()) && !ownedProjectIds.contains(o2.getProjectId())) {
+						return 1;
 					}
-					catch (IOException e) {
-						throw new RuntimeException(e);
+					else if (ownedProjectIds.contains(o2.getProjectId()) && !ownedProjectIds.contains(o1.getProjectId())) {
+						return -1;
+					}
+					else {
+						return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
 					}
 				}
 			},
@@ -108,6 +95,8 @@ public class ProjectListView extends VerticalLayout {
 	private IconButton helpButton;
 	private ProjectManagerHelpWindow helpWindow;
 	private HorizontalFlexLayout projectsLayout;
+
+	private List<String> ownedProjectIds;
 
 	public ProjectListView(ProjectsManager projectsManager, EventBus eventBus, RemoteGitManagerRestricted remoteGitManagerRestricted) {
 		this.projectsManager = projectsManager;
@@ -172,6 +161,8 @@ public class ProjectListView extends VerticalLayout {
 		projectsLayout.addComponent(new JoinProjectCard(remoteGitManagerRestricted.getUser(), eventBus));
 
 		try {
+			ownedProjectIds = projectsManager.getOwnedProjectIds(forceReload);
+
 			projectsManager.getProjectReferences(forceReload)
 					.stream()
 					.filter(
@@ -181,10 +172,6 @@ public class ProjectListView extends VerticalLayout {
 					.sorted(sortedByBox.getValue().getSortComparator())
 					.map(projectRef -> new ProjectCard(projectRef, projectsManager, eventBus, remoteGitManagerRestricted))
 					.forEach(projectsLayout::addComponent);
-
-			if (forceReload) {
-				projectsManager.getOwnedProjectIds(true);
-			}
 		}
 		catch (Exception e) {
 			((ErrorHandler) UI.getCurrent()).showAndLogError("Failed to fetch projects", e);

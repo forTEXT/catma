@@ -14,7 +14,6 @@ import de.catma.ui.layout.HorizontalFlexLayout;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.user.Group;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -39,20 +38,14 @@ public class GroupListView extends VerticalLayout {
 			new Comparator<>() {
 				@Override
 				public int compare(Group o1, Group o2) {
-					try {
-						List<Long> ownedGroupIds = projectsManager.getOwnedGroupIds(false);
-						if (ownedGroupIds.contains(o1.getId()) && !ownedGroupIds.contains(o2.getId())) {
-							return -1;
-						}
-						else if (ownedGroupIds.contains(o2.getId()) && !ownedGroupIds.contains(o1.getId())) {
-							return 1;
-						}
-						else {
-							return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
-						}
+					if (ownedGroupIds.contains(o1.getId()) && !ownedGroupIds.contains(o2.getId())) {
+						return -1;
 					}
-					catch (IOException e) {
-						throw new RuntimeException(e);
+					else if (ownedGroupIds.contains(o2.getId()) && !ownedGroupIds.contains(o1.getId())) {
+						return 1;
+					}
+					else {
+						return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
 					}
 				}
 			},
@@ -63,20 +56,14 @@ public class GroupListView extends VerticalLayout {
 			new Comparator<>() {
 				@Override
 				public int compare(Group o1, Group o2) {
-					try {
-						List<Long> ownedGroupIds = projectsManager.getOwnedGroupIds(false);
-						if (ownedGroupIds.contains(o1.getId()) && !ownedGroupIds.contains(o2.getId())) {
-							return 1;
-						}
-						else if (ownedGroupIds.contains(o2.getId()) && !ownedGroupIds.contains(o1.getId())) {
-							return -1;
-						}
-						else {
-							return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
-						}
+					if (ownedGroupIds.contains(o1.getId()) && !ownedGroupIds.contains(o2.getId())) {
+						return 1;
 					}
-					catch (IOException e) {
-						throw new RuntimeException(e);
+					else if (ownedGroupIds.contains(o2.getId()) && !ownedGroupIds.contains(o1.getId())) {
+						return -1;
+					}
+					else {
+						return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
 					}
 				}
 			},
@@ -88,6 +75,8 @@ public class GroupListView extends VerticalLayout {
 	private IconButton helpButton;
 	private GroupManagerHelpWindow helpWindow;
 	private HorizontalFlexLayout groupsLayout;
+
+	private List<Long> ownedGroupIds;
 
 	public GroupListView(ProjectsManager projectsManager, EventBus eventBus, RemoteGitManagerRestricted remoteGitManagerRestricted) {
 		this.projectsManager = projectsManager;
@@ -146,6 +135,8 @@ public class GroupListView extends VerticalLayout {
 		groupsLayout.addComponent(new CreateGroupCard(projectsManager, eventBus));
 
 		try {
+			ownedGroupIds = projectsManager.getOwnedGroupIds(forceReload);
+
 			projectsManager.getGroups(forceReload)
 					.stream()
 					.filter(
@@ -155,10 +146,6 @@ public class GroupListView extends VerticalLayout {
 					.sorted(sortedByBox.getValue().getSortComparator())
 					.map(group -> new GroupCard(group, projectsManager, eventBus, remoteGitManagerRestricted))
 					.forEach(groupsLayout::addComponent);
-
-			if (forceReload) {
-				projectsManager.getOwnedGroupIds(true);
-			}
 		}
 		catch (Exception e) {
 			((ErrorHandler) UI.getCurrent()).showAndLogError("Failed to fetch groups", e);
