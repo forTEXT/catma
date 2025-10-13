@@ -25,8 +25,6 @@ public class GroupListView extends VerticalLayout {
 	private final EventBus eventBus;
 	private final RemoteGitManagerRestricted remoteGitManagerRestricted;
 
-	private final Set<Long> deletedGroupIds;
-
 	private final SortItem<Group> sortByNameAsc = new SortItem<>(
 			(o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName()),
 			"Name: A-Z"
@@ -96,8 +94,6 @@ public class GroupListView extends VerticalLayout {
 		this.eventBus = eventBus;
 		this.remoteGitManagerRestricted = remoteGitManagerRestricted;
 
-		this.deletedGroupIds = new HashSet<>();
-
 		initComponents();
 		initData(false);
 		initActions();
@@ -156,12 +152,6 @@ public class GroupListView extends VerticalLayout {
 							group -> searchField.getValue() == null || searchField.getValue().trim().isEmpty()
 									|| group.getName().contains(searchField.getValue().trim())
 					)
-					// GitLab group deletion is a background operation, we usually still get the deleted group for some time after deletion
-					// TODO: check if this is still relevant now that GitLab marks groups for deletion and only truly deletes them later
-					//       also see GroupApi.getGroups calls in GitlabManagerRestricted (now also filtering on 'active')
-					//       groups marked for deletion are not renamed (unlike projects), so this filter does work for the current session, even if not
-					//       filtering on 'active'
-					.filter(group -> !deletedGroupIds.contains(group.getId()))
 					.sorted(sortedByBox.getValue().getSortComparator())
 					.map(group -> new GroupCard(group, projectsManager, eventBus, remoteGitManagerRestricted))
 					.forEach(groupsLayout::addComponent);
@@ -192,9 +182,6 @@ public class GroupListView extends VerticalLayout {
 
 	@Subscribe
 	public void handleGroupsChanged(GroupsChangedEvent groupsChangedEvent) {
-		if (groupsChangedEvent.getDeletedGroupId() != null) {
-			deletedGroupIds.add(groupsChangedEvent.getDeletedGroupId());
-		}
 		initData(true);
 	}
 

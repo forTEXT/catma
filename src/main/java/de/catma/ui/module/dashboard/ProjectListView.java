@@ -25,8 +25,6 @@ public class ProjectListView extends VerticalLayout {
 	private final EventBus eventBus;
 	private final RemoteGitManagerRestricted remoteGitManagerRestricted;
 
-	private final Set<String> deletedProjectIds;
-
 	private final SortItem<ProjectReference> sortByNameAsc = new SortItem<>(
 			(o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName()),
 			"Name: A-Z"
@@ -116,8 +114,6 @@ public class ProjectListView extends VerticalLayout {
 		this.eventBus = eventBus;
 		this.remoteGitManagerRestricted = remoteGitManagerRestricted;
 
-		this.deletedProjectIds = new HashSet<>();
-
 		initComponents();
 		initData(false);
 		initActions();
@@ -182,12 +178,6 @@ public class ProjectListView extends VerticalLayout {
 							projectRef -> searchField.getValue() == null || searchField.getValue().trim().isEmpty()
 									|| projectRef.getName().contains(searchField.getValue().trim())
 					)
-					// GitLab project deletion is a background operation, we usually still get the deleted project for some time after deletion
-					// TODO: check if this is still relevant now that GitLab marks projects for deletion and only truly deletes them later
-					//       also see ProjectApi.getProjects calls in GitlabManagerRestricted (now also filtering on 'active')
-					//       projects marked for deletion are renamed (unlike groups), so this filter no longer works (what we call the project ID is actually
-					//       the path, we don't use the stable/fixed numeric ID)
-					.filter(projectRef -> !deletedProjectIds.contains(projectRef.getProjectId()))
 					.sorted(sortedByBox.getValue().getSortComparator())
 					.map(projectRef -> new ProjectCard(projectRef, projectsManager, eventBus, remoteGitManagerRestricted))
 					.forEach(projectsLayout::addComponent);
@@ -218,9 +208,6 @@ public class ProjectListView extends VerticalLayout {
 
 	@Subscribe
 	public void handleProjectsChanged(ProjectsChangedEvent projectsChangedEvent) {
-		if (projectsChangedEvent.getDeletedProjectId() != null) {
-			deletedProjectIds.add(projectsChangedEvent.getDeletedProjectId());
-		}
 		initData(true);
 	}
 

@@ -97,7 +97,7 @@ public class GroupCard extends VerticalFlexLayout {
                             try {
                                 if (confirmDialog.isConfirmed()) {
                                     projectsManager.deleteGroup(group);
-                                    eventBus.post(new GroupsChangedEvent(group.getId()));
+                                    eventBus.post(new GroupsChangedEvent());
                                 }
                             }
                             catch (IOException e) {
