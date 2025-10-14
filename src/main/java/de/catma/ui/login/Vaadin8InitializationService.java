@@ -92,7 +92,6 @@ public class Vaadin8InitializationService implements InitializationService {
 				gitProjectsManager,
 				new CatmaHeader(eventBus, loginService, gitlabManagerPrivileged, api),
 				eventBus,
-				api,
 				loginService,
 				termsOfUseConsentGiven,
 				consent -> gitlabManagerPrivileged.setTermsOfUseConsentGiven(user, consent)

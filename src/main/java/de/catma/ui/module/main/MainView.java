@@ -15,10 +15,7 @@ import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectsManager;
 import de.catma.properties.CATMAPropertyKey;
-import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.ui.CatmaRouter;
-import de.catma.ui.Parameter;
-import de.catma.ui.ParameterProvider;
 import de.catma.ui.RequestTokenHandlerProvider;
 import de.catma.ui.events.HeaderContextChangeEvent;
 import de.catma.ui.events.QueryResultRowInAnnotateEvent;
@@ -38,7 +35,6 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 	private final ProjectsManager projectsManager;
 	private final CatmaHeader header;
 	private final EventBus eventBus;
-	private final RemoteGitManagerRestricted remoteGitManagerRestricted;
 
 	// mainSection is the combined section (navigation and viewSection / content)
 	private final HorizontalLayout mainSection = new HorizontalLayout();
@@ -58,7 +54,6 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 			ProjectsManager projectsManager,
 			CatmaHeader catmaHeader,
 			EventBus eventBus,
-			RemoteGitManagerRestricted remoteGitManagerRestricted,
 			LoginService loginLogoutService,
 			boolean termsOfUseConsentGiven,
 			Consumer<Boolean> termsOfUseUpdater
@@ -66,7 +61,6 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 		this.projectsManager = projectsManager;
 		this.header = catmaHeader;
 		this.eventBus = eventBus;
-		this.remoteGitManagerRestricted = remoteGitManagerRestricted;
 
 		this.navigation = new CatmaNav(eventBus);
 
@@ -166,7 +160,7 @@ public class MainView extends VerticalLayout implements CatmaRouter, Closeable {
 		closeViews();
 		
 		if (isNewTarget(routeToDashboardEvent.getClass())) {
-			dashBoardView = new DashboardView(projectsManager, remoteGitManagerRestricted, eventBus);
+			dashBoardView = new DashboardView(projectsManager, eventBus);
 			setContent(dashBoardView);
 			viewSection.addStyleName("no-margin-view-section");
 			eventBus.post(new HeaderContextChangeEvent());

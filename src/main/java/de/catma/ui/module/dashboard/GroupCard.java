@@ -28,7 +28,6 @@ import com.vaadin.ui.renderers.HtmlRenderer;
 
 import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager;
-import de.catma.rbac.RBACManager;
 import de.catma.rbac.RBACConstraint;
 import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
@@ -61,7 +60,6 @@ public class GroupCard extends VerticalFlexLayout {
 	
 	private final ErrorHandler errorHandler;
 	
-	private final RBACManager rbacManager;
     private final RBACConstraintEnforcer<RBACRole> rbacEnforcer = new RBACConstraintEnforcer<>();
     
     private Grid<Member> memberGrid;
@@ -74,11 +72,10 @@ public class GroupCard extends VerticalFlexLayout {
 	private IconButton btnLeave;
 
 
-    public GroupCard(Group group, ProjectsManager projectsManager, EventBus eventBus, RBACManager rbacManager) {
+    public GroupCard(Group group, ProjectsManager projectsManager, EventBus eventBus) {
         this.group = group;
         this.projectsManager = projectsManager;
         this.eventBus = eventBus;
-        this.rbacManager = rbacManager;
         this.errorHandler = (ErrorHandler)UI.getCurrent();
         initComponents();
         initActions();
@@ -144,14 +141,14 @@ public class GroupCard extends VerticalFlexLayout {
         
         rbacEnforcer.register(
     		RBACConstraint.ifAuthorized(
-				role -> rbacManager.hasPermission(role, RBACPermission.GROUP_MEMBERS_EDIT), 
+				role -> projectsManager.hasPermission(role, RBACPermission.GROUP_MEMBERS_EDIT),
 				() -> {
 					memberGridComponentMoreOptionsContextMenu.addItem("Edit Members", (selectedItem) -> handleEditMembers());
 					memberGridComponentMoreOptionsContextMenu.addItem("Remove Members", (selectedItem) -> handleRemoveMembers());
 				}));
         rbacEnforcer.register(
     		RBACConstraint.ifNotAuthorized(
-				role -> rbacManager.hasPermission(role, RBACPermission.GROUP_MEMBERS_EDIT), 
+				role -> projectsManager.hasPermission(role, RBACPermission.GROUP_MEMBERS_EDIT),
 				() -> {
 					memberGridComponent.getActionGridBar().setAddBtnVisible(false);
 					memberGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false);
@@ -306,7 +303,7 @@ public class GroupCard extends VerticalFlexLayout {
 	
 	private void initData() {
 		try {
-			RBACRole groupRole = rbacManager.getRoleOnGroup(projectsManager.getUser(), group);
+			RBACRole groupRole = projectsManager.getRoleOnGroup(group);
 			rbacEnforcer.enforceConstraints(groupRole); // normally done in reload();
 		} catch (IOException e) {
             errorHandler.showAndLogError(String.format("Can't fetch permissions for group \"%s\"", group.getName()), e);
@@ -397,7 +394,7 @@ public class GroupCard extends VerticalFlexLayout {
 
 		rbacEnforcer.register(
 				RBACConstraint.ifNotAuthorized(
-						role -> rbacManager.hasPermission(role, RBACPermission.GROUP_EDIT),
+						role -> projectsManager.hasPermission(role, RBACPermission.GROUP_EDIT),
 						() -> {
 							btnEdit.setVisible(false);
 							btnEdit.setEnabled(false);
@@ -407,7 +404,7 @@ public class GroupCard extends VerticalFlexLayout {
 
 		rbacEnforcer.register(
 				RBACConstraint.ifNotAuthorized(
-						role -> rbacManager.hasPermission(role, RBACPermission.GROUP_DELETE),
+						role -> projectsManager.hasPermission(role, RBACPermission.GROUP_DELETE),
 						() -> {
 							btnRemove.setVisible(false);
 							btnRemove.setEnabled(false);
@@ -417,8 +414,8 @@ public class GroupCard extends VerticalFlexLayout {
 
 		rbacEnforcer.register(
 				RBACConstraint.ifNotAuthorized(
-						role -> rbacManager.hasPermission(role, RBACPermission.GROUP_LEAVE)
-								&& !rbacManager.hasPermission(role, RBACPermission.GROUP_DELETE), // the owner is the only one with 'delete' permission and the owner cannot leave his group
+						role -> projectsManager.hasPermission(role, RBACPermission.GROUP_LEAVE)
+								&& !projectsManager.hasPermission(role, RBACPermission.GROUP_DELETE), // the owner is the only one with 'delete' permission and the owner cannot leave his group
 						() -> {
 							btnLeave.setVisible(false);
 							btnLeave.setEnabled(false);

@@ -7,7 +7,6 @@ import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.VerticalLayout;
 
 import de.catma.project.ProjectsManager;
-import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.ui.events.ShowGroupsEvent;
 
 /**
@@ -18,22 +17,22 @@ public class DashboardView extends VerticalLayout {
 	private Tab groupsTab;
 	private EventBus eventBus;
 
-	public DashboardView(ProjectsManager projectsManager, RemoteGitManagerRestricted remoteGitManagerRestricted, EventBus eventBus) {
+	public DashboardView(ProjectsManager projectsManager, EventBus eventBus) {
 		this.eventBus = eventBus;
 		this.eventBus.register(this);
-		initComponents(projectsManager, remoteGitManagerRestricted, eventBus);
+		initComponents(projectsManager, eventBus);
 	}
 
-	private void initComponents(ProjectsManager projectsManager, RemoteGitManagerRestricted remoteGitManagerRestricted, EventBus eventBus) {
+	private void initComponents(ProjectsManager projectsManager, EventBus eventBus) {
 		setSizeFull();
 		setMargin(false);
 		addStyleName("dashboard-view");
 		tabSheet = new TabSheet();
 		addComponent(tabSheet);
 
-		ProjectListView projectListView = new ProjectListView(projectsManager, eventBus, remoteGitManagerRestricted);
+		ProjectListView projectListView = new ProjectListView(projectsManager, eventBus);
 		tabSheet.addTab(projectListView, "All Projects");
-		groupsTab = tabSheet.addTab(new GroupListView(projectsManager, eventBus, remoteGitManagerRestricted), "User Groups");
+		groupsTab = tabSheet.addTab(new GroupListView(projectsManager, eventBus), "User Groups");
 	}
 	
 	@Subscribe

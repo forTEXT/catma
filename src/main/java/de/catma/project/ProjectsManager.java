@@ -19,6 +19,14 @@ public interface ProjectsManager {
 		description,
 	}
 
+	boolean hasPermission(RBACRole role, RBACPermission permission);
+
+	RBACRole getRoleOnGroup(Group group) throws IOException;
+
+	RBACRole getRoleOnProject(ProjectReference projectReference) throws IOException;
+
+	Set<Member> getProjectMembers(ProjectReference projectReference) throws IOException;
+
 	/**
 	 * Gets the user for the current session.
 	 *

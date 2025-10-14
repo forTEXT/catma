@@ -5,7 +5,6 @@ import com.google.common.eventbus.Subscribe;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.*;
 import de.catma.project.ProjectsManager;
-import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.GroupsChangedEvent;
 import de.catma.ui.events.MembersChangedEvent;
@@ -22,7 +21,6 @@ import java.util.*;
 public class GroupListView extends VerticalLayout {
 	private final ProjectsManager projectsManager;
 	private final EventBus eventBus;
-	private final RemoteGitManagerRestricted remoteGitManagerRestricted;
 
 	private final SortItem<Group> sortByNameAsc = new SortItem<>(
 			(o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName()),
@@ -78,10 +76,9 @@ public class GroupListView extends VerticalLayout {
 
 	private List<Long> ownedGroupIds;
 
-	public GroupListView(ProjectsManager projectsManager, EventBus eventBus, RemoteGitManagerRestricted remoteGitManagerRestricted) {
+	public GroupListView(ProjectsManager projectsManager, EventBus eventBus) {
 		this.projectsManager = projectsManager;
 		this.eventBus = eventBus;
-		this.remoteGitManagerRestricted = remoteGitManagerRestricted;
 
 		initComponents();
 		initData(false);
@@ -144,7 +141,7 @@ public class GroupListView extends VerticalLayout {
 									|| group.getName().toLowerCase().contains(searchField.getValue().trim().toLowerCase())
 					)
 					.sorted(sortedByBox.getValue().getSortComparator())
-					.map(group -> new GroupCard(group, projectsManager, eventBus, remoteGitManagerRestricted))
+					.map(group -> new GroupCard(group, projectsManager, eventBus))
 					.forEach(groupsLayout::addComponent);
 		}
 		catch (Exception e) {

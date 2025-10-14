@@ -6,7 +6,6 @@ import com.vaadin.icons.VaadinIcons;
 import com.vaadin.ui.*;
 import de.catma.project.ProjectReference;
 import de.catma.project.ProjectsManager;
-import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.GroupsChangedEvent;
 import de.catma.ui.events.ProjectsChangedEvent;
@@ -23,7 +22,6 @@ import java.util.*;
 public class ProjectListView extends VerticalLayout {
 	private final ProjectsManager projectsManager;
 	private final EventBus eventBus;
-	private final RemoteGitManagerRestricted remoteGitManagerRestricted;
 
 	private final SortItem<ProjectReference> sortByNameAsc = new SortItem<>(
 			(o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName()),
@@ -99,10 +97,9 @@ public class ProjectListView extends VerticalLayout {
 
 	private List<String> ownedProjectIds;
 
-	public ProjectListView(ProjectsManager projectsManager, EventBus eventBus, RemoteGitManagerRestricted remoteGitManagerRestricted) {
+	public ProjectListView(ProjectsManager projectsManager, EventBus eventBus) {
 		this.projectsManager = projectsManager;
 		this.eventBus = eventBus;
-		this.remoteGitManagerRestricted = remoteGitManagerRestricted;
 
 		initComponents();
 		initData(false);
@@ -159,7 +156,7 @@ public class ProjectListView extends VerticalLayout {
 		projectsLayout.removeAllComponents();
 
 		projectsLayout.addComponent(new CreateProjectCard(projectsManager, eventBus));
-		projectsLayout.addComponent(new JoinProjectCard(remoteGitManagerRestricted.getUser(), eventBus));
+		projectsLayout.addComponent(new JoinProjectCard(projectsManager.getUser(), eventBus));
 
 		try {
 			ownedProjectIds = projectsManager.getOwnedProjectIds(forceReload);
@@ -171,7 +168,7 @@ public class ProjectListView extends VerticalLayout {
 									|| projectRef.getName().toLowerCase().contains(searchField.getValue().trim().toLowerCase())
 					)
 					.sorted(sortedByBox.getValue().getSortComparator())
-					.map(projectRef -> new ProjectCard(projectRef, projectsManager, eventBus, remoteGitManagerRestricted))
+					.map(projectRef -> new ProjectCard(projectRef, projectsManager, eventBus))
 					.forEach(projectsLayout::addComponent);
 		}
 		catch (Exception e) {

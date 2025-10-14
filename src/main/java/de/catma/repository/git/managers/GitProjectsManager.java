@@ -11,6 +11,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.apache.commons.io.FileUtils;
@@ -66,6 +67,26 @@ public class GitProjectsManager implements ProjectsManager {
 		this.localGitRepositoryManager = new JGitRepoManager(this.gitBasedRepositoryBasePath, this.user);
 		this.jGitCredentialsManager = new JGitCredentialsManager(this.remoteGitServerManager);
 		this.idGenerator = new IDGenerator();
+	}
+
+	@Override
+	public boolean hasPermission(RBACRole role, RBACPermission permission) {
+		return remoteGitServerManager.hasPermission(role, permission);
+	}
+
+	@Override
+	public RBACRole getRoleOnGroup(Group group) throws IOException {
+		return remoteGitServerManager.getRoleOnGroup(user, group);
+	}
+
+	@Override
+	public RBACRole getRoleOnProject(ProjectReference projectReference) throws IOException {
+		return remoteGitServerManager.getRoleOnProject(user, projectReference);
+	}
+
+	@Override
+	public Set<Member> getProjectMembers(ProjectReference projectReference) throws IOException {
+		return remoteGitServerManager.getProjectMembers(projectReference);
 	}
 
 	@Override

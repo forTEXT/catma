@@ -20,7 +20,6 @@ import de.catma.rbac.RBACConstraint;
 import de.catma.rbac.RBACConstraintEnforcer;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
-import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.ui.component.IconButton;
 import de.catma.ui.events.ProjectsChangedEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
@@ -48,24 +47,20 @@ public class ProjectCard extends VerticalFlexLayout  {
 
 	private final EventBus eventBus;
 
-	private final RemoteGitManagerRestricted rbacManager;
-	
 	private final RBACConstraintEnforcer<RBACRole> rbacEnforcer = new RBACConstraintEnforcer<>();
 
 	private final ClickAction clickAction;
 
-	public ProjectCard(ProjectReference projectReference, ProjectsManager projectManager, EventBus eventBus, RemoteGitManagerRestricted rbacManager) {
-		this(projectReference, projectManager, eventBus, rbacManager, ref -> eventBus.post(new RouteToProjectEvent(ref)));
+	public ProjectCard(ProjectReference projectReference, ProjectsManager projectManager, EventBus eventBus) {
+		this(projectReference, projectManager, eventBus, ref -> eventBus.post(new RouteToProjectEvent(ref)));
 	}
 
     private ProjectCard(
     		ProjectReference projectReference, ProjectsManager projectManager, 
-    		EventBus eventBus, RemoteGitManagerRestricted rbacManager, 
-    		ClickAction clickAction){
+    		EventBus eventBus, ClickAction clickAction){
         this.projectReference = Objects.requireNonNull(projectReference) ;
         this.projectManager = projectManager;
         this.eventBus = eventBus;
-        this.rbacManager = rbacManager;
         this.errorLogger = (ErrorHandler) UI.getCurrent();
         this.clickAction = clickAction;
         initComponents();
@@ -76,7 +71,7 @@ public class ProjectCard extends VerticalFlexLayout  {
 
     private void initData() {
 		try {
-			RBACRole projectRole = rbacManager.getRoleOnProject(projectManager.getUser(), projectReference);
+			RBACRole projectRole = projectManager.getRoleOnProject(projectReference);
 			rbacEnforcer.enforceConstraints(projectRole); // normally done in reload();
 		} catch (IOException e) {
             errorLogger.showAndLogError(String.format("Can't fetch permissions for project \"%s\"", projectReference.getName()), e);
@@ -187,8 +182,8 @@ public class ProjectCard extends VerticalFlexLayout  {
 				clickEvent -> {
 					
 					try {
-						Set<Member> members = rbacManager.getProjectMembers(projectReference);
-						Member self = members.stream().filter(m -> m.getUserId().equals(rbacManager.getUser().getUserId())).findAny().orElse(null);
+						Set<Member> members = projectManager.getProjectMembers(projectReference);
+						Member self = members.stream().filter(m -> m.getUserId().equals(projectManager.getUser().getUserId())).findAny().orElse(null);
 						if (self != null) {
 							if (self instanceof SharedGroupMember) {
 								Notification groupMembershipNotification = new Notification(
@@ -237,7 +232,7 @@ public class ProjectCard extends VerticalFlexLayout  {
 
 		rbacEnforcer.register(
 				RBACConstraint.ifNotAuthorized(
-						role -> rbacManager.hasPermission(role, RBACPermission.PROJECT_EDIT),
+						role -> projectManager.hasPermission(role, RBACPermission.PROJECT_EDIT),
 						() -> {
 							btnEdit.setVisible(false);
 							btnEdit.setEnabled(false);
@@ -247,7 +242,7 @@ public class ProjectCard extends VerticalFlexLayout  {
 
 		rbacEnforcer.register(
 				RBACConstraint.ifNotAuthorized(
-						role -> rbacManager.hasPermission(role, RBACPermission.PROJECT_DELETE),
+						role -> projectManager.hasPermission(role, RBACPermission.PROJECT_DELETE),
 						() -> {
 							btnRemove.setVisible(false);
 							btnRemove.setEnabled(false);
@@ -257,8 +252,8 @@ public class ProjectCard extends VerticalFlexLayout  {
 
 		rbacEnforcer.register(
 				RBACConstraint.ifNotAuthorized(
-						role -> rbacManager.hasPermission(role, RBACPermission.PROJECT_LEAVE)
-								&& !rbacManager.hasPermission(role, RBACPermission.PROJECT_DELETE), // only owners can delete projects and owners should not be able to leave
+						role -> projectManager.hasPermission(role, RBACPermission.PROJECT_LEAVE)
+								&& !projectManager.hasPermission(role, RBACPermission.PROJECT_DELETE), // only owners can delete projects and owners should not be able to leave
 						() -> {
 							btnLeave.setVisible(false);
 							btnLeave.setEnabled(false);
