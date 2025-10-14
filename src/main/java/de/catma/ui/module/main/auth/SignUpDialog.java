@@ -168,7 +168,7 @@ public class SignUpDialog extends AuthenticationDialog {
 		userDataBinder.forField(tfEmail)
 				.asRequired("Email address is required")
 				.withValidator(new EmailValidator("Email address is invalid"))
-				.withValidator(new AccountAlreadyTakenValidator(gitManagerPrivileged))
+				.withValidator(new EmailAlreadyRegisteredValidator(gitManagerPrivileged))
 				.bind(UserData::getEmail, UserData::setEmail);
 
 		HorizontalLayout hlEmailDescriptionAndButton = new HorizontalLayout();

@@ -46,6 +46,15 @@ public interface RemoteGitManagerPrivileged extends RemoteGitManagerCommon {
 	public String createPersonalAccessToken(long userId, String tokenName, LocalDate expiresAt) throws IOException;
 
 	/**
+	 * Checks whether a remote user account exists for a given email address or username.
+	 *
+	 * @param emailOrUsername the email address or username to search for
+	 * @return true if an account with the given email address or username exists, otherwise false
+	 * @throws IOException if an error occurs while searching
+	 */
+	boolean emailOrUsernameExists(String emailOrUsername) throws IOException;
+
+	/**
 	 * Creates a new remote user.
 	 * <p>
 	 * This action is performed as a GitLab admin.

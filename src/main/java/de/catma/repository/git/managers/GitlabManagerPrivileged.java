@@ -209,19 +209,18 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 			throw new IOException("Failed to modify user attributes",e);
 		}
 	}
-	
+
 	@Override
-	public boolean existsUserOrEmail(String usernameOrEmail) throws IOException {
+	public boolean emailOrUsernameExists(String emailOrUsername) throws IOException {
 		try {
-			List<User> userPager = this.privilegedGitLabApi.getUserApi().findUsers(usernameOrEmail);
-			return userPager.stream()
-			.filter(u -> usernameOrEmail.equals(u.getUsername()) || usernameOrEmail.equals(u.getEmail()))
-			.count() > 0;
-		} catch(GitLabApiException e){
-			throw new IOException("Failed to check whether user exists",e);
+			return privilegedGitLabApi.getUserApi().findUsers(emailOrUsername)
+					.stream().anyMatch(user -> user.getUsername().equals(emailOrUsername) || user.getEmail().equals(emailOrUsername));
+		}
+		catch(GitLabApiException e) {
+			throw new IOException("Failed to check whether user exists", e);
 		}
 	}
-	
+
 	// it's more convenient to work with the User class internally, which is why this method exists
 	private User createUser(String email, String username, String password, String publicname, String provider
 			) throws IOException {

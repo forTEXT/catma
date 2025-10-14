@@ -132,23 +132,6 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	}
 
 
-	// RemoteGitManagerCommon implementations
-	@Override
-	public boolean existsUserOrEmail(String usernameOrEmail) throws IOException {
-		try {
-			List<org.gitlab4j.api.models.User> users = restrictedGitLabApi.getUserApi().findUsers(usernameOrEmail);
-
-			return users.stream()
-					// exclude current user, exact matches only
-					.filter(gitlabUser -> !gitlabUser.getId().equals(user.getUserId()))
-					.anyMatch(gitlabUser -> gitlabUser.getUsername().equals(usernameOrEmail) || gitlabUser.getEmail().equals(usernameOrEmail));
-		}
-		catch (GitLabApiException e){
-			throw new IOException("Failed to check whether user exists", e);
-		}
-	}
-
-
 	// GitUserInformationProvider implementations
 	@Override
 	public String getUsername() {

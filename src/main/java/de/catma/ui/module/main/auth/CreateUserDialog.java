@@ -75,7 +75,7 @@ public class CreateUserDialog extends Window {
 		tfEmail.setWidth("100%");
 		tfEmail.setValue(emailAddress);
 		tfEmail.setEnabled(false);
-		tfEmail.setDescription("Email is already been verified");
+		tfEmail.setDescription("Email already verified");
 		
 		PasswordField tfPassword = new PasswordField("Password");
 		tfPassword.setWidth("100%");
@@ -109,7 +109,8 @@ public class CreateUserDialog extends Window {
 		
 		content.addComponent(buttonPanel);
 		
-		userBinder.forField(tfUsername) 
+		userBinder.forField(tfUsername)
+		.asRequired("Username is required")
 	    .withValidator(new UsernameValidator(gitlabManagerPrivileged))
 	    .bind(UserData::getUsername, UserData::setUsername);
 		
