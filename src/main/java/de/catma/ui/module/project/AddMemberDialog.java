@@ -123,12 +123,6 @@ public class AddMemberDialog extends AbstractMemberDialog<MemberData> {
 
 	@Override
 	protected MemberData getResult() {
-		try {
-			return new MemberData(cbUsers.getValue(), cbRole.getValue(), expiresAtInput.getValue()); 
-		}
-		catch (Exception e) {
-			errorLogger.showAndLogError(null, e);
-			return null;
-		}
+		return new MemberData(cbUsers.getValue(), cbRole.getValue(), expiresAtInput.getValue());
 	}
 }

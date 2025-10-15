@@ -110,7 +110,7 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 			sqliteService = new SqliteService();
 		}
 		catch (Exception e) {
-			showAndLogError(null, e);
+			showAndLogError("Failed to initialize SqliteService", e);
 		}
 
 		logger.info("Session: " + request.getWrappedSession().getId());
