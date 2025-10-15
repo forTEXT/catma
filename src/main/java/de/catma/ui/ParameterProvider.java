@@ -1,7 +1,13 @@
 package de.catma.ui;
 
-public interface ParameterProvider {
+import java.util.Map;
 
-	public String getParameter(Parameter parameter);
-	
+public interface ParameterProvider {
+	Map<String, String[]> getParameters();
+	String[] getParameters(Parameter parameter);
+	String[] getParameters(String key);
+
+	String getParameter(Parameter parameter);
+	String getParameter(Parameter parameter, String defaultValue);
+	String getParameter(String key);
 }
