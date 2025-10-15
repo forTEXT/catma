@@ -156,6 +156,19 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 		}
 	}
 
+	@Override
+	public final void unassignFromGroup(RBACSubject subject, Long groupId) throws IOException {
+		try {
+			getGitLabApi().getGroupApi().removeMember(groupId, subject.getUserId());
+		}
+		catch (GitLabApiException e) {
+			throw new IOException(
+					String.format("Failed to remove member \"%s\" from group with ID %d", subject, groupId),
+					e
+			);
+		}
+	}
+
 	private RBACSubject addProjectMember(RBACSubject subject, RBACRole role, Long projectId, Date expiresAt) throws IOException {
 		try {
 			return new GitMember(

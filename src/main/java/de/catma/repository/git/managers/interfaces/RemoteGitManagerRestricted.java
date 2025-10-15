@@ -143,14 +143,6 @@ public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitU
 	 * @throws IOException if an error occurs when leaving the group
 	 */
 	void leaveGroup(Group group) throws IOException;
-	
-	/**
-	 * Unassign the given member subject from the given group.
-	 * @param subject the member
-	 * @param group the group to remove from
-	 * @throws IOException if an error occurs when removing the subject from the group
-	 */
-	void unassignFromGroup(RBACSubject subject, Group group) throws IOException;
 
 	
 	/**

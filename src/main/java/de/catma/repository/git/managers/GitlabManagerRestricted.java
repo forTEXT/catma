@@ -410,25 +410,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	
 	@Override
 	public void leaveGroup(de.catma.user.Group group) throws IOException {
-		unassignFromGroup(user, group);
-	}
-	
-	@Override
-	public void unassignFromGroup(RBACSubject subject, de.catma.user.Group group) throws IOException {
-		try {
-			GroupApi groupApi = restrictedGitLabApi.getGroupApi();
-			org.gitlab4j.api.models.Member member = groupApi.getMember(group.getId(), subject.getUserId());
-	
-			if (member != null
-					&& member.getAccessLevel().value >= AccessLevel.GUEST.value
-					&& member.getAccessLevel().value < AccessLevel.OWNER.value
-			) {
-				groupApi.removeMember(group.getId(), member.getId());
-			}
-		}
-		catch (GitLabApiException e) {
-			throw new IOException("Failed to remove subject from group", e);
-		}		
+		unassignFromGroup(user, group.getId());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -634,20 +616,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 	@Override
 	public void leaveProject(ProjectReference projectReference) throws IOException {
-		try {
-			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-			org.gitlab4j.api.models.Member member = projectApi.getMember(projectReference.getFullPath(), user.getUserId());
-
-			if (member != null
-					&& member.getAccessLevel().value >= AccessLevel.GUEST.value
-					&& member.getAccessLevel().value < AccessLevel.OWNER.value
-			) {
-				projectApi.removeMember(projectReference.getFullPath(), user.getUserId());
-			}
-		}
-		catch (GitLabApiException e) {
-			throw new IOException("Failed to leave project", e);
-		}
+		unassignFromProject(user,  projectReference);
 	}
 
 	@Override

@@ -153,7 +153,7 @@ public class GitProjectsManager implements ProjectsManager {
 	
 	@Override
 	public void unassignFromGroup(RBACSubject subject, Group group) throws IOException {
-		remoteGitServerManager.unassignFromGroup(subject, group);
+		remoteGitServerManager.unassignFromGroup(subject, group.getId());
 	}
 
 	@Override

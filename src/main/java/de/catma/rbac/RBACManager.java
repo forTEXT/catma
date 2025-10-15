@@ -31,6 +31,8 @@ public interface RBACManager {
 
 	RBACSubject updateAssignmentOnGroup(Long userId, Long groupId, RBACRole role, LocalDate expiresAt) throws IOException;
 
+	void unassignFromGroup(RBACSubject subject, Long groupId) throws IOException;
+
 
 	RBACSubject assignOnProject(RBACSubject subject, RBACRole role, ProjectReference projectReference, LocalDate expiresAt) throws IOException;
 
