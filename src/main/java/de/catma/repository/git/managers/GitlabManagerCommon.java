@@ -1,11 +1,11 @@
 package de.catma.repository.git.managers;
 
 import de.catma.project.ProjectReference;
-import de.catma.rbac.RBACManager;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
 import de.catma.repository.git.GitMember;
+import de.catma.repository.git.managers.interfaces.RemoteGitManagerCommon;
 import de.catma.user.Group;
 import de.catma.user.SharedGroup;
 import org.gitlab4j.api.GitLabApi;
@@ -22,9 +22,10 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class GitlabManagerCommon implements RBACManager {
+public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 	protected abstract Logger getLogger();
 
+	@Override
 	public abstract GitLabApi getGitLabApi();
 
 	private Project fetchProject(ProjectReference projectReference) throws GitLabApiException, IOException {
