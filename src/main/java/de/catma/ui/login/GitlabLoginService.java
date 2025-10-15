@@ -22,37 +22,34 @@ public class GitlabLoginService implements LoginService {
 
 	private final RemoteGitManagerFactory remoteGitManagerFactory;
 
-	private RemoteGitManagerRestricted remoteGitServerManager;
+	private RemoteGitManagerRestricted remoteGitManagerRestricted;
 
 	public GitlabLoginService(RemoteGitManagerFactory remoteGitManagerFactory) {
 		this.remoteGitManagerFactory = remoteGitManagerFactory;
 	}
 
 	@Override
-	public RemoteGitManagerRestricted login(String username, String password) throws IOException {
-		remoteGitServerManager = remoteGitManagerFactory.createFromUsernameAndPassword(username, password);
+	public void login(String username, String password) throws IOException {
+		remoteGitManagerRestricted = remoteGitManagerFactory.createFromUsernameAndPassword(username, password);
 		logLoginEvent("username/password");
-		return remoteGitServerManager;
 	}
 
 	@Override
-	public RemoteGitManagerRestricted login(String personalAccessToken) throws IOException {
-		remoteGitServerManager = remoteGitManagerFactory.createFromImpersonationToken(personalAccessToken);
+	public void login(String personalAccessToken) throws IOException {
+		remoteGitManagerRestricted = remoteGitManagerFactory.createFromImpersonationToken(personalAccessToken);
 		logLoginEvent("token");
-		return remoteGitServerManager;
 	}
 
 	@Override
-	public RemoteGitManagerRestricted loggedInFromThirdParty(String identifier, String provider, String email, String name) throws IOException {
+	public void loggedInFromThirdParty(String identifier, String provider, String email, String name) throws IOException {
 		RemoteGitManagerPrivileged gitlabManagerPrivileged = new GitlabManagerPrivileged();
 		Pair<GitUser, String> userAndToken = gitlabManagerPrivileged.acquireImpersonationToken(identifier, provider, email, name);
-		remoteGitServerManager = remoteGitManagerFactory.createFromImpersonationToken(userAndToken.getSecond());
+		remoteGitManagerRestricted = remoteGitManagerFactory.createFromImpersonationToken(userAndToken.getSecond());
 		logLoginEvent("third party");
-		return remoteGitServerManager;
 	}
 
 	private void logLoginEvent(String authMethod) {
-		if (remoteGitServerManager == null) {
+		if (remoteGitManagerRestricted == null) {
 			return;
 		}
 
@@ -61,7 +58,7 @@ public class GitlabLoginService implements LoginService {
 		logger.info(
 				String.format(
 						"User \"%1$s\" logged in with method \"%2$s\" (users: %3$d)",
-						remoteGitServerManager.getUser().preciseName(),
+						remoteGitManagerRestricted.getUser().preciseName(),
 						authMethod,
 						count
 				)
@@ -74,7 +71,7 @@ public class GitlabLoginService implements LoginService {
 	}
 
 	private void logLogoutEvent() {
-		if (remoteGitServerManager == null) {
+		if (remoteGitManagerRestricted == null) {
 			return;
 		}
 
@@ -83,7 +80,7 @@ public class GitlabLoginService implements LoginService {
 		logger.info(
 				String.format(
 						"User \"%s\" logged out (users: %d)",
-						remoteGitServerManager.getUser().preciseName(),
+						remoteGitManagerRestricted.getUser().preciseName(),
 						count
 				)
 		);
@@ -91,12 +88,12 @@ public class GitlabLoginService implements LoginService {
 
 	@Override
 	public RemoteGitManagerRestricted getRemoteGitManagerRestricted() {
-		return remoteGitServerManager;
+		return remoteGitManagerRestricted;
 	}
 
 	@Override
 	public void close() {
 		logLogoutEvent();
-		remoteGitServerManager = null;
+		remoteGitManagerRestricted = null;
 	}
 }
