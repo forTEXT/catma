@@ -43,6 +43,8 @@ public class TagLibrary implements Iterable<TagsetDefinition> {
 	private Locale locale;
 	
 	public TagLibrary() {
+		// TODO: change to one of the SortedMap implementations here, so that we have a stable sort order rather than random
+		//       also check if we do this elsewhere
 		tagsetDefinitionsByID = new HashMap<String, TagsetDefinition>();
 	}
 

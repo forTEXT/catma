@@ -1,0 +1,71 @@
+# An .aiignore file follows the same syntax as a .gitignore file.
+# .gitignore documentation: https://git-scm.com/docs/gitignore
+
+## Same as .gitignore:
+.gwt
+.idea
+.settings
+build
+catma_base
+db
+out
+repo
+target
+temp
+tmp
+
+# Eclipse config files
+.classpath
+.project
+
+# Eclipse scratch files
+*.jpage
+
+# MS Office temp files
+~$$*.*
+
+# Mac
+.DS_Store
+
+# Group/project signup-token transaction log
+group_project_signup_token*.*
+
+
+## Altered from .gitignore:
+
+# ALL properties files ("real" ones that may contain secrets, as well as the template, which won't be useful to AI)
+*.properties
+
+
+## Additionally:
+
+.github
+.run
+doc
+testdocs
+
+# Empty SQLite DB
+catma.db
+
+
+## Additionally, from sample at https://www.jetbrains.com/help/junie/aiignore.html with modifications:
+
+# Ignore project files
+*.iml
+
+# Ignore compiled Java class files
+*.class
+
+# Ignore all .java files except the ones from the 'src/main' and 'src/test/java' folders
+*.java
+!src/main/**/*.java
+!src/test/java/**/*.java
+
+# Ignore test reports and test directories
+test-results/
+allure-results/
+
+# Ignore logs and temporary files
+logs/
+*.log
+*.tmp

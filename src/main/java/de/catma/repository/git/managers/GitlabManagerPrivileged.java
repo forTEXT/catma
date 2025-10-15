@@ -144,7 +144,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 		String username = identifier + provider;
 
 		try {
-			User user = userApi.getUser(username);
+			User user = userApi.getUser(username); // TODO: user's email could have changed
 
 			if (user == null) {
 				user = createUser(
