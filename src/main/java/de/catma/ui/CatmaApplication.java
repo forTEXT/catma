@@ -286,15 +286,15 @@ public class CatmaApplication extends UI implements KeyValueStorage, BackgroundS
 
 	@Override
 	public void showAndLogError(String message, Throwable e) {
-		RemoteGitManagerRestricted api = null;
+		RemoteGitManagerRestricted remoteGitManagerRestricted = null;
 		try {
-			api = loginService.getAPI();
+			remoteGitManagerRestricted = loginService.getRemoteGitManagerRestricted();
 		}
 		catch (Exception ignored) {}
 
 		logger.log(
 				Level.SEVERE,
-				String.format("[%s] %s", api == null ? "not logged in" : api.getUsername(), message),
+				String.format("[%s] %s", remoteGitManagerRestricted == null ? "not logged in" : remoteGitManagerRestricted.getUsername(), message),
 				e
 		);
 

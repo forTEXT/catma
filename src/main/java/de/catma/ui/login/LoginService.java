@@ -9,6 +9,6 @@ public interface LoginService {
 	RemoteGitManagerRestricted login(String personalAccessToken) throws IOException;
 	RemoteGitManagerRestricted loggedInFromThirdParty(String identifier, String provider, String email, String name) throws IOException;
 	void logout();
-	RemoteGitManagerRestricted getAPI();
+	RemoteGitManagerRestricted getRemoteGitManagerRestricted();
 	void close();
 }

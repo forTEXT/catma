@@ -36,7 +36,7 @@ public class AccessTokenDialog extends Window {
 	public AccessTokenDialog(RemoteGitManagerPrivileged gitManagerPrivileged, LoginService loginService) {
 		this.gitManagerPrivileged = gitManagerPrivileged;
 
-		User user = loginService.getAPI().getUser();
+		User user = loginService.getRemoteGitManagerRestricted().getUser();
 		this.userId = user.getUserId();
 
 		setCaption(Messages.getString("AccessTokenDialog.caption"));

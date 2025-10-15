@@ -90,7 +90,7 @@ public class GitlabLoginService implements LoginService {
 	}
 
 	@Override
-	public RemoteGitManagerRestricted getAPI() {
+	public RemoteGitManagerRestricted getRemoteGitManagerRestricted() {
 		return remoteGitServerManager;
 	}
 

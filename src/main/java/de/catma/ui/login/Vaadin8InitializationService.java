@@ -68,15 +68,15 @@ public class Vaadin8InitializationService implements InitializationService {
 
 	@Override
 	public Component newEntryPage(EventBus eventBus, LoginService loginService, HazelCastService hazelcastService, SqliteService sqliteService) {
-		RemoteGitManagerRestricted api = loginService.getAPI();
+		RemoteGitManagerRestricted remoteGitManagerRestricted = loginService.getRemoteGitManagerRestricted();
 
-		if (api == null ) {
+		if (remoteGitManagerRestricted == null ) {
 			return new NotLoggedInMainView(this, loginService, hazelcastService, sqliteService, eventBus);
 		}
 
 		GitProjectsManager gitProjectsManager = new GitProjectsManager(
 				CATMAPropertyKey.GIT_REPOSITORY_BASE_PATH.getValue(),
-				api,
+				remoteGitManagerRestricted,
 				(projectReference) -> {}, // noop deletion handler, currently there is no persistent project on the graph level
 				acquireBackgroundService(),
 				eventBus
@@ -84,13 +84,13 @@ public class Vaadin8InitializationService implements InitializationService {
 
 		hazelcastService.start();
 
-		User user = api.getUser();
+		User user = remoteGitManagerRestricted.getUser();
 		GitlabManagerPrivileged gitlabManagerPrivileged = new GitlabManagerPrivileged();
 		boolean termsOfUseConsentGiven = gitlabManagerPrivileged.updateLastLoginAndGetTermsOfUseConsent(user);
 
 		return new MainView(
 				gitProjectsManager,
-				new CatmaHeader(eventBus, loginService, gitlabManagerPrivileged, api),
+				new CatmaHeader(eventBus, loginService, gitlabManagerPrivileged, remoteGitManagerRestricted),
 				eventBus,
 				loginService,
 				termsOfUseConsentGiven,

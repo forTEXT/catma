@@ -48,7 +48,7 @@ public class EditAccountDialog extends Window {
 		this.gitManagerPrivileged = gitManagerPrivileged;
 		this.remoteGitManagerRestricted = remoteGitManagerRestricted;
 
-		User user = loginService.getAPI().getUser();
+		User user = loginService.getRemoteGitManagerRestricted().getUser();
 		this.userId = user.getUserId();
 		this.name = user.getName();
 		this.username = user.getIdentifier();
