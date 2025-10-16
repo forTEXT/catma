@@ -9,6 +9,8 @@ import java.time.LocalDate;
 
 /**
  * Role-Based Access Control Manager
+ *
+ * @see de.catma.repository.git.managers.interfaces.RemoteGitManagerCommon
  */
 public interface RBACManager {
 	default boolean hasPermission(RBACRole role, RBACPermission permission) {

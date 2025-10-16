@@ -18,7 +18,12 @@ import de.catma.user.Member;
 import de.catma.user.User;
 
 /**
- * Provides restricted access (current user scope) to the remote Git server API
+ * Restricted operations (current user scope).
+ * <p>
+ * RemoteGitManagerRestricted is part of a set of interfaces that are related to the interactions with the remote Git server which acts as CATMA's project and
+ * user management backend.
+ *
+ * @see RemoteGitManagerCommon
  */
 public interface RemoteGitManagerRestricted extends RemoteGitManagerCommon, GitUserInformationProvider {
 	

@@ -7,10 +7,12 @@ import de.catma.repository.git.GitUser;
 import de.catma.util.Pair;
 
 /**
- * Privileged operations for user management
- * 
- * @author db
+ * Privileged operations for user management.
+ * <p>
+ * RemoteGitManagerPrivileged is part of a set of interfaces that are related to the interactions with the remote Git server which acts as CATMA's project and
+ * user management backend.
  *
+ * @see RemoteGitManagerCommon
  */
 public interface RemoteGitManagerPrivileged extends RemoteGitManagerCommon {
 

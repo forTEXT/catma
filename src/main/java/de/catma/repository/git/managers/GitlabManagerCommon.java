@@ -25,7 +25,6 @@ import java.util.logging.Logger;
 public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 	protected abstract Logger getLogger();
 
-	@Override
 	public abstract GitLabApi getGitLabApi();
 
 	private Project fetchProject(ProjectReference projectReference) throws GitLabApiException, IOException {
