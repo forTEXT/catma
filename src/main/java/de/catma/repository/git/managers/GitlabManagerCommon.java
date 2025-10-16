@@ -26,18 +26,6 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 
 	public abstract GitLabApi getGitLabApi();
 
-	private Project fetchProject(ProjectReference projectReference) throws GitLabApiException, IOException {
-		Project project = getGitLabApi().getProjectApi().getProject(
-				projectReference.getNamespace(), projectReference.getProjectId()
-		);
-
-		if (project == null) {
-			throw new IOException(String.format("Unknown project \"%s\"", projectReference.getName()));
-		}
-
-		return project;
-	}
-
 	private Date convertExpirationLocalDateToDate(LocalDate expiresAt) {
 		return expiresAt == null ? null : Date.from(expiresAt.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
 	}
@@ -45,14 +33,9 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 	@Override
 	public final RBACRole getRoleOnGroup(RBACSubject subject, Group group) throws IOException {
 		try {
-			org.gitlab4j.api.models.Group gitlabGroup = getGitLabApi().getGroupApi().getGroup(group.getId());
-
-			if (gitlabGroup == null) {
-				throw new IOException(String.format("Unknown group \"%s\"", group.getName()));
-			}
-
+			// TODO: we shouldn't need includeInherited here as we don't support group hierarchies
 			Member member = getGitLabApi().getGroupApi().getMember(group.getId(), subject.getUserId(), true);
-			if (member == null ) {
+			if (member == null ) { // TODO: test if this can actually happen or if an exception is thrown anyway
 				throw new IOException(String.format("Member \"%s\" not found in group \"%s\"", subject, group.getName()));
 			}
 
@@ -69,10 +52,8 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 	@Override
 	public final RBACRole getRoleOnProject(RBACSubject subject, ProjectReference projectReference) throws IOException {
 		try {
-			Project project = fetchProject(projectReference);
-
-			Member member = getGitLabApi().getProjectApi().getMember(project.getId(), subject.getUserId(), true);
-			if (member == null ) {
+			Member member = getGitLabApi().getProjectApi().getMember(projectReference.getFullPath(), subject.getUserId(), true);
+			if (member == null ) { // TODO: test if this can actually happen or if an exception is thrown anyway
 				throw new IOException(String.format("Member \"%s\" not found in project \"%s\"", subject, projectReference.getName()));
 			}
 
@@ -89,21 +70,15 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 	@Override
 	public final boolean isAuthorizedOnProject(RBACSubject subject, RBACPermission permission, ProjectReference projectReference) {
 		try {
-			Project project = fetchProject(projectReference);
-
-			Member projectMember = getGitLabApi().getProjectApi().getMember(project.getId(), subject.getUserId(), true);
+			Member projectMember = getGitLabApi().getProjectApi().getMember(projectReference.getFullPath(), subject.getUserId(), true);
 			if (projectMember == null || permission == null) {
 				return false;
 			}
 
 			return projectMember.getAccessLevel().value >= permission.getRoleRequired().getAccessLevel();
 		}
-		catch (IOException e) {
-			// unknown project
-			getLogger().warning(e.getMessage());
-			return false;
-		}
 		catch (GitLabApiException e) {
+			// TODO: throw and handle in caller
 			getLogger().log(
 					Level.SEVERE,
 					String.format("Failed to retrieve permissions for project \"%s\"", projectReference.getName()),
@@ -165,25 +140,29 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 		}
 	}
 
-	private void addProjectMember(RBACSubject subject, RBACRole role, Long projectId, Date expiresAt) throws IOException {
+	private void addProjectMember(RBACSubject subject, RBACRole role, ProjectReference projectReference, Date expiresAt) throws IOException {
 		try {
-			getGitLabApi().getProjectApi().addMember(projectId, subject.getUserId(), AccessLevel.forValue(role.getAccessLevel()), expiresAt);
+			getGitLabApi().getProjectApi().addMember(
+					projectReference.getFullPath(), subject.getUserId(), AccessLevel.forValue(role.getAccessLevel()), expiresAt
+			);
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
-					String.format("Failed to add member \"%s\" to project with ID %s", subject, projectId),
+					String.format("Failed to add member \"%s\" to project \"%s\"", subject, projectReference.getName()),
 					e
 			);
 		}
 	}
 
-	private void updateProjectMember(RBACSubject subject, RBACRole role, long projectId, Date expiresAt) throws IOException {
+	private void updateProjectMember(RBACSubject subject, RBACRole role, ProjectReference projectReference, Date expiresAt) throws IOException {
 		try {
-			getGitLabApi().getProjectApi().updateMember(projectId, subject.getUserId(), AccessLevel.forValue(role.getAccessLevel()), expiresAt);
+			getGitLabApi().getProjectApi().updateMember(
+					projectReference.getFullPath(), subject.getUserId(), AccessLevel.forValue(role.getAccessLevel()), expiresAt
+			);
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
-					String.format("Failed to update member \"%s\" in project with ID %s", subject, projectId),
+					String.format("Failed to update member \"%s\" in project \"%s\"", subject, projectReference.getName()),
 					e
 			);
 		}
@@ -192,12 +171,10 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 	@Override
 	public final void assignOnProject(RBACSubject subject, RBACRole role, ProjectReference projectReference, LocalDate expiresAt) throws IOException {
 		try {
-			Project project = fetchProject(projectReference);
-
 			Date expirationDate = convertExpirationLocalDateToDate(expiresAt);
 
 			try {
-				Member projectMember = getGitLabApi().getProjectApi().getMember(project.getId(), subject.getUserId());
+				Member projectMember = getGitLabApi().getProjectApi().getMember(projectReference.getFullPath(), subject.getUserId());
 				AccessLevel projectMemberAccessLevel = projectMember.getAccessLevel();
 
 				if (projectMemberAccessLevel == AccessLevel.OWNER || projectMemberAccessLevel.value == role.getAccessLevel()) {
@@ -210,13 +187,13 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 					return;
 				}
 
-				updateProjectMember(subject, role, project.getId(), expirationDate);
+				updateProjectMember(subject, role, projectReference, expirationDate);
 			}
 			catch (GitLabApiException e) {
 				// if getMember above does not find the member in the project it throws GitLabApiException: 404 Not found
 				if (e.getMessage().contains("404")) {
 					// we need to add the member to the project
-					addProjectMember(subject, role, project.getId(), expirationDate);
+					addProjectMember(subject, role, projectReference, expirationDate);
 				}
 				else {
 					throw e;
@@ -240,9 +217,7 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 	@Override
 	public final void unassignFromProject(RBACSubject subject, ProjectReference projectReference) throws IOException {
 		try {
-			Project project = fetchProject(projectReference);
-
-			getGitLabApi().getProjectApi().removeMember(project.getId(), subject.getUserId());
+			getGitLabApi().getProjectApi().removeMember(projectReference.getFullPath(), subject.getUserId());
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
@@ -253,16 +228,15 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 	}
 
 	@Override
-	public void assignOnProject(SharedGroup sharedGroup, RBACRole role, ProjectReference projectReference, LocalDate expiresAt, boolean reassign)
+	public final void assignOnProject(SharedGroup sharedGroup, RBACRole role, ProjectReference projectReference, LocalDate expiresAt, boolean reassign)
 			throws IOException {
 		try {
-			Project project = fetchProject(projectReference);
-
 			if (reassign) {
-				getGitLabApi().getProjectApi().unshareProject(project.getId(), sharedGroup.groupId());
+				getGitLabApi().getProjectApi().unshareProject(projectReference.getFullPath(), sharedGroup.groupId());
 			}
 			else {
 				// check that the project is not already shared with the group (GitLab returns an error if we try to share the same project again)
+				Project project = getGitLabApi().getProjectApi().getProject(projectReference.getFullPath()); // TODO: can project be null or does 404 = exc.?
 				if (project.getSharedWithGroups().stream().anyMatch(group -> group.getGroupId() == sharedGroup.groupId())) {
 					return;
 				}
@@ -271,7 +245,7 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 			Date expirationDate = convertExpirationLocalDateToDate(expiresAt);
 
 			getGitLabApi().getProjectApi().shareProject(
-					project.getId(),
+					projectReference.getFullPath(),
 					sharedGroup.groupId(), 
 					AccessLevel.forValue(role.getAccessLevel()), 
 					expirationDate
@@ -286,11 +260,9 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 	}
 
 	@Override
-	public void unassignFromProject(SharedGroup sharedGroup, ProjectReference projectReference) throws IOException {
+	public final void unassignFromProject(SharedGroup sharedGroup, ProjectReference projectReference) throws IOException {
 		try {
-			Project project = fetchProject(projectReference);
-
-			getGitLabApi().getProjectApi().unshareProject(project.getId(), sharedGroup.groupId());
+			getGitLabApi().getProjectApi().unshareProject(projectReference.getFullPath(), sharedGroup.groupId());
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
