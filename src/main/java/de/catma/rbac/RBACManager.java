@@ -21,28 +21,31 @@ public interface RBACManager {
 		return role.getAccessLevel() >= permission.getRoleRequired().getAccessLevel();
 	}
 
-	RBACRole getRoleOnGroup(RBACSubject subject, Group group) throws IOException;
-
-	RBACRole getRoleOnProject(RBACSubject subject, ProjectReference projectReference) throws IOException;
-
+	// TODO: this is only used in one place - hasPermission is used everywhere else (consistency; it would probably be cleaner to perform all permission checks
+	//       on the basis of resource/subject/permission, rather than relying on callers to do some of the work upfront, as is the case with hasPermission)
 	boolean isAuthorizedOnProject(RBACSubject subject, RBACPermission permission, ProjectReference projectReference);
 
 
 	// TODO: consider renaming 'assign' functions - rather use the same language as GitLab (also see callers)
-	RBACSubject assignOnGroup(RBACSubject subject, Long groupId, LocalDate expiresAt) throws IOException;
+	RBACRole getRoleOnGroup(RBACSubject subject, Group group) throws IOException;
 
-	RBACSubject updateAssignmentOnGroup(Long userId, Long groupId, RBACRole role, LocalDate expiresAt) throws IOException;
+	void assignOnGroup(RBACSubject subject, Long groupId, LocalDate expiresAt) throws IOException;
+
+	void updateAssignmentOnGroup(Long userId, Long groupId, RBACRole role, LocalDate expiresAt) throws IOException;
 
 	void unassignFromGroup(RBACSubject subject, Long groupId) throws IOException;
 
 
-	RBACSubject assignOnProject(RBACSubject subject, RBACRole role, ProjectReference projectReference, LocalDate expiresAt) throws IOException;
+	RBACRole getRoleOnProject(RBACSubject subject, ProjectReference projectReference) throws IOException;
+
+	// TODO: dual add/update implementation, consider splitting up
+	void assignOnProject(RBACSubject subject, RBACRole role, ProjectReference projectReference, LocalDate expiresAt) throws IOException;
 
 	void unassignFromProject(RBACSubject subject, ProjectReference projectReference) throws IOException;
 
 
-	SharedGroup assignOnProject(SharedGroup sharedGroup, RBACRole role, ProjectReference projectReference, LocalDate expiresAt, boolean reassign)
-			throws IOException;
+	// TODO: dual add/update implementation, consider splitting up
+	void assignOnProject(SharedGroup sharedGroup, RBACRole role, ProjectReference projectReference, LocalDate expiresAt, boolean reassign) throws IOException;
 
 	void unassignFromProject(SharedGroup sharedGroup, ProjectReference projectReference) throws IOException;
 }

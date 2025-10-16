@@ -793,12 +793,12 @@ public class GitProjectHandler {
 		return remoteGitServerManager.getRoleOnProject(subject, projectReference);
 	}
 
-	public RBACSubject assignOnProject(RBACSubject subject, RBACRole role, LocalDate expiresAt) throws IOException {
-		return remoteGitServerManager.assignOnProject(subject, role, projectReference, expiresAt);
+	public void assignOnProject(RBACSubject subject, RBACRole role, LocalDate expiresAt) throws IOException {
+		remoteGitServerManager.assignOnProject(subject, role, projectReference, expiresAt);
 	}
 	
-	public SharedGroup assignOnProject(SharedGroup group, RBACRole role, LocalDate expiresAt, boolean reassign) throws IOException {
-		return remoteGitServerManager.assignOnProject(group, role, projectReference, expiresAt, reassign);
+	public void assignOnProject(SharedGroup group, RBACRole role, LocalDate expiresAt, boolean reassign) throws IOException {
+		remoteGitServerManager.assignOnProject(group, role, projectReference, expiresAt, reassign);
 	}
 
 

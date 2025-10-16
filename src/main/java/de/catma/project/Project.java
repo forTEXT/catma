@@ -471,10 +471,9 @@ public interface Project {
 	 * @param subject the {@link RBACSubject} to add
 	 * @param role the {@link RBACRole} to assign
 	 * @param expiresAt optional expiration date
-	 * @return the {@link RBACSubject} that was added
 	 * @throws IOException if an error occurs when adding the member
 	 */
-	RBACSubject assignRoleToSubject(RBACSubject subject, RBACRole role, LocalDate expiresAt) throws IOException;
+	void assignRoleToSubject(RBACSubject subject, RBACRole role, LocalDate expiresAt) throws IOException;
 
 	/**
 	 * Shares this project with a user group.
@@ -482,10 +481,9 @@ public interface Project {
 	 * @param projectRole the project role for group members
 	 * @param expiresAt optional expiration date
 	 * @param reassign set to true for updates of already existing shares, for shares to be created set to false
-	 * @return the group
 	 * @throws IOException if an error occurs when sharing with the group
 	 */
-	SharedGroup assignRoleToGroup(SharedGroup group, RBACRole projectRole, LocalDate expiresAt, boolean reassign) throws IOException;
+	void assignRoleToGroup(SharedGroup group, RBACRole projectRole, LocalDate expiresAt, boolean reassign) throws IOException;
 	
 	/**
 	 * Removes a member from this project.

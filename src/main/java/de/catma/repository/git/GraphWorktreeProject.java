@@ -1713,13 +1713,13 @@ public class GraphWorktreeProject implements IndexedProject {
 	}
 
 	@Override
-	public RBACSubject assignRoleToSubject(RBACSubject subject, RBACRole role, LocalDate expiresAt) throws IOException {
-		return gitProjectHandler.assignOnProject(subject, role, expiresAt);
+	public void assignRoleToSubject(RBACSubject subject, RBACRole role, LocalDate expiresAt) throws IOException {
+		gitProjectHandler.assignOnProject(subject, role, expiresAt);
 	}
 	
 	@Override
-	public SharedGroup assignRoleToGroup(SharedGroup group, RBACRole projectRole, LocalDate expiresAt, boolean reassign) throws IOException {
-		return gitProjectHandler.assignOnProject(group, projectRole, expiresAt, reassign);
+	public void assignRoleToGroup(SharedGroup group, RBACRole projectRole, LocalDate expiresAt, boolean reassign) throws IOException {
+		gitProjectHandler.assignOnProject(group, projectRole, expiresAt, reassign);
 	}
 
 	@Override

@@ -4,7 +4,6 @@ import de.catma.project.ProjectReference;
 import de.catma.rbac.RBACPermission;
 import de.catma.rbac.RBACRole;
 import de.catma.rbac.RBACSubject;
-import de.catma.repository.git.GitMember;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerCommon;
 import de.catma.user.Group;
 import de.catma.user.SharedGroup;
@@ -115,21 +114,20 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 	}
 
 	@Override
-	public final RBACSubject assignOnGroup(RBACSubject subject, Long groupId, LocalDate expiresAt) throws IOException {
+	public final void assignOnGroup(RBACSubject subject, Long groupId, LocalDate expiresAt) throws IOException {
 		try {
 			// check that the user is not already a member of the group (GitLab returns an error if we try to add the same user again)
 			if (getGitLabApi().getUserApi().getMemberships(subject.getUserId()).stream().anyMatch(
 					membership -> membership.getSourceType() == MembershipSourceType.NAMESPACE && membership.getSourceId().equals(groupId)
 			)) {
-				return subject;
+				return;
 			}
 
 			Date expirationDate = convertExpirationLocalDateToDate(expiresAt);
 
 			// we use ASSISTANT/developer as the default role because as far as CATMA is concerned there is not much difference between
 			// the developer and maintainer roles in groups
-			Member member = getGitLabApi().getGroupApi().addMember(groupId, subject.getUserId(), RBACRole.ASSISTANT.getAccessLevel(), expirationDate);
-			return new GitMember(member);
+			getGitLabApi().getGroupApi().addMember(groupId, subject.getUserId(), RBACRole.ASSISTANT.getAccessLevel(), expirationDate);
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
@@ -140,12 +138,11 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 	}
 
 	@Override
-	public final RBACSubject updateAssignmentOnGroup(Long userId, Long groupId, RBACRole role, LocalDate expiresAt) throws IOException {
+	public final void updateAssignmentOnGroup(Long userId, Long groupId, RBACRole role, LocalDate expiresAt) throws IOException {
 		try {
 			Date expirationDate = convertExpirationLocalDateToDate(expiresAt);
 
-			Member updatedMember = getGitLabApi().getGroupApi().updateMember(groupId, userId, role.getAccessLevel(), expirationDate);
-			return new GitMember(updatedMember);
+			getGitLabApi().getGroupApi().updateMember(groupId, userId, role.getAccessLevel(), expirationDate);
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
@@ -168,16 +165,9 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 		}
 	}
 
-	private RBACSubject addProjectMember(RBACSubject subject, RBACRole role, Long projectId, Date expiresAt) throws IOException {
+	private void addProjectMember(RBACSubject subject, RBACRole role, Long projectId, Date expiresAt) throws IOException {
 		try {
-			return new GitMember(
-					getGitLabApi().getProjectApi().addMember(
-							projectId,
-							subject.getUserId(),
-							AccessLevel.forValue(role.getAccessLevel()),
-							expiresAt
-					)
-			);
+			getGitLabApi().getProjectApi().addMember(projectId, subject.getUserId(), AccessLevel.forValue(role.getAccessLevel()), expiresAt);
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
@@ -187,16 +177,9 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 		}
 	}
 
-	private RBACSubject updateProjectMember(RBACSubject subject, RBACRole role, long projectId, Date expiresAt) throws IOException {
+	private void updateProjectMember(RBACSubject subject, RBACRole role, long projectId, Date expiresAt) throws IOException {
 		try {
-			return new GitMember(
-					getGitLabApi().getProjectApi().updateMember(
-							projectId,
-							subject.getUserId(),
-							AccessLevel.forValue(role.getAccessLevel()),
-							expiresAt
-					)
-			);
+			getGitLabApi().getProjectApi().updateMember(projectId, subject.getUserId(), AccessLevel.forValue(role.getAccessLevel()), expiresAt);
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
@@ -207,7 +190,7 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 	}
 
 	@Override
-	public final RBACSubject assignOnProject(RBACSubject subject, RBACRole role, ProjectReference projectReference, LocalDate expiresAt) throws IOException {
+	public final void assignOnProject(RBACSubject subject, RBACRole role, ProjectReference projectReference, LocalDate expiresAt) throws IOException {
 		try {
 			Project project = fetchProject(projectReference);
 
@@ -224,18 +207,20 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 					//       2. GitLab allows for multiple owners (although we don't support this in the UI yet), so we could check if there is at least one
 					//          other owner and allow the change, as long as the member being modified here is not the project creator (because then we would
 					//          be talking about transferring the project into another namespace)
-					return subject;
+					return;
 				}
 
-				return updateProjectMember(subject, role, project.getId(), expirationDate);
+				updateProjectMember(subject, role, project.getId(), expirationDate);
 			}
 			catch (GitLabApiException e) {
 				// if getMember above does not find the member in the project it throws GitLabApiException: 404 Not found
 				if (e.getMessage().contains("404")) {
 					// we need to add the member to the project
-					return addProjectMember(subject, role, project.getId(), expirationDate);
+					addProjectMember(subject, role, project.getId(), expirationDate);
 				}
-				throw e;
+				else {
+					throw e;
+				}
 			}
 		}
 		catch (GitLabApiException e) {
@@ -268,7 +253,7 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 	}
 
 	@Override
-	public SharedGroup assignOnProject(SharedGroup sharedGroup, RBACRole role, ProjectReference projectReference, LocalDate expiresAt, boolean reassign)
+	public void assignOnProject(SharedGroup sharedGroup, RBACRole role, ProjectReference projectReference, LocalDate expiresAt, boolean reassign)
 			throws IOException {
 		try {
 			Project project = fetchProject(projectReference);
@@ -279,7 +264,7 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 			else {
 				// check that the project is not already shared with the group (GitLab returns an error if we try to share the same project again)
 				if (project.getSharedWithGroups().stream().anyMatch(group -> group.getGroupId() == sharedGroup.groupId())) {
-					return sharedGroup;
+					return;
 				}
 			}
 
@@ -291,8 +276,6 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 					AccessLevel.forValue(role.getAccessLevel()), 
 					expirationDate
 			);
-
-			return sharedGroup;
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
