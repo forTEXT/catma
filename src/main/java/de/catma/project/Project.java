@@ -440,6 +440,7 @@ public interface Project {
 
 	// member, role and permissions related things
 	// TODO: strictly speaking 'hasPermission' doesn't belong in this interface as they don't relate to a particular project
+	//       see related TODO on RBACManager.isAuthorizedOnProject
 	/**
 	 * Whether the given role has the given permission.
 	 *

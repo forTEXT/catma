@@ -11,7 +11,6 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Member;
-import org.gitlab4j.api.models.MembershipSourceType;
 import org.gitlab4j.api.models.Project;
 
 import java.io.IOException;
@@ -33,12 +32,8 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 	@Override
 	public final RBACRole getRoleOnGroup(RBACSubject subject, Group group) throws IOException {
 		try {
-			// TODO: we shouldn't need includeInherited here as we don't support group hierarchies
-			Member member = getGitLabApi().getGroupApi().getMember(group.getId(), subject.getUserId(), true);
-			if (member == null ) { // TODO: test if this can actually happen or if an exception is thrown anyway
-				throw new IOException(String.format("Member \"%s\" not found in group \"%s\"", subject, group.getName()));
-			}
-
+			// includeInherited=false because we don't allow for group hierarchies
+			Member member = getGitLabApi().getGroupApi().getMember(group.getId(), subject.getUserId(), false);
 			return RBACRole.forValue(member.getAccessLevel().value);
 		}
 		catch (GitLabApiException e) {
@@ -52,11 +47,8 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 	@Override
 	public final RBACRole getRoleOnProject(RBACSubject subject, ProjectReference projectReference) throws IOException {
 		try {
+			// includeInherited=true because membership might be via a group
 			Member member = getGitLabApi().getProjectApi().getMember(projectReference.getFullPath(), subject.getUserId(), true);
-			if (member == null ) { // TODO: test if this can actually happen or if an exception is thrown anyway
-				throw new IOException(String.format("Member \"%s\" not found in project \"%s\"", subject, projectReference.getName()));
-			}
-
 			return RBACRole.forValue(member.getAccessLevel().value);
 		}
 		catch (GitLabApiException e) {
@@ -70,6 +62,7 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 	@Override
 	public final boolean isAuthorizedOnProject(RBACSubject subject, RBACPermission permission, ProjectReference projectReference) {
 		try {
+			// includeInherited=true because membership might be via a group
 			Member projectMember = getGitLabApi().getProjectApi().getMember(projectReference.getFullPath(), subject.getUserId(), true);
 			if (projectMember == null || permission == null) {
 				return false;
@@ -92,8 +85,8 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 	public final void assignOnGroup(RBACSubject subject, Long groupId, LocalDate expiresAt) throws IOException {
 		try {
 			// check that the user is not already a member of the group (GitLab returns an error if we try to add the same user again)
-			if (getGitLabApi().getUserApi().getMemberships(subject.getUserId()).stream().anyMatch(
-					membership -> membership.getSourceType() == MembershipSourceType.NAMESPACE && membership.getSourceId().equals(groupId)
+			if (getGitLabApi().getGroupApi().getMembers(groupId).stream().anyMatch(
+					member -> member.getId().equals(subject.getUserId())
 			)) {
 				return;
 			}
@@ -173,32 +166,16 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 		try {
 			Date expirationDate = convertExpirationLocalDateToDate(expiresAt);
 
-			try {
-				Member projectMember = getGitLabApi().getProjectApi().getMember(projectReference.getFullPath(), subject.getUserId());
-				AccessLevel projectMemberAccessLevel = projectMember.getAccessLevel();
-
-				if (projectMemberAccessLevel == AccessLevel.OWNER || projectMemberAccessLevel.value == role.getAccessLevel()) {
-					// if the project member's current access level is OWNER or already the target access level, do nothing
-					// we don't touch owners because there is usually only one, and trying to change their role would cause an error
-					// TODO: 1. this prevents setting/changing the expiration date unless there is a role change
-					//       2. GitLab allows for multiple owners (although we don't support this in the UI yet), so we could check if there is at least one
-					//          other owner and allow the change, as long as the member being modified here is not the project creator (because then we would
-					//          be talking about transferring the project into another namespace)
-					return;
-				}
-
+			if (getGitLabApi().getProjectApi().getMembers(projectReference.getFullPath()).stream().anyMatch(
+					member -> member.getId().equals(subject.getUserId())
+			)) {
+				// the user is already a member of the project
 				updateProjectMember(subject, role, projectReference, expirationDate);
+				return;
 			}
-			catch (GitLabApiException e) {
-				// if getMember above does not find the member in the project it throws GitLabApiException: 404 Not found
-				if (e.getMessage().contains("404")) {
-					// we need to add the member to the project
-					addProjectMember(subject, role, projectReference, expirationDate);
-				}
-				else {
-					throw e;
-				}
-			}
+
+			// we need to add the member to the project
+			addProjectMember(subject, role, projectReference, expirationDate);
 		}
 		catch (GitLabApiException e) {
 			throw new IOException(
@@ -236,7 +213,7 @@ public abstract class GitlabManagerCommon implements RemoteGitManagerCommon {
 			}
 			else {
 				// check that the project is not already shared with the group (GitLab returns an error if we try to share the same project again)
-				Project project = getGitLabApi().getProjectApi().getProject(projectReference.getFullPath()); // TODO: can project be null or does 404 = exc.?
+				Project project = getGitLabApi().getProjectApi().getProject(projectReference.getFullPath());
 				if (project.getSharedWithGroups().stream().anyMatch(group -> group.getGroupId() == sharedGroup.groupId())) {
 					return;
 				}

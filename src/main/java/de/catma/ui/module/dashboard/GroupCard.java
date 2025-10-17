@@ -168,6 +168,10 @@ public class GroupCard extends VerticalFlexLayout {
 		eventBus.post(new RouteToProjectEvent(projectReference));
 	}
 
+	// TODO: GitLab allows for multiple owners:
+	//       - note that group members are currently always added with the ASSISTANT role (see GitlabManagerCommon.assignOnGroup)
+	//       - allow all owners to add additional owners (NB: also needs to be handled when inviting)
+	//       - allow owners to be edited by other owners? (can't check who the creator is, so can't add validation to disallow changes to the creator)
 	private void handleEditMembers() {
 		Set<Member> membersToEdit = memberGrid.getSelectedItems();
 
@@ -223,8 +227,10 @@ public class GroupCard extends VerticalFlexLayout {
 		}
 
 	}
-	
-	
+
+	// TODO: GitLab allows for multiple owners:
+	//       - note that group members are currently always added with the ASSISTANT role (see GitlabManagerCommon.assignOnGroup)
+	//       - allow all owners to remove other owners? (can't check who the creator is, so can't add validation to disallow removal of the creator)
 	private void handleRemoveMembers() {
 		Set<Member> membersToRemove = memberGrid.getSelectedItems();
 

@@ -25,7 +25,7 @@ public class ProjectReference {
 	public ProjectReference(String projectId, String namespace, String name, String description, ZonedDateTime createdAt,
 			ZonedDateTime lastActivityAt) {
 		super();
-		this.projectId = projectId;
+		this.projectId = projectId; // TODO: what we are calling ID here is actually the path
 		this.namespace = namespace;
 		this.name = name;
 		this.description = description;

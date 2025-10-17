@@ -1970,8 +1970,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	// team actions
 	private void handleEditMembers() {
 		// remove any owner members from the selection and display an informational message
-		// TODO: allow the original owner (whose namespace the project is in) to edit any other owner's role, as well as
-		//       assign additional owners (also see GitlabManagerCommon.assignOnProject which does its own check)
+		// TODO: GitLab allows for multiple owners:
+		//       - allow all owners to add additional owners (NB: also needs to be handled when inviting or adding members directly)
+		//       - allow owners to be edited by other owners, as long as the owner being modified is not the project creator (because then we would be talking
+		//         about transferring the project to another namespace)
 		if (memberGrid.getSelectedItems().stream().anyMatch(member -> member.getRole() == RBACRole.OWNER)) {
 			Notification ownerMembersSelectedNotification = new Notification(
 					"Your selection includes members with the 'Owner' role, whose role you cannot change.\n"
@@ -2030,7 +2032,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private void handleRemoveMembers() {
 		// remove any owner members from the selection and display an informational message
-		// TODO: allow the original owner (whose namespace the project is in) to remove any other owner
+		// TODO: GitLab allows for multiple owners:
+		//       - allow all owners to remove other owners, as long as the owner being removed is not the project creator (because then we would be talking
+		//         about transferring the project to another namespace)
 		if (memberGrid.getSelectedItems().stream().anyMatch(member -> member.getRole() == RBACRole.OWNER)) {
 			Notification ownerMembersSelectedNotification = new Notification(
 					"Your selection includes members with the 'Owner' role, who you cannot remove.\n"
