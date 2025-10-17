@@ -264,6 +264,8 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 												.map(GitMember::new)
 												.collect(Collectors.toSet());
 
+								// TODO: ideally we would use this endpoint as we only create projects in a user namespace and only work with shared projects in
+								//       groups: https://docs.gitlab.com/api/groups/#list-shared-projects, but it hasn't been implemented in gitlab4j-api
 								List<ProjectReference> sharedProjects =
 										groupApi.getProjects(
 														group.getId(), new GroupProjectsFilter().withShared(true).withSimple(true)).stream().map(project -> {
@@ -935,6 +937,10 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	@Override
 	public List<MergeRequestInfo> getOpenMergeRequests(ProjectReference projectReference) throws IOException {
 		try {
+			// TODO: this is why ProjectReference should hold the actual numerical id - we are fetching the project just to get that
+			//       apparently the MergeRequestApi endpoint does accept the path, but MergeRequestFilter currently only accepts a long
+			//       see https://docs.gitlab.com/api/merge_requests/#list-project-merge-requests
+			//       also see getMergeRequest & createMergeRequest
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
 			Long gitlabProjectId = projectApi.getProject(projectReference.getFullPath()).getId();
 
@@ -977,6 +983,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	@Override
 	public MergeRequestInfo getMergeRequest(ProjectReference projectReference, Long mergeRequestIid) throws IOException {
 		try {
+			// TODO: stop fetching the project just to get the numerical ID - requires changes to mergeMergeRequest, which gets the ID from MergeRequestInfo
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
 			Long gitlabProjectId = projectApi.getProject(projectReference.getFullPath()).getId();
 
@@ -1008,6 +1015,7 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	@Override
 	public MergeRequestInfo createMergeRequest(ProjectReference projectReference) throws IOException {
 		try {
+			// TODO: stop fetching the project just to get the numerical ID - requires changes to mergeMergeRequest, which gets the ID from MergeRequestInfo
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
 			Long gitlabProjectId = projectApi.getProject(projectReference.getFullPath()).getId();
 
@@ -1083,11 +1091,9 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	public void forkProject(ProjectReference projectReference, String targetProjectId) throws IOException {
 		try {
 			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-			Project sourceProject = projectApi.getProject(projectReference.getFullPath());
-			
-			
+
 			projectApi.forkProject(
-					sourceProject.getId(), 
+					projectReference.getFullPath(),
 					this.user.getIdentifier(), // we always fork into the namespace of the current user 
 					targetProjectId, // path 
 					targetProjectId); // name
@@ -1125,13 +1131,10 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	@Override
 	public BackendPager<CommitInfo> getCommits(ProjectReference projectReference, LocalDate after, LocalDate before, String branch, String author) throws IOException {
 		try {
-			ProjectApi projectApi = restrictedGitLabApi.getProjectApi();
-			Long gitlabProjectId = projectApi.getProject(projectReference.getFullPath()).getId();
-
 			ExtendedCommitsApi commitsApi = new ExtendedCommitsApi(restrictedGitLabApi);
 			
 			EnhancedPager<Commit> commitsPager = commitsApi.getCommitsWithEnhancedPager(
-					gitlabProjectId, 
+					projectReference.getFullPath(),
 					branch, 
 					after==null?null:java.util.Date.from(
 							after.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()),
