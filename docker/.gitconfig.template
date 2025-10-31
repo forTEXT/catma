@@ -1,0 +1,8 @@
+[user]
+        name = CATMA System
+        email = support@catma.de
+[core]
+        editor = vi
+        symlinks = false # CVE-2023-4759
+[credential]
+        helper = cache
