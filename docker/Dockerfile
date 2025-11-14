@@ -22,6 +22,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install -y \
          unzip \
+         pwgen \
     && apt-get clean -y
 
 # all of these can be overriden with '--env <key>=<value>' at run time
@@ -87,17 +88,16 @@ RUN --mount=from=build_assets,target=/tmp/build_assets \
     && cp /opt/jetty_web/catma_base/webapps/ROOT/WEB-INF/classes/catma.db /data/catma/ \
     && chown -R jetty:jetty /data /opt/jetty_web/catma_base/webapps/ROOT/
 
-COPY --link --chown=jetty:jetty --chmod=0640 catma.properties.template /opt/jetty_web/catma_base/webapps/ROOT/catma.properties
-COPY --link --chown=jetty:jetty --chmod=0640 .gitconfig.template /opt/jetty_usr_home/.gitconfig
-COPY --link --chmod=0755 bootstrap.sh /opt/
+COPY --link --chown=jetty:jetty --chmod=0640 templates/catma.properties.template /opt/jetty_web/catma_base/webapps/ROOT/catma.properties
+COPY --link --chown=jetty:jetty --chmod=0640 templates/.gitconfig.template /opt/jetty_usr_home/.gitconfig
+COPY --link --chmod=0755 assets /opt/assets
+COPY --link --chmod=0755 scripts /opt/scripts
 
 EXPOSE 80 8089
 
 VOLUME ["/opt/jetty_web/catma_base/logs", "/opt/jetty_temp", "/data/catma"]
 
-CMD ["/opt/bootstrap.sh"]
+CMD ["/opt/scripts/bootstrap.sh"]
 
 #TODOs:
 # - check if the default JETTY_JAVA_OPTIONS are reasonable in this context
-# - we need to create a default user account somehow
-# - all of the GitLab settings that can't be set via gitlab.rb need to be set via the API

@@ -66,9 +66,11 @@ sed -i "s|^\(BASE_URL=http://localhost:\).*$|\1$CATMA_PORT|" /opt/jetty_web/catm
 sed -i "s|^\(LOGOUT_URL=http://localhost:\).*$|\1$CATMA_PORT|" /opt/jetty_web/catma_base/webapps/ROOT/catma.properties
 sed -i "s|^\(RESET_PASSWORD_URL=http://localhost:\).*\(/users/password/new\)$|\1$GITLAB_PORT\2|" /opt/jetty_web/catma_base/webapps/ROOT/catma.properties
 
-# 2. if /etc/gitlab/gitlab.rb doesn't exist then we're starting for the first time - copy the template file and set some initial config options
-#    this is partially copied from GitLab's /assets/init-container script
+# 2. if /etc/gitlab/gitlab.rb doesn't exist then we're starting for the first time - set a flag for later use, copy the template file and set some initial
+#    config options TODO: set external_url?
+#    this is partially copied from GitLab's init-container script, ref: https://gitlab.com/gitlab-org/omnibus-gitlab/-/blob/master/docker/assets/init-container
 if [[ ! -e /etc/gitlab/gitlab.rb ]]; then
+  FIRST_START=true
   cp /opt/gitlab/etc/gitlab.rb.template /etc/gitlab/gitlab.rb
   chmod 0600 /etc/gitlab/gitlab.rb
   # our custom config follows
@@ -151,33 +153,59 @@ then
   cat << EOF
 $(color_yellow "Aborting after waiting for more than 5 minutes!")
 $(color_gray "GitLab may still start successfully, but we can't wait forever...\nTo troubleshoot, open a terminal in the still running container (e.g. \`docker
-exec -it catma-standalone /bin/bash\`), inspect /var/log/gitlab/gitlab_init.log and run \`gitlab-ctl status\`. Docker may need more CPU/RAM for GitLab to start
-within a reasonable timeframe. If GitLab does start successfully, check /opt/bootstrap.sh for the subsequent steps required.")
+exec -it catma-standalone /bin/bash\`), inspect /var/log/gitlab/gitlab_init.log (e.g. \`tail --lines=50 /var/log/gitlab/gitlab_init.log\`) and run \`gitlab-ctl
+status\`. Docker may need more CPU/RAM for GitLab to start within a reasonable timeframe. If you are sure that GitLab did eventually start successfully you can
+choose to continue, otherwise you can send the details of the problem to support@catma.de")
+
+EOF
+  read -p "Try to continue anyway? (y/n [n]): " confirm && [[ $confirm = [yY] || $confirm = [yY][eE][sS] ]] || shutdown_handler
+fi
+
+# 5. if this is the first start of the GitLab server, complete the initial GitLab setup (set default settings, create an admin PAT, create the default user)
+#    also generate a CATMA API secret
+if [[ $FIRST_START = "true" ]]
+then
+  echo -e "Configuring GitLab ..."
+  echo -e "\n--- $(date)\n\n" >> /var/log/gitlab/gitlab_config.log
+  ADMIN_TOKEN_STRING=$(pwgen -snc 20 1)
+  cp /opt/assets/catma-gitlab-combo-favicon.ico /opt/assets/catma-gitlab-combo-logo-blue.svg /var/opt/gitlab/gitlab-rails/uploads/
+  chown git:git /var/opt/gitlab/gitlab-rails/uploads/catma-gitlab-combo-favicon.ico /var/opt/gitlab/gitlab-rails/uploads/catma-gitlab-combo-logo-blue.svg
+  # https://docs.gitlab.com/administration/operations/rails_console/#using-the-rails-runner
+  gitlab-rails runner /opt/scripts/gitlab_config.rb $ADMIN_TOKEN_STRING &>> /var/log/gitlab/gitlab_config.log
+  if [[ $? -ne 0 ]]
+  then
+    cat << EOF
+$(color_red "Error! Couldn't complete the initial configuration of GitLab.")
+$(color_gray "To troubleshoot, open a terminal in the still running container (e.g. \`docker exec -it catma-standalone /bin/bash\`) and inspect
+/var/log/gitlab/gitlab_config.log (e.g. \`cat /var/log/gitlab/gitlab_config.log\`) - you can send the details of the problem to support@catma.de")
 
 Hit <Enter> to exit $(color_red "(this will stop the container)")
 EOF
-  read
-  shutdown_handler
+    read
+    shutdown_handler
+  fi
+  sed -i "s|^\(GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN=\).*$|\1catma-glpat-$ADMIN_TOKEN_STRING|" /opt/jetty_web/catma_base/webapps/ROOT/catma.properties
+  sed -i "s|^\(API_HMAC_SECRET=\).*$|\1$(pwgen -snc 32 1)|" /opt/jetty_web/catma_base/webapps/ROOT/catma.properties
 fi
 
-# 5. start Jetty
-# we need to ensure correct ownership because these directories are specified as volumes - they will thus retain the origin ownership
-# on the host unless we change it
+# 6. start Jetty
+# we need to ensure correct ownership because these directories are specified as volumes - they will thus retain the origin ownership on the host unless we
+# change it
 chown -R jetty:jetty /opt/jetty_web/catma_base/logs /data
 chown jetty:root /opt/jetty_temp
 
 service jetty start \
   && cat << EOF
 
-$(color_green "Success! You can now access CATMA at http://localhost:${CATMA_PORT} and log in with\nUsername: standalone\nPassword: standalone")
+$(color_green "Success! You can now access CATMA at http://localhost:${CATMA_PORT} and log in with\nUsername: standalone\nPassword: St4nd@lone")
 
-$(color_gray "You can access the underlying GitLab backend at http://localhost:${GITLAB_PORT} and log in with the same credentials.
-For admin access to GitLab, use the username \"root\" and the password found in \$GITLAB_HOME/config/initial_root_password (you can also get the password by
-running e.g. \`docker exec -it catma-standalone grep 'Password:' /etc/gitlab/initial_root_password\` in a separate terminal). Note that the
-initial_root_password file is automatically deleted if the container is started again more than 24 hours after the first start.")
+$(color_gray "You can access the underlying GitLab backend at http://localhost:${GITLAB_PORT} and log in with the same credentials.\nFor admin access to GitLab,
+use the username \"root\" and the password found in \$GITLAB_HOME/config/initial_root_password (you can also get the password by running e.g. \`docker exec -it
+catma-standalone grep 'Password:' /etc/gitlab/initial_root_password\` in a separate terminal). Store the admin password somewhere safe, as you may need it again
+later - the initial_root_password file is automatically deleted if the container is started again more than 24 hours after the first start.")
 
 Hit <CTRL/CMD + C> to stop the container
 EOF
 
-# 6. wait for signals
+# 7. wait for signals
 wait
