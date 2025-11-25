@@ -13,7 +13,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.data.TreeData;
@@ -274,7 +273,7 @@ public class AnnotateResourcePanel extends VerticalLayout {
 
 	private void selectCollectionsForSelectedMembers(boolean selected) {
 		ProjectParticipant participant = cbMembers.getValue();
-		Set<String> responsableIdentfifiers = Sets.newHashSet();
+		Set<String> responsableIdentfifiers = new HashSet<>();
 		if (participant instanceof ProjectMemberParticipant) {
 			responsableIdentfifiers.add(((ProjectMemberParticipant)participant).getMember().getIdentifier());
 		}

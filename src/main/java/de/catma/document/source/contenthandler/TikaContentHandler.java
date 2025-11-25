@@ -26,7 +26,7 @@ public class TikaContentHandler extends AbstractSourceContentHandler {
 		}
 
 		Tika tika = new Tika();
-		tika.setMaxStringLength(-1);
+		tika.setMaxStringLength(-1); // -1 is important, otherwise the default is 100k chars!
 
 		try {
 			setContent(

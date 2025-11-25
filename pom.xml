@@ -48,6 +48,13 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			<dependency>
+				<groupId>org.apache.tika</groupId>
+				<artifactId>tika-bom</artifactId>
+				<version>3.2.3</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
@@ -62,6 +69,7 @@
 		<!-- Vaadin & addons (Ref: https://vaadin.com/docs/v8/framework/getting-started/getting-started-libraries)
 			 "Note that the vaadin-client-compiler and vaadin-client JARs should not be deployed with the web application. The Maven scope provided can be used.
 			 Some other libraries, such as vaadin-sass-compiler, are not needed in production deployment."
+			 Versions for Vaadin not required since BOM is included.
 		 -->
 		<dependency>
 			<groupId>com.vaadin</groupId>
@@ -98,6 +106,7 @@
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-context-menu</artifactId>
 		</dependency>
+
 		<dependency>
 			<groupId>org.vaadin</groupId>
 			<artifactId>elements</artifactId>
@@ -105,14 +114,14 @@
 			<version>0.2.3-CATMA</version>
 		</dependency>
 		<dependency>
-		   <groupId>org.vaadin.addon</groupId>
-		   <artifactId>confirmdialog</artifactId>
-		   <version>3.2.0</version>
+			<groupId>org.vaadin.addon</groupId>
+			<artifactId>confirmdialog</artifactId>
+			<version>3.2.0</version>
 		</dependency>
 		<dependency>
-		   <groupId>org.vaadin.addons</groupId>
-		   <artifactId>vaadin-sliderpanel</artifactId>
-		   <version>2.2.1</version>
+			<groupId>org.vaadin.addons</groupId>
+			<artifactId>vaadin-sliderpanel</artifactId>
+			<version>2.2.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.wcs.wcslib</groupId>
@@ -132,7 +141,16 @@
 			<version>1.1.8</version>
 		</dependency>
 
+		<!-- SLF4J Logging Provider -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>2.0.17</version>
+		</dependency>
+
 		<!-- Apache Commons -->
+		<!-- Note: these dependencies, and especially commons-compress, are commented because they are a dependency of Tika (below) anyway, and a mismatch with
+			 what Tika declares has caused problems for people before, ref: https://issues.apache.org/jira/browse/TIKA-4469
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-compress</artifactId>
@@ -144,40 +162,27 @@
 			<version>1.10.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-email</artifactId>
-			<version>1.6.0</version>
-			<exclusions>
-				<!-- prefer the jakarta.activation version that comes with tika-parsers -->
-				<exclusion>
-					<groupId>com.sun.activation</groupId>
-					<artifactId>jakarta.activation</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>2.17.0</version>
 		</dependency>
-
-		<!-- Apache HTTP (used for OAuth login and document loading over HTTP) -->
+		-->
 		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpcore</artifactId>
-			<version>4.4.16</version>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-email</artifactId>
+			<version>1.6.0</version>
+		</dependency>
+
+		<!-- Apache HTTP (used for OAuth login) -->
+		<dependency>
+			<groupId>org.apache.httpcomponents.core5</groupId>
+			<artifactId>httpcore5</artifactId>
+			<version>5.3.6</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>4.5.14</version>
-			<exclusions>
-				<!-- prefer org.slf4j:jcl-over-slf4j implementation that comes with tika-parsers -->
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
+			<groupId>org.apache.httpcomponents.client5</groupId>
+			<artifactId>httpclient5</artifactId>
+			<version>5.5.1</version>
 		</dependency>
 
 		<!-- Hazelcast & caching (used for cross-session comms and caching of signup tokens and project invitation codes) -->
@@ -216,6 +221,13 @@
 			<groupId>org.eclipse.jgit</groupId>
 			<artifactId>org.eclipse.jgit</artifactId>
 			<version>4.11.8.201904181247-r</version>
+			<exclusions>
+				<!-- prefer org.apache.httpcomponents.client5:httpclient5 -->
+				<exclusion>
+					<groupId>org.apache.httpcomponents</groupId>
+					<artifactId>httpclient</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- GitLab -->
@@ -224,78 +236,53 @@
 			<groupId>org.gitlab4j</groupId>
 			<artifactId>gitlab4j-api</artifactId>
 			<!-- https://github.com/forTEXT/gitlab4j-api/releases/tag/gitlab4j-api-5.0.1-CATMA-v2 -->
-			<version>5.0.1-CATMA-v2</version>
+			<version>5.0.1-CATMA-v3</version>
 			<exclusions>
 				<!-- prefer the jackson version that comes with swagger-jaxrs2 -->
 				<exclusion>
 					<groupId>com.fasterxml.jackson.core</groupId>
 					<artifactId>jackson-annotations</artifactId>
-				</exclusion>
-				<!-- prefer com.sun.activation:jakarta.activation that comes with tika-parsers -->
-				<exclusion>
-					<groupId>jakarta.activation</groupId>
-					<artifactId>jakarta.activation-api</artifactId>
 				</exclusion>
 				<!-- provided by Jetty -->
 				<exclusion>
 					<groupId>jakarta.servlet</groupId>
 					<artifactId>jakarta.servlet-api</artifactId>
 				</exclusion>
-			</exclusions>
-		</dependency>
-
-		<!-- Apache Tika & Lucene (used for document parsing & indexing) -->
-		<dependency>
-			<groupId>org.apache.tika</groupId>
-			<artifactId>tika-parsers</artifactId>
-			<version>1.28.5</version>
-			<exclusions>
-				<exclusion>
-					<groupId>c3p0</groupId>
-					<artifactId>c3p0</artifactId>
-				</exclusion>
-				<!-- prefer com.sun.activation:jakarta.activation, a transient dependency of this package, over direct dependency on activation-api -->
-				<exclusion>
-					<groupId>jakarta.activation</groupId>
-					<artifactId>jakarta.activation-api</artifactId>
-				</exclusion>
-				<!-- prefer com.github.stephenc.jcip:jcip-annotations implementation that comes with nimbus-jose-jwt -->
-				<exclusion>
-					<groupId>net.jcip</groupId>
-					<artifactId>jcip-annotations</artifactId>
-				</exclusion>
-				<!-- prefer org.slf4j:jcl-over-slf4j implementation, a direct dependency of this package, over transient dependency on commons-logging -->
+				<!-- prefer org.slf4j:jcl-over-slf4j implementation that comes with tika-parsers-standard-package -->
 				<exclusion>
 					<groupId>commons-logging</groupId>
 					<artifactId>commons-logging</artifactId>
 				</exclusion>
-				<!-- prefer the jackson version that comes with swagger-jaxrs2 -->
+			</exclusions>
+		</dependency>
+
+		<!-- Apache Tika & Lucene (used for document parsing & indexing). Versions for Tika not required since BOM is included. -->
+		<dependency>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-parsers-standard-package</artifactId>
+			<exclusions>
+				<!-- prefer org.slf4j:jcl-over-slf4j implementation, a direct dependency of this package, over transient dependencies on commons-logging
+					 and log4j-api
+				 -->
 				<exclusion>
-					<groupId>com.fasterxml.jackson.core</groupId>
-					<artifactId>jackson-core</artifactId>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
 				</exclusion>
 				<exclusion>
-					<groupId>com.fasterxml.jackson.core</groupId>
-					<artifactId>jackson-databind</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.fasterxml.jackson.core</groupId>
-					<artifactId>jackson-annotations</artifactId>
+					<groupId>org.apache.logging.log4j</groupId>
+					<artifactId>log4j-api</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tika</groupId>
-			<artifactId>tika-langdetect</artifactId>
-			<version>1.28.5</version>
-			<exclusions>
-				<!-- prefer com.sun.activation:jakarta.activation that comes with tika-parsers -->
-				<exclusion>
-					<groupId>jakarta.activation</groupId>
-					<artifactId>jakarta.activation-api</artifactId>
-				</exclusion>
-			</exclusions>
+			<artifactId>tika-langdetect-optimaize</artifactId>
 		</dependency>
+
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-core</artifactId>
@@ -317,15 +304,9 @@
 		<!-- XML handling -->
 		<!-- TODO: replace, see related TODO in HazelCastInitializerServlet -->
 		<dependency>
-			<groupId>com.io7m.xom</groupId>
+			<groupId>xom</groupId>
 			<artifactId>xom</artifactId>
-			<version>1.2.10</version>
-		</dependency>
-		<!-- Force a higher version of xml-apis than the one xom wants to avoid a ClassNotFoundException for org.w3c.dom.ElementTraversal -->
-		<dependency>
-			<groupId>xml-apis</groupId>
-			<artifactId>xml-apis</artifactId>
-			<version>1.4.01</version>
+			<version>1.3.9</version>
 		</dependency>
 
 		<!-- JSON handling -->
@@ -343,6 +324,18 @@
 		</dependency>
 
 		<!-- API -->
+		<!-- Force specific versions of jakarta.ws.rs-api and jakarta.annotation-api - the last versions to use the javax namespace -->
+		<dependency>
+			<groupId>jakarta.ws.rs</groupId>
+			<artifactId>jakarta.ws.rs-api</artifactId>
+			<version>2.1.6</version>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
+			<version>1.3.5</version>
+		</dependency>
+		<!-- / End force specific versions -->
 		<dependency>
 			<groupId>org.glassfish.jersey.containers</groupId>
 			<artifactId>jersey-container-servlet</artifactId>
@@ -357,12 +350,6 @@
 			<groupId>com.nimbusds</groupId>
 			<artifactId>nimbus-jose-jwt</artifactId>
 			<version>10.0.2</version>
-			<exclusions>
-				<exclusion>  <!-- has vulnerabilities and is used only for tests -->
-					<groupId>org.bitbucket.b_c</groupId>
-					<artifactId>jose4j</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>io.swagger.core.v3</groupId>
@@ -447,15 +434,15 @@
 									<message>use jakarta.activation:jakarta.activation-api or com.sun.activation:jakarta.activation instead of
 										javax.activation</message>
 								</bannedDependencies>
-								<!-- if you use com.sun.activation:jakarta.activation -->
+								<!-- if you use com.sun.activation:jakarta.activation
 								<bannedDependencies>
-									<!-- the implementation com.sun.activation:jakarta.activation contains the api classes too -->
+									<!- - the implementation com.sun.activation:jakarta.activation contains the api classes too - ->
 									<excludes>
 										<exclude>jakarta.activation:jakarta.activation-api</exclude>
 									</excludes>
 									<message>the implementation com.sun.activation:jakarta.activation is included and it contains the api classes too</message>
 								</bannedDependencies>
-
+								-->
 								<bannedDependencies>
 									<excludes>
 										<exclude>net.jcip:jcip-annotations</exclude>

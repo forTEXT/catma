@@ -18,7 +18,6 @@
  */
 package de.catma.tag;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,6 +27,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.tika.langdetect.optimaize.OptimaizeLangDetector;
 import org.apache.tika.language.detect.LanguageDetector;
 import org.apache.tika.language.detect.LanguageResult;
 
@@ -167,15 +167,9 @@ public class TagLibrary implements Iterable<TagsetDefinition> {
 	public Locale getLocale() {
 		if (locale == null) {
 			this.locale = tagsetDefinitionsByID.values().stream().map(TagsetDefinition::getName).reduce((s1, s2) -> String.join(",", s1, s2)).map(names -> {
-				LanguageDetector languageDetector = LanguageDetector.getDefaultLanguageDetector();
-				try {
-					languageDetector.loadModels();
-					LanguageResult languageResult = languageDetector.detect(names);
-					return Locale.forLanguageTag(languageResult.getLanguage());
-				}
-				catch (IOException e) {
-					return Locale.getDefault();
-				}
+				LanguageDetector languageDetector = new OptimaizeLangDetector().loadModels();
+				LanguageResult languageResult = languageDetector.detect(names);
+				return Locale.forLanguageTag(languageResult.getLanguage());
 			}).orElse(Locale.getDefault());
 		}
 		

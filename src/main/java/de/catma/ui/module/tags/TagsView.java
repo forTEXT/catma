@@ -22,7 +22,6 @@ import org.vaadin.sliderpanel.SliderPanel;
 import org.vaadin.sliderpanel.SliderPanelBuilder;
 import org.vaadin.sliderpanel.client.SliderMode;
 
-import com.beust.jcommander.internal.Sets;
 import com.github.appreciated.material.MaterialTheme;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -1122,7 +1121,7 @@ public class TagsView extends HugeCard {
 	private void updateAnnotations(Collection<AnnotationCollectionReference> affectedCollections, Collection<TagsetDefinition> affectedTagsets, Collection<TagDefinition> affectedTags, Collection<PropertyAction> actions) {
 		try {
 			Multimap<TagInstance, Property> toBeUpdatedInstances = ArrayListMultimap.create();
-			Set<AnnotationCollectionReference> toBeUpatedCollections = Sets.newHashSet();
+			Set<AnnotationCollectionReference> toBeUpatedCollections = new HashSet<>();
 			
 			AnnotationCollectionManager collectionManager = new AnnotationCollectionManager(project);
 			for (AnnotationCollectionReference collectionRef : affectedCollections) {
@@ -1210,7 +1209,7 @@ public class TagsView extends HugeCard {
 		.filter(name -> !availableCommonPropertyNames.contains(name))
 		.collect(Collectors.toSet());
 		
-		Set<TagsetDefinition> affectedTagsets = Sets.newHashSet();
+		Set<TagsetDefinition> affectedTagsets = new HashSet<>();
 		
 		
 		for (TagDefinition tag : targetTags) {

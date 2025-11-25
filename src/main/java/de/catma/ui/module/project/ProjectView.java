@@ -7,8 +7,6 @@ import org.vaadin.sliderpanel.SliderPanel;
 import org.vaadin.sliderpanel.SliderPanelBuilder;
 import org.vaadin.sliderpanel.client.SliderMode;
 
-import com.beust.jcommander.internal.Maps;
-import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
@@ -340,7 +338,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 	private void initMemberData(Set<Member> members) {
 		// add direct members and group non direct members by their shared group
-		Map<Long, GroupParticipant> groupParticipantByGroupId = Maps.newHashMap();
+		Map<Long, GroupParticipant> groupParticipantByGroupId = new HashMap<>();
 		TreeData<ProjectParticipant> memberData = new TreeData<ProjectParticipant>();
 		
 		for (Member member : members) {
@@ -847,9 +845,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 								currentUI.access(() -> {
 									
 									try {
-										Set<SourceDocumentReference> docsToBeDeleted = Sets.newHashSet();
-										Set<AnnotationCollectionReference> collectionsToBeDeleted = Sets.newHashSet();
-										Set<TagsetDefinition> tagsetsToBeDeleted = Sets.newHashSet();
+										Set<SourceDocumentReference> docsToBeDeleted = new HashSet<>();
+										Set<AnnotationCollectionReference> collectionsToBeDeleted = new HashSet<>();
+										Set<TagsetDefinition> tagsetsToBeDeleted = new HashSet<>();
 										
 										for (SourceDocumentReference docRef : project.getSourceDocumentReferences().stream().toList()) {
 											if (!selectedResourceIdsToKeep.contains(docRef.getUuid())) {

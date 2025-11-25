@@ -14,7 +14,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -485,7 +484,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 	private void updateAnnotations(Collection<AnnotationCollectionReference> affectedCollections, Collection<TagsetDefinition> affectedTagsets, Collection<TagDefinition> affectedTags, Collection<PropertyAction> actions) {
 		try {
 			Multimap<TagInstance, Property> toBeUpdatedInstances = ArrayListMultimap.create();
-			Set<AnnotationCollectionReference> toBeUpatedCollections = Sets.newHashSet();
+			Set<AnnotationCollectionReference> toBeUpatedCollections = new HashSet<>();
 			
 			AnnotationCollectionManager collectionManager = new AnnotationCollectionManager(project);
 			for (AnnotationCollectionReference collectionRef : affectedCollections) {

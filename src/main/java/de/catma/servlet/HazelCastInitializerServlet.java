@@ -29,7 +29,7 @@ public class HazelCastInitializerServlet extends HttpServlet{
 		// start the embedded Hazelcast cluster member
 		log("Hazelcast initializing...");
 
-		// we need this to avoid an exception being thrown, the cause being the fact that we have Xalan on the classpath (via xom, TODO: replace)
+		// we need this to avoid an exception being thrown, the cause being the fact that we have Xerces on the classpath (via xom, TODO: replace)
 		// see https://github.com/hazelcast/hazelcast/issues/17839
 		// we don't use Hazelcast to pass any XML messages, and certainly not anything that comes from outside, so there shouldn't be any security impact
 		System.setProperty("hazelcast.ignoreXxeProtectionFailures", "true");

@@ -41,6 +41,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.tika.Tika;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
 
 import com.vaadin.data.provider.ListDataProvider;
@@ -194,7 +195,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 							
 							Metadata metadata = new Metadata();
 							if (url.getFile() != null && !url.getFile().isEmpty()) {
-								metadata.set(Metadata.RESOURCE_NAME_KEY, url.getFile());
+								metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, url.getFile());
 							}
 							
 							MediaType mediaType = MediaType.parse(uploadFile.getMimetype());
