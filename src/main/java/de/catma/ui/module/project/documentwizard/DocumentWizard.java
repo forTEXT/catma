@@ -3,6 +3,7 @@ package de.catma.ui.module.project.documentwizard;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.dialog.wizard.Wizard;
 import de.catma.ui.dialog.wizard.WizardContext;
+import org.apache.tika.Tika;
 
 public class DocumentWizard extends Wizard {
 	public enum WizardContextKey {
@@ -14,10 +15,10 @@ public class DocumentWizard extends Wizard {
 		TAGSET_IMPORT_LIST
 	}
 
-	public DocumentWizard(WizardContext wizardContext, SaveCancelListener<WizardContext> saveCancelListener) {
+	public DocumentWizard(WizardContext wizardContext, SaveCancelListener<WizardContext> saveCancelListener, Tika tika) {
 		super(
 				"Add Documents to Your Project",
-				progressPanel -> new UploadStep(wizardContext, progressPanel::addStep),
+				progressPanel -> new UploadStep(wizardContext, progressPanel::addStep, tika),
 				wizardContext,
 				saveCancelListener
 		);

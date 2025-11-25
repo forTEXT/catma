@@ -2,7 +2,6 @@ package de.catma.document.source.contenthandler;
 
 import de.catma.document.source.FileType;
 import org.apache.tika.Tika;
-import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 
@@ -18,6 +17,12 @@ import java.io.InputStream;
  * @see de.catma.document.source.TechInfoSet
  */
 public class TikaContentHandler extends AbstractSourceContentHandler {
+	private final Tika tika;
+
+	public TikaContentHandler(Tika tika) {
+		this.tika = tika;
+	}
+
 	private void load(InputStream inputStream) throws IOException {
 		MediaType mediaType = MediaType.parse(getSourceDocumentInfo().getTechInfoSet().getMimeType());
 		Metadata metadata = new Metadata();
@@ -25,18 +30,15 @@ public class TikaContentHandler extends AbstractSourceContentHandler {
 			metadata.set(Metadata.CONTENT_TYPE, new MediaType(mediaType, getSourceDocumentInfo().getTechInfoSet().getCharset()).toString());
 		}
 
-		Tika tika = new Tika();
-		tika.setMaxStringLength(-1); // -1 is important, otherwise the default is 100k chars!
-
 		try {
 			setContent(
 					// some texts seem to include invalid unicode characters and this causes problems when converting text to HTML for GUI delivery and during
 					// indexing
-					tika.parseToString(inputStream, metadata)
+					tika.parseToString(inputStream, metadata, -1) // -1 is important, otherwise the default is 100k chars!
 							.replaceAll("[^\\x09\\x0A\\x0D\\x20-\\uD7FF\\uE000-\\uFFFD\\u10000-\\u10FFFF]", "?")
 			);
 		}
-		catch (TikaException e) {
+		catch (Exception e) {
 			throw new IOException(e);
 		} 
 	}

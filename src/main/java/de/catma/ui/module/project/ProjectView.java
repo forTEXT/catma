@@ -2,6 +2,8 @@ package de.catma.ui.module.project;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.mail.EmailException;
+import org.apache.tika.Tika;
+import org.apache.tika.config.TikaConfig;
 import org.vaadin.dialogs.ConfirmDialog;
 import org.vaadin.sliderpanel.SliderPanel;
 import org.vaadin.sliderpanel.SliderPanelBuilder;
@@ -21,6 +23,7 @@ import com.vaadin.server.FileDownloader;
 import com.vaadin.server.Page;
 import com.vaadin.server.SerializablePredicate;
 import com.vaadin.server.StreamResource;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
@@ -121,6 +124,7 @@ import de.catma.util.Pair;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -150,6 +154,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private final ErrorHandler errorHandler;
 	private final TagManager tagManager;
 	private final ProgressListener progressListener;
+
+	private Tika tika;
 
 	private PropertyChangeListener projectExceptionListener;
 	private PropertyChangeListener tagsetChangeListener;
@@ -208,10 +214,10 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		this.projectsManager = projectsManager;
 		this.eventBus = eventBus;
 
-		this.errorHandler = (ErrorHandler) UI.getCurrent();
+		final UI ui = UI.getCurrent();
+		this.errorHandler = (ErrorHandler) ui;
 		this.tagManager = new TagManager(new TagLibrary());
 
-		final UI ui = UI.getCurrent();
 		this.progressListener = new ProgressListener() {
 			@Override
 			public void setProgress(String value, Object... args) {
@@ -226,6 +232,15 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				});
 			}
 		};
+
+		try {
+			File tikaConfigFile = new File(VaadinSession.getCurrent().getService().getBaseDirectory(), "tika-config.xml");
+			TikaConfig tikaConfig = new TikaConfig(tikaConfigFile.getAbsolutePath());
+			this.tika = new Tika(tikaConfig);
+		}
+		catch (Exception e) {
+			this.errorHandler.showAndLogError("Failed to initialize Tika", e);
+		}
 
 		initProjectListeners();
 		initComponents();
@@ -1091,8 +1106,8 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 					public void savePressed(WizardContext result) {
 						handleSaveDocumentWizardContext(result);
 					}
-
-				}
+				},
+				tika
 		);
 
 		documentWizard.show();
@@ -1337,7 +1352,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 
 		SourceContentHandler sourceContentHandler =
 				sourceDocumentInfo.getTechInfoSet().getMimeType().equals(FileType.XML2.getMimeType())
-						? new XML2ContentHandler(simpleXml) : new TikaContentHandler();
+						? new XML2ContentHandler(simpleXml) : new TikaContentHandler(tika);
 		sourceContentHandler.setSourceDocumentInfo(sourceDocumentInfo);
 
 		SourceDocument sourceDocument = new SourceDocument(uploadFile.getUuid(), sourceContentHandler);

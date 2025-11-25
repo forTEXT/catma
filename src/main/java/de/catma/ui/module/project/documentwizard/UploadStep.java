@@ -117,7 +117,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 	private IDGenerator idGenerator;
 	private ProgressBar progressBar;
 	
-	public UploadStep(WizardContext wizardContext, ProgressStepFactory progressStepFactory) {
+	public UploadStep(WizardContext wizardContext, ProgressStepFactory progressStepFactory, Tika tika) {
 		
 		this.progressStep = progressStepFactory.create(1, "Upload Some Files");
 		
@@ -125,8 +125,8 @@ class UploadStep extends VerticalLayout implements WizardStep {
 		wizardContext.put(DocumentWizard.WizardContextKey.UPLOAD_FILE_LIST, fileList);
 		this.fileDataProvider = new ListDataProvider<UploadFile>(this.fileList);
 		
-		this.tika = new Tika();
-		this.nextStep = new InspectContentStep(wizardContext, progressStepFactory);
+		this.tika = tika;
+		this.nextStep = new InspectContentStep(wizardContext, progressStepFactory, tika);
 		this.idGenerator = new IDGenerator();
 
 		initComponents();
@@ -353,7 +353,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 					}
 				}
 				catch (Exception e) {
-					
+					e.printStackTrace();
 					String errorMsg = e.getMessage();
 					if ((errorMsg == null) || (errorMsg.trim().isEmpty())) {
 						errorMsg = "";

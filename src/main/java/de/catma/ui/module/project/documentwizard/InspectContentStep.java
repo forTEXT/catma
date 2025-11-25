@@ -43,6 +43,8 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 	private final ArrayList<UploadFile> uploadFiles;
 	private final ListDataProvider<UploadFile> uploadFileListDataProvider;
 
+	private final Tika tika;
+
 	private StepChangeListener stepChangeListener;
 
 	private ProgressBar progressBar;
@@ -55,13 +57,15 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 	private CheckBox cbSimpleXml;
 	private TextArea taPreview;
 
-	public InspectContentStep(WizardContext wizardContext, ProgressStepFactory progressStepFactory) {
+	public InspectContentStep(WizardContext wizardContext, ProgressStepFactory progressStepFactory, Tika tika) {
 		this.wizardContext = wizardContext;
 		this.wizardContext.put(DocumentWizard.WizardContextKey.APOSTROPHE_AS_SEPARATOR, false);
 		this.wizardContext.put(DocumentWizard.WizardContextKey.SIMPLE_XML, false);
 
 		this.progressStep = progressStepFactory.create(2, "Inspect the Content");
 		this.nextStep = new AddMetadataStep(wizardContext, progressStepFactory);
+
+		this.tika = tika;
 
 		this.uploadFiles = new ArrayList<>();
 		this.uploadFileListDataProvider = new ListDataProvider<>(uploadFiles);
@@ -198,7 +202,7 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 				}
 
 				try (FileInputStream fileInputStream = new FileInputStream(new File(uploadFile.getTempFilename()))) {
-					previewContent = new Tika().parseToString(fileInputStream, metadata, maxPreviewLength);
+					previewContent = tika.parseToString(fileInputStream, metadata, maxPreviewLength);
 				}
 			}
 
@@ -339,7 +343,7 @@ public class InspectContentStep extends VerticalLayout implements WizardStep {
 								// TODO: figure out and document why this works differently than in updatePreview & TikaContentHandler
 								try (FileInputStream fileInputStream = new FileInputStream(new File(uploadFile.getTempFilename()))) {
 									Metadata metadata = new Metadata();
-									String content = new Tika().parseToString(fileInputStream, metadata);
+									String content = tika.parseToString(fileInputStream, metadata);
 
 									String contentType = metadata.get(Metadata.CONTENT_TYPE);
 									MediaType mediaType = MediaType.parse(contentType);

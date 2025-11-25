@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<properties>
+    <parsers>
+        <parser class="org.apache.tika.parser.DefaultParser">
+            <!-- explicitly disable OCR, even though we don't expect Tesseract to be installed
+                 ref: https://cwiki.apache.org/confluence/display/TIKA/TikaOCR#TikaOCR-disable-ocr
+             -->
+            <parser-exclude class="org.apache.tika.parser.ocr.TesseractOCRParser"/>
+        </parser>
+    </parsers>
+</properties>
