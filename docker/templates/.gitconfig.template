@@ -3,6 +3,6 @@
         email = support@catma.de
 [core]
         editor = vi
-        symlinks = false # CVE-2023-4759
+        symlinks = false # originally added for CVE-2023-4759, which was fixed in JGit 6.7.0, but we may as well leave it off
 [credential]
         helper = cache

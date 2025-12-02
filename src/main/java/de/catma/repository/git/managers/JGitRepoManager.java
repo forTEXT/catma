@@ -5,8 +5,6 @@ import de.catma.project.CommitInfo;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.jgit.ClosableRecursiveMerger;
-import de.catma.repository.git.managers.jgit.JGitCommandFactory;
-import de.catma.repository.git.managers.jgit.RelativeJGitCommandFactory;
 import de.catma.user.User;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -18,26 +16,16 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
-import org.eclipse.jgit.dircache.DirCache;
-import org.eclipse.jgit.dircache.DirCacheEntry;
-import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.lib.*;
-import org.eclipse.jgit.lib.IndexDiff.StageState;
-import org.eclipse.jgit.revwalk.FooterLine;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.storage.file.FileBasedConfig;
-import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
-import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
-import org.eclipse.jgit.util.FS;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -50,7 +38,6 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 	private final String repositoryBasePath;
 	private final String username;
-	private final JGitCommandFactory jGitCommandFactory;
 
 	private Git gitApi;
 
@@ -67,7 +54,6 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 	public JGitRepoManager(String repositoryBasePath, User user) {
 		this.repositoryBasePath = repositoryBasePath;
 		this.username = user.getIdentifier();
-		this.jGitCommandFactory = new RelativeJGitCommandFactory();
 	}
 
 	// methods that can always be called, irrespective of the instance state
@@ -119,7 +105,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 				.toFile();
 
 		try {
-			CloneCommand cloneCommand = jGitCommandFactory.newCloneCommand().setURI(uri).setDirectory(targetPath);
+			CloneCommand cloneCommand = new CloneCommand().setURI(uri).setDirectory(targetPath);
 			cloneCommand.setCredentialsProvider(jGitCredentialsManager.getCredentialsProvider());
 			gitApi = cloneCommand.call();
 		}

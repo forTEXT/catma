@@ -47,8 +47,6 @@ import de.catma.repository.git.GitProjectHandler;
 import de.catma.repository.git.managers.JGitRepoManager;
 import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
-import de.catma.repository.git.managers.jgit.JGitCommandFactory;
-import de.catma.repository.git.managers.jgit.RelativeJGitCommandFactory;
 import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
@@ -153,10 +151,8 @@ public class ProjectFixtures {
 		}
 		localProjectGitDir.mkdirs();
 	
-		JGitCommandFactory jGitCommandFactory = new RelativeJGitCommandFactory();
-		CloneCommand cloneCommand = jGitCommandFactory.newCloneCommand();
 		// setURI actually takes a plain path string and using a URI leads to a corrupt 'remote' configuration
-		try (Git gitApi = cloneCommand.setURI(remoteGitDir.getAbsolutePath()).setDirectory(localProjectGitDir).call()) {
+		try (Git gitApi = new CloneCommand().setURI(remoteGitDir.getAbsolutePath()).setDirectory(localProjectGitDir).call()) {
 			gitApi.getRepository().close();			
 		}
 		
@@ -300,10 +296,8 @@ public class ProjectFixtures {
 		}
 		localProjectGitDir.mkdirs();
 	
-		JGitCommandFactory jGitCommandFactory = new RelativeJGitCommandFactory();
-		CloneCommand cloneCommand = jGitCommandFactory.newCloneCommand();
 		// setURI actually takes a plain path string and using a URI leads to a corrupt 'remote' configuration
-		try (Git gitApi = cloneCommand.setURI(remoteGitDir.getAbsolutePath()).setDirectory(localProjectGitDir).call()) {
+		try (Git gitApi = new CloneCommand().setURI(remoteGitDir.getAbsolutePath()).setDirectory(localProjectGitDir).call()) {
 			gitApi.getRepository().close();			
 		}
 		
