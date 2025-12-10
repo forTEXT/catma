@@ -438,7 +438,9 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 
 		try (FileOutputStream fileOutputStream = FileUtils.openOutputStream(targetFile)) {
 			fileOutputStream.write(bytes);
+		}
 
+		try {
 			Path basePath = gitApi.getRepository().getWorkTree().toPath();
 			Path absoluteFilePath = Paths.get(targetFile.getAbsolutePath());
 			Path relativeFilePath = basePath.relativize(absoluteFilePath);
