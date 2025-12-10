@@ -27,6 +27,8 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.gitlab4j.api.GitLabApiException;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -80,7 +82,12 @@ class AuthServiceTest extends JerseyTest {
 
 		return app;
 	}
-	
+
+	@Override
+	protected void configureClient(ClientConfig config) {
+		config.property(ClientProperties.FOLLOW_REDIRECTS, false);
+	}
+
 	@BeforeAll
 	static void setup() {
 		Properties properties = new Properties();
