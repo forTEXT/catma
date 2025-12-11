@@ -46,6 +46,7 @@ import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.project.ProjectView.DocumentGridColumn;
 import de.catma.ui.module.project.ProjectView.TagsetGridColumn;
+import de.catma.ui.util.Cleaner;
 import de.catma.user.Member;
 
 public class ForkConfigurationDialog extends AbstractOkCancelDialog<Set<String>> {
@@ -334,7 +335,7 @@ public class ForkConfigurationDialog extends AbstractOkCancelDialog<Set<String>>
 				.append("<div class='documentsgrid__doc'>")
 				.append("<div class='documentsgrid__doc__title")
 				.append(resource.isContribution() ? " documentsgrid__doc__contrib'>" : "'>")
-				.append(resource.getName())
+				.append(Cleaner.clean(resource.getName()))
 				.append("</div>");
 
 		// disabled due to styling issue and not really adding value, also see createComponents and `div.documentsgrid__doc` in CSS
@@ -356,7 +357,7 @@ public class ForkConfigurationDialog extends AbstractOkCancelDialog<Set<String>>
 			return "";
 		}
 
-		return String.format("<div class='documentsgrid__doc'>%s</div>", resource.getResponsibleUser());
+		return String.format("<div class='documentsgrid__doc'>%s</div>", Cleaner.clean(resource.getResponsibleUser()));
 	};
 
 	

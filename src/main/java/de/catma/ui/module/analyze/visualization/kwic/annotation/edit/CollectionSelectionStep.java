@@ -37,6 +37,7 @@ import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.project.CollectionResource;
 import de.catma.ui.module.project.DocumentResource;
 import de.catma.ui.module.project.Resource;
+import de.catma.ui.util.Cleaner;
 import de.catma.user.Member;
 
 class CollectionSelectionStep extends VerticalLayout implements WizardStep {
@@ -201,7 +202,7 @@ class CollectionSelectionStep extends VerticalLayout implements WizardStep {
 			StringBuilder sb = new StringBuilder()
 			  .append("<div class='documentsgrid__doc'> ")
 		      .append("<div class='documentsgrid__doc__title'> ")
-		      .append(resource.getName())
+		      .append(Cleaner.clean(resource.getName()))
 		      .append("</div>");
 			if(resource.hasDetail()){
 		        sb
@@ -222,7 +223,7 @@ class CollectionSelectionStep extends VerticalLayout implements WizardStep {
 			
 			StringBuilder sb = new StringBuilder()
 			  .append("<div class='documentsgrid__doc'> ") //$NON-NLS-1$
-		      .append(resource.getResponsibleUser())
+		      .append(Cleaner.clean(resource.getResponsibleUser()))
 		      .append("</div>"); //$NON-NLS-1$
 			sb.append("</div>"); //$NON-NLS-1$
 				        

@@ -112,6 +112,7 @@ import de.catma.ui.module.project.documentwizard.DocumentWizard;
 import de.catma.ui.module.project.documentwizard.TagsetImport;
 import de.catma.ui.module.project.documentwizard.TagsetImportState;
 import de.catma.ui.module.project.documentwizard.UploadFile;
+import de.catma.ui.util.Cleaner;
 import de.catma.user.Group;
 import de.catma.user.Member;
 import de.catma.user.SharedGroup;
@@ -440,7 +441,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 				.append("<div class='documentsgrid__doc'>")
 				.append("<div class='documentsgrid__doc__title")
 				.append(resource.isContribution() ? " documentsgrid__doc__contrib'>" : "'>")
-				.append(resource.getName())
+				.append(Cleaner.clean(resource.getName()))
 				.append("</div>");
 
 		// disabled due to styling issue and not really adding value, also see initResourcesContent and `div.documentsgrid__doc` in CSS
@@ -462,7 +463,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			return "";
 		}
 
-		return String.format("<div class='documentsgrid__doc'>%s</div>", resource.getResponsibleUser());
+		return String.format("<div class='documentsgrid__doc'>%s</div>", Cleaner.clean(resource.getResponsibleUser()));
 	};
 
 	private Component initResourcesContent() {

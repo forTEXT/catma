@@ -15,6 +15,7 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.serialization.TagsetDefinitionImportStatus;
 import de.catma.ui.dialog.AbstractOkCancelDialog;
 import de.catma.ui.dialog.SaveCancelListener;
+import de.catma.ui.util.Cleaner;
 
 public class TagsetImportDialog extends AbstractOkCancelDialog<List<TagsetDefinitionImportStatus>> {
 
@@ -53,11 +54,11 @@ public class TagsetImportDialog extends AbstractOkCancelDialog<List<TagsetDefini
 				
 				String doImportText = String.format(
 						"<strong>%s</strong> will be imported!",
-						tagsetDefinitionImportStatus.getTagset().getName()
+						Cleaner.clean(tagsetDefinitionImportStatus.getTagset().getName())
 				);
 				String doNotImportText = String.format(
 						"<strong>%s</strong> will <strong>NOT</strong> be imported!",
-						tagsetDefinitionImportStatus.getTagset().getName()
+						Cleaner.clean(tagsetDefinitionImportStatus.getTagset().getName())
 				);
 				rowLabel.setValue(doImportText);
 				
@@ -76,14 +77,14 @@ public class TagsetImportDialog extends AbstractOkCancelDialog<List<TagsetDefini
 						+ "Importing it will merge new tags, properties and values from the imported tagset into the existing tagset.<br />"
 						+ "Please tick off the check box to import this tagset!<br />"
 						+ "%1$s will be imported!", 
-						tagsetDefinitionImportStatus.getTagset().getName()
+						Cleaner.clean(tagsetDefinitionImportStatus.getTagset().getName())
 				);
 				String doNotImportText = String.format(
 						"<strong>%1$s</strong> is already part of this project!<br />"
 						+ "Importing it will merge new tags, properties and values from the imported tagset into the existing tagset.<br />"
 						+ "Please tick off the check box to import this tagset!<br />"
 						+ "%1$s will <strong>NOT</strong> be imported!",
-						tagsetDefinitionImportStatus.getTagset().getName()
+						Cleaner.clean(tagsetDefinitionImportStatus.getTagset().getName())
 				);
 
 				rowLabel.setValue(doNotImportText);

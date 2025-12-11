@@ -10,6 +10,7 @@ import de.catma.tag.Property;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
+import de.catma.ui.util.Cleaner;
 
 public class AnnotationPropertyDataItem implements AnnotationTreeItem {
 	
@@ -46,7 +47,7 @@ public class AnnotationPropertyDataItem implements AnnotationTreeItem {
 	
 	@Override
 	public String getDescription() {
-		return property.getPropertyValueList().stream().collect(Collectors.joining(","));
+		return property.getPropertyValueList().stream().map(Cleaner::clean).collect(Collectors.joining(","));
 	}
 
 	@Override
