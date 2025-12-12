@@ -29,7 +29,7 @@
 
 		<jetty.plugin.version>12.0.16</jetty.plugin.version>
 		
-		<jersey.version>2.45</jersey.version>
+		<jersey.version>2.46</jersey.version>
 	</properties>
 
 	<repositories>
