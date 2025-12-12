@@ -139,6 +139,13 @@
 			<groupId>com.github.vaadin4qbanos</groupId>
 			<artifactId>jsclipboard</artifactId>
 			<version>1.0.12</version>
+			<exclusions>
+				<!-- prefer the version that comes with Tika/Swagger (avoids a NoSuchMethodError for org.apache.commons.lang3.math.NumberUtils.isCreatable) -->
+				<exclusion>
+					<groupId>org.apache.commons</groupId>
+					<artifactId>commons-lang3</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Material Design theme for Vaadin (https://github.com/appreciated/material) -->
@@ -180,16 +187,23 @@
 			<version>1.6.0</version>
 		</dependency>
 
-		<!-- Apache HTTP (used for OAuth login) -->
+		<!-- Apache HTTP (used for OAuth login and related tests) -->
+<!--		<dependency>--> <!-- TODO: update -->
+<!--			<groupId>org.apache.httpcomponents.client5</groupId>-->
+<!--			<artifactId>httpclient5</artifactId>-->
+<!--			<version>5.5.1</version>-->
+<!--		</dependency>-->
 		<dependency>
-			<groupId>org.apache.httpcomponents.core5</groupId>
-			<artifactId>httpcore5</artifactId>
-			<version>5.3.6</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.httpcomponents.client5</groupId>
-			<artifactId>httpclient5</artifactId>
-			<version>5.5.1</version>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.14</version>
+			<exclusions>
+				<!-- prefer org.slf4j:jcl-over-slf4j implementation that comes with tika-parsers-standard-package -->
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Hazelcast & caching (used for cross-session comms and caching of signup tokens and project invitation codes) -->
@@ -234,14 +248,9 @@
 		<dependency>
 			<groupId>org.gitlab4j</groupId>
 			<artifactId>gitlab4j-api</artifactId>
-			<!-- https://github.com/forTEXT/gitlab4j-api/releases/tag/gitlab4j-api-5.0.1-CATMA-v2 -->
+			<!-- https://github.com/forTEXT/gitlab4j-api/releases/tag/gitlab4j-api-5.0.1-CATMA-v3 -->
 			<version>5.0.1-CATMA-v3</version>
 			<exclusions>
-				<!-- prefer the jackson version that comes with swagger-jaxrs2 -->
-				<exclusion>
-					<groupId>com.fasterxml.jackson.core</groupId>
-					<artifactId>jackson-annotations</artifactId>
-				</exclusion>
 				<!-- provided by Jetty -->
 				<exclusion>
 					<groupId>jakarta.servlet</groupId>
@@ -254,6 +263,40 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		<!-- Force our overall Jersey version for gitlab4j-api's Jersey dependencies -->
+		<dependency>
+			<groupId>org.glassfish.jersey.core</groupId>
+			<artifactId>jersey-client</artifactId>
+			<version>${jersey.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.inject</groupId>
+			<artifactId>jersey-hk2</artifactId>
+			<version>${jersey.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.connectors</groupId>
+			<artifactId>jersey-apache-connector</artifactId>
+			<version>${jersey.version}</version>
+			<exclusions>
+				<!-- prefer org.slf4j:jcl-over-slf4j implementation that comes with tika-parsers-standard-package -->
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-multipart</artifactId>
+			<version>${jersey.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-json-jackson</artifactId>
+			<version>${jersey.version}</version>
+		</dependency>
+		<!-- / End force our overall Jersey version -->
 
 		<!-- Apache Tika & Lucene (used for document parsing & indexing). Versions for Tika not required since BOM is included. -->
 		<dependency>
@@ -264,7 +307,7 @@
 			<groupId>org.apache.tika</groupId>
 			<artifactId>tika-parsers-standard-package</artifactId>
 			<exclusions>
-				<!-- prefer org.slf4j:jcl-over-slf4j implementation, a direct dependency of this package, over transient dependencies on commons-logging
+				<!-- prefer org.slf4j:jcl-over-slf4j implementation, a direct dependency of this package, over transitive dependencies on commons-logging
 					 and log4j-api
 				 -->
 				<exclusion>
@@ -354,14 +397,6 @@
 			<groupId>io.swagger.core.v3</groupId>
 			<artifactId>swagger-jaxrs2</artifactId>
 			<version>2.2.30</version>
-		</dependency>
-		<!-- Force a higher version of commons-lang3 than we would otherwise get transitively (via jsclipboard) - avoids a NoSuchMethodError for
-			 org.apache.commons.lang3.math.NumberUtils.isCreatable
-		 -->
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-lang3</artifactId>
-			<version>3.18.0</version>
 		</dependency>
 
 		<!-- Test dependencies -->
