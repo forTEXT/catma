@@ -20,7 +20,7 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider;
-import de.catma.ui.util.Cleaner;
+import de.catma.ui.util.HtmlEscaper;
 
 public class KwicItemHandler {
 	private Logger logger = Logger.getLogger(KwicItemHandler.class.getName());
@@ -124,7 +124,7 @@ public class KwicItemHandler {
 			return AnnotatedTextProvider.buildCommentedKeyword(row.getPhrase(), comment);
 		}
 		
-		return Cleaner.clean(row.getPhrase());
+		return HtmlEscaper.escape(row.getPhrase());
 	}
 	
 	

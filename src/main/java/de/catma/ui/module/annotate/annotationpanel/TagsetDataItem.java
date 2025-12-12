@@ -14,7 +14,7 @@ import de.catma.document.annotation.TagReference;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
-import de.catma.ui.util.Cleaner;
+import de.catma.ui.util.HtmlEscaper;
 
 class TagsetDataItem implements TagsetTreeItem {
 	
@@ -46,7 +46,7 @@ class TagsetDataItem implements TagsetTreeItem {
 				rootTags.stream()
 				.limit(3)
 				.sorted((t1, t2)->collator.compare(Optional.ofNullable(t1.getName()).orElse(""), Optional.ofNullable(t2.getName()).orElse("")))
-				.map(tag -> Cleaner.clean(tag.getName()))
+				.map(tag -> HtmlEscaper.escape(tag.getName()))
 				.collect(Collectors.joining(", ")));
 			tagSummeryBuilder.append(
 				((rootTags.size() > 3)?"...":""));
@@ -56,7 +56,7 @@ class TagsetDataItem implements TagsetTreeItem {
 	
 	@Override
 	public String getTagsetName() {
-		return "<span class=\"annotate-panel-tagsetname\">"+Cleaner.clean(tagset.getName())+"</span>";
+		return "<span class=\"annotate-panel-tagsetname\">"+ HtmlEscaper.escape(tagset.getName())+"</span>";
 	}
 
 	public TagsetDefinition getTagset() {

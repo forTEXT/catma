@@ -14,7 +14,7 @@ import de.catma.document.annotation.TagReference;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
-import de.catma.ui.util.Cleaner;
+import de.catma.ui.util.HtmlEscaper;
 import de.catma.util.ColorConverter;
 
 class TagDataItem implements TagsetTreeItem {
@@ -140,7 +140,7 @@ class TagDataItem implements TagsetTreeItem {
 			propertySummary.append(tag.getUserDefinedPropertyDefinitions().stream()
 			.limit(3)
 			.sorted((p1,p2)->collator.compare(Optional.ofNullable(p1.getName()).orElse(""), Optional.ofNullable(p2.getName()).orElse("")))
-			.map(property -> Cleaner.clean(property.getName()))
+			.map(property -> HtmlEscaper.escape(property.getName()))
 			.collect(Collectors.joining(",")));
 			propertySummary.append(
 				((tag.getUserDefinedPropertyDefinitions().size() > 3)?"...":""));

@@ -13,7 +13,7 @@ import com.vaadin.ui.VerticalLayout;
 import de.catma.serialization.TagsetDefinitionImportStatus;
 import de.catma.ui.dialog.AbstractOkCancelDialog;
 import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.ui.util.Cleaner;
+import de.catma.ui.util.HtmlEscaper;
 
 public class CollectionImportDialog extends AbstractOkCancelDialog<List<TagsetDefinitionImportStatus>> {
 
@@ -50,7 +50,7 @@ public class CollectionImportDialog extends AbstractOkCancelDialog<List<TagsetDe
 			if (!tagsetDefinitionImportStatus.isCurrent()) {
 				String doImportText = String.format(
 						"<strong>%s</strong> is new to this project and will be imported!",
-						Cleaner.clean(tagsetDefinitionImportStatus.getTagset().getName())
+						HtmlEscaper.escape(tagsetDefinitionImportStatus.getTagset().getName())
 				);
 
 				rowLabel.setValue(doImportText);
@@ -61,7 +61,7 @@ public class CollectionImportDialog extends AbstractOkCancelDialog<List<TagsetDe
 						+ "Importing the collection will merge not yet included tags, properties "
 						+ "and values<br />from the tagset of the imported collection into the existing tagset.<br />"
 						+ "%1$s will be imported!",
-						Cleaner.clean(tagsetDefinitionImportStatus.getTagset().getName())
+						HtmlEscaper.escape(tagsetDefinitionImportStatus.getTagset().getName())
 				);
 				rowLabel.setValue(doImportText);
 			}

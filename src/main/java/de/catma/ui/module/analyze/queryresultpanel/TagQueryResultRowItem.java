@@ -14,7 +14,7 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.ui.module.main.ErrorHandler;
-import de.catma.ui.util.Cleaner;
+import de.catma.ui.util.HtmlEscaper;
 
 public class TagQueryResultRowItem implements QueryResultRowItem {
 
@@ -35,7 +35,7 @@ public class TagQueryResultRowItem implements QueryResultRowItem {
 
 	@Override
 	public String getKey() {
-		return Cleaner.clean(groupedQueryResult.getGroup().toString());
+		return HtmlEscaper.escape(groupedQueryResult.getGroup().toString());
 	}
 	
 	@Override

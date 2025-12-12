@@ -10,7 +10,7 @@ import com.vaadin.icons.VaadinIcons;
 import de.catma.tag.PropertyDefinition;
 import de.catma.tag.TagDefinition;
 import de.catma.tag.TagsetDefinition;
-import de.catma.ui.util.Cleaner;
+import de.catma.ui.util.HtmlEscaper;
 
 class PropertyDataItem implements TagsetTreeItem {
 	
@@ -58,7 +58,7 @@ class PropertyDataItem implements TagsetTreeItem {
 				"<div class=\"annotation-panel-property-summary %1$s\">",
 				propertyDefinition.isContribution()?"annotate-panel-tagset-with-contributions":""));
 		
-		propertySummary.append(Cleaner.clean(propertyDefinition.getName())); 
+		propertySummary.append(HtmlEscaper.escape(propertyDefinition.getName())); 
 
 		if (!valuesExpanded) {
 			if (!propertyDefinition.getPossibleValueList().isEmpty()) { 
@@ -67,7 +67,7 @@ class PropertyDataItem implements TagsetTreeItem {
 			propertySummary.append(propertyDefinition.getPossibleValueList().stream()
 			.limit(2)
 			.sorted((v1, v2) -> collator.compare(Optional.ofNullable(v1).orElse(""), Optional.ofNullable(v2).orElse("")))
-			.map(pValue -> Cleaner.clean(pValue))
+			.map(pValue -> HtmlEscaper.escape(pValue))
 			.collect(Collectors.joining(",")));
 			propertySummary.append(
 				((propertyDefinition.getPossibleValueList().size() > 2)?"...":""));

@@ -13,7 +13,7 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider;
 import de.catma.ui.module.main.ErrorHandler;
-import de.catma.ui.util.Cleaner;
+import de.catma.ui.util.HtmlEscaper;
 
 public class DocumentQueryResultRowItem implements QueryResultRowItem {
 
@@ -40,7 +40,7 @@ public class DocumentQueryResultRowItem implements QueryResultRowItem {
 
 	@Override
 	public String getKey() {
-		return Cleaner.clean(documentName);
+		return HtmlEscaper.escape(documentName);
 	}
 
 	@Override

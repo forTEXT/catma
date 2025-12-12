@@ -60,7 +60,7 @@ import de.catma.ui.dialog.BeyondResponsibilityConfirmDialog.Action;
 import de.catma.ui.dialog.SaveCancelListener;
 import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider.ContextSizeEditCommand;
 import de.catma.ui.module.main.ErrorHandler;
-import de.catma.ui.util.Cleaner;
+import de.catma.ui.util.HtmlEscaper;
 
 public class AnnotationDetailsPanel extends VerticalLayout {
 	private final static SerializableComparator<AnnotationTreeItem> ANNOTATION_TREE_ITEM_COMPARATOR_ASC = (t1, t2) -> t1.compareTo(t2);
@@ -492,7 +492,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 						AnnotationPropertyDataItem propertyDataItem = 
 								new AnnotationPropertyDataItem(
 										property, 
-										() -> Cleaner.clean(propertyDef.getName()),
+										() -> HtmlEscaper.escape(propertyDef.getName()),
 										annotation.getTagInstance().getUuid(),
 										annotation.getTagInstance().getAuthor(),
 										propertyDef,
@@ -504,7 +504,7 @@ public class AnnotationDetailsPanel extends VerticalLayout {
 						for (String value : property.getPropertyValueList()) {
 							AnnotationPropertyValueDataItem valueDataItem = 
 									new AnnotationPropertyValueDataItem(
-											Cleaner.clean(value),
+											HtmlEscaper.escape(value),
 											annotation.getTagInstance().getUuid(),
 											annotation.getTagInstance().getAuthor(),
 											propertyDef,

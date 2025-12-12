@@ -17,15 +17,12 @@ import de.catma.document.annotation.TagReference;
 import de.catma.document.comment.Comment;
 import de.catma.indexer.KeywordInSpanContext;
 import de.catma.indexer.KwicProvider;
-import de.catma.properties.CATMAProperties;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.dialog.SaveCancelListener;
-import de.catma.ui.dialog.SingleTextInputDialog;
 import de.catma.ui.dialog.SliderInputDialog;
-import de.catma.ui.module.analyze.queryresultpanel.QueryResultPanel;
 import de.catma.ui.module.main.ErrorHandler;
-import de.catma.ui.util.Cleaner;
+import de.catma.ui.util.HtmlEscaper;
 import de.catma.util.ColorConverter;
 
 public class AnnotatedTextProvider {
@@ -57,7 +54,7 @@ public class AnnotatedTextProvider {
 
 		try {
 			KeywordInSpanContext kwic = kwicProvider.getKwic(range, contextSize);
-			builder.append(Cleaner.clean(kwic.getBackwardContext()));
+			builder.append(HtmlEscaper.escape(kwic.getBackwardContext()));
 
 			builder.append("<span");
 			builder.append(" class=\"annotation-details-tag-color\"");
@@ -67,13 +64,13 @@ public class AnnotatedTextProvider {
 			builder.append(";");
 			builder.append("\">");
 			builder.append(
-				Cleaner.clean(
+					HtmlEscaper.escape(
 					shorten(
 							kwic.getKeyword(), 
 							keywordLength)));
 			builder.append("</span>");	
 		
-			builder.append(Cleaner.clean(kwic.getForwardContext()));
+			builder.append(HtmlEscaper.escape(kwic.getForwardContext()));
 		}
 		catch (IOException e) {
 			((ErrorHandler) UI.getCurrent()).showAndLogError(
@@ -121,7 +118,7 @@ public class AnnotatedTextProvider {
 			List<KeywordInSpanContext> kwics = kwicProvider.getKwic(Range.mergeRanges(new TreeSet<>(ranges)), contextSize);
 			String conc = "";
 			for (KeywordInSpanContext kwic : kwics) {
-				builder.append(Cleaner.clean(kwic.getBackwardContext()));
+				builder.append(HtmlEscaper.escape(kwic.getBackwardContext()));
 
 				builder.append("<span");
 				if (tagDefinition != null) { // can happen when switching back to synch mode
@@ -138,13 +135,13 @@ public class AnnotatedTextProvider {
 				}
 				builder.append("\">");
 				builder.append(
-					Cleaner.clean(
+						HtmlEscaper.escape(
 						shorten(
 								kwic.getKeyword(), 
 								LARGE_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH)));
 				builder.append("</span>");	
 			
-				builder.append(Cleaner.clean(kwic.getForwardContext()));
+				builder.append(HtmlEscaper.escape(kwic.getForwardContext()));
 				builder.append(conc);
 				conc = " [" + HORIZONTAL_ELLIPSIS + "] ";
 			}
@@ -213,11 +210,11 @@ public class AnnotatedTextProvider {
 	public static String buildCommentedKeyword(String phrase, Comment comment) {
 		StringBuilder builder = new StringBuilder();
 		builder.append("<div class=\"commented-keyword\">");
-		builder.append(Cleaner.clean(shorten(phrase, SMALL_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH)));
+		builder.append(HtmlEscaper.escape(shorten(phrase, SMALL_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH)));
 		builder.append("</div>");
 		builder.append("<div class=\"commented-keyword-comment\">");
 		builder.append("<div class=\"commented-keyword-username\">");
-		builder.append(Cleaner.clean(comment.getUsername()));
+		builder.append(HtmlEscaper.escape(comment.getUsername()));
 		if (comment.getReplyCount() > 0) {
 			builder.append("(+");
 			builder.append(comment.getReplyCount());
@@ -225,7 +222,7 @@ public class AnnotatedTextProvider {
 		}
 		builder.append(":");
 		builder.append("</div>");
-		builder.append(Cleaner.clean(
+		builder.append(HtmlEscaper.escape(
 				shorten(
 						comment.getBody(), 
 						LARGE_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH)));

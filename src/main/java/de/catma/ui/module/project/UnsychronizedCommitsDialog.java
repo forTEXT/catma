@@ -12,7 +12,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 import de.catma.project.CommitInfo;
-import de.catma.ui.util.Cleaner;
+import de.catma.ui.util.HtmlEscaper;
 
 public class UnsychronizedCommitsDialog extends Window {
 	
@@ -60,7 +60,7 @@ public class UnsychronizedCommitsDialog extends Window {
 			Label l = new Label(
 					ci.getId() 
 					+ "<br/><strong>"
-					+ Cleaner.clean(
+					+ HtmlEscaper.escape(
 						ci.getMsg().replaceAll(
 								Pattern.quote("with")
 								+"\\s+" 

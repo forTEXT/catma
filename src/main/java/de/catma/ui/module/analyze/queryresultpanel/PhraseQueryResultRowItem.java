@@ -12,7 +12,7 @@ import de.catma.queryengine.result.GroupedQueryResult;
 import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.ui.module.main.ErrorHandler;
-import de.catma.ui.util.Cleaner;
+import de.catma.ui.util.HtmlEscaper;
 
 public class PhraseQueryResultRowItem implements QueryResultRowItem {
 
@@ -31,7 +31,7 @@ public class PhraseQueryResultRowItem implements QueryResultRowItem {
 
 	@Override
 	public String getKey() {
-		return Cleaner.clean(groupedQueryResult.getGroup().toString());
+		return HtmlEscaper.escape(groupedQueryResult.getGroup().toString());
 	}
 
 	@Override

@@ -14,7 +14,7 @@ import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.tag.TagDefinition;
 import de.catma.ui.module.annotate.annotationpanel.AnnotatedTextProvider;
 import de.catma.ui.module.main.ErrorHandler;
-import de.catma.ui.util.Cleaner;
+import de.catma.ui.util.HtmlEscaper;
 
 public class CollectionQueryResultRowItem implements QueryResultRowItem {
 
@@ -43,7 +43,7 @@ public class CollectionQueryResultRowItem implements QueryResultRowItem {
 
 	@Override
 	public String getKey() {
-		return Cleaner.clean(collectionName);
+		return HtmlEscaper.escape(collectionName);
 	}
 	
 	@Override
