@@ -7,7 +7,7 @@
 # https://docs.docker.com/engine/logging/configure/
 
 # syntax=docker/dockerfile:1
-FROM  gitlab/gitlab-ee:18.2.8-ee.0
+FROM  gitlab/gitlab-ee:18.5.5-ee.0
 LABEL maintainer="CATMA Team" \
       version="0.0.1"
 
@@ -15,7 +15,7 @@ SHELL ["/bin/bash", "-c"]
 
 # all of these can be overriden with '--build-arg' at build time
 ARG JDK_FILENAME=jdk-21_linux-x64_bin.tar.gz
-ARG JETTY_FILENAME=jetty-home-12.0.29.tar.gz
+ARG JETTY_FILENAME=jetty-home-12.0.30.tar.gz
 ARG CATMA_WAR_FILENAME=catma-7.2-SNAPSHOT.war
 
 ARG DEBIAN_FRONTEND=noninteractive
