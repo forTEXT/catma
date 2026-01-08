@@ -86,7 +86,7 @@ ApplicationSetting.current.update!(
 appearance = Appearance.first_or_create!
 appearance.update!(
   favicon: File.open("/var/opt/gitlab/gitlab-rails/uploads/catma-gitlab-combo-favicon.ico"),
-  header_logo: File.open("/var/opt/gitlab/gitlab-rails/uploads/catma-gitlab-combo-logo-blue.svg"),
+  header_logo: File.open("/var/opt/gitlab/gitlab-rails/uploads/catma-gitlab-combo-logo-blue-on-white-pill-50a.svg"),
   title: "CATMA GitLab",
   description: <<EOF
 This is CATMA's self-managed GitLab backend.

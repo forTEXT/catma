@@ -167,9 +167,10 @@ if [[ $FIRST_START = "true" ]]
 then
   echo -e "Configuring GitLab ..."
   echo -e "\n--- $(date)\n\n" >> /var/log/gitlab/gitlab_config.log
+  GITLAB_UPLOADS_DIR=/var/opt/gitlab/gitlab-rails/uploads/
+  cp /opt/assets/catma-gitlab-combo-favicon.ico /opt/assets/catma-gitlab-combo-logo-blue-on-white-pill-50a.svg $GITLAB_UPLOADS_DIR
+  chown git:git ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-favicon.ico ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-logo-blue-on-white-pill-50a.svg
   ADMIN_TOKEN_STRING=$(pwgen -snc 20 1)
-  cp /opt/assets/catma-gitlab-combo-favicon.ico /opt/assets/catma-gitlab-combo-logo-blue.svg /var/opt/gitlab/gitlab-rails/uploads/
-  chown git:git /var/opt/gitlab/gitlab-rails/uploads/catma-gitlab-combo-favicon.ico /var/opt/gitlab/gitlab-rails/uploads/catma-gitlab-combo-logo-blue.svg
   # https://docs.gitlab.com/administration/operations/rails_console/#using-the-rails-runner
   gitlab-rails runner /opt/scripts/gitlab_config.rb $ADMIN_TOKEN_STRING &>> /var/log/gitlab/gitlab_config.log
   if [[ $? -ne 0 ]]
