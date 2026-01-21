@@ -1,7 +1,5 @@
 #!/bin/bash
 
-CATMA_VERSION=7.2
-
 red='\033[31m'
 green='\033[32m'
 yellow='\033[33m'
@@ -61,13 +59,16 @@ trap "shutdown_handler" INT TERM
 print_logo
 
 # 1. update config files based on environment variables
-sed -i "s|^\(JAVA_OPTIONS=\"\).*$|\1$JETTY_JAVA_OPTIONS\"|" /etc/default/jetty
-sed -i "s|^\(BASE_URL=http://localhost:\).*$|\1$CATMA_PORT|" /opt/jetty_web/catma_base/webapps/ROOT/catma.properties
-sed -i "s|^\(LOGOUT_URL=http://localhost:\).*$|\1$CATMA_PORT|" /opt/jetty_web/catma_base/webapps/ROOT/catma.properties
-sed -i "s|^\(RESET_PASSWORD_URL=http://localhost:\).*\(/users/password/new\)$|\1$GITLAB_PORT\2|" /opt/jetty_web/catma_base/webapps/ROOT/catma.properties
+sed -i "s|^\(JAVA_OPTIONS=\"\).*$|\1$JETTY_JAVA_OPTIONS -server\"|" /etc/default/jetty
+sed -i "s|^\(BASE_URL=\).*$|\1$CATMA_URL/|" /opt/jetty_web/catma_base/webapps/ROOT/catma.properties # note trailing slash, see CATMAPropertyKey
+# the following requires '--add-host=gitlab.localhost=127.0.0.1' as part of the 'docker run' command because gitlab.localhost doesn't automatically resolve to
+# 127.0.0.1 within the container
+sed -i "s|^\(GITLAB_SERVER_URL=\).*$|\1$GITLAB_URL|" /opt/jetty_web/catma_base/webapps/ROOT/catma.properties
+sed -i "s|^\(LOGOUT_URL=\).*$|\1$CATMA_URL|" /opt/jetty_web/catma_base/webapps/ROOT/catma.properties
+sed -i "s|^\(RESET_PASSWORD_URL=\).*$|\1$GITLAB_URL/users/password/new|" /opt/jetty_web/catma_base/webapps/ROOT/catma.properties
 
 # 2. if /etc/gitlab/gitlab.rb doesn't exist then we're starting for the first time - set a flag for later use, copy the template file and set some initial
-#    config options TODO: set external_url?
+#    config options
 #    this is partially copied from GitLab's init-container script, ref: https://gitlab.com/gitlab-org/omnibus-gitlab/-/blob/master/docker/assets/init-container
 if [[ ! -e /etc/gitlab/gitlab.rb ]]; then
   FIRST_START=true
@@ -78,11 +79,14 @@ if [[ ! -e /etc/gitlab/gitlab.rb ]]; then
   cat << EOF >> /etc/gitlab/gitlab.rb
 
 
-# following are recommendations as per: https://docs.gitlab.com/omnibus/settings/memory_constrained_envs/
+external_url = '${GITLAB_URL}'
+nginx['listen_port'] = ${GITLAB_PORT}
+gitlab_rails['gitlab_username_changing_enabled'] = false
+prometheus_monitoring['enable'] = false
 
+# following are additional recommendations as per: https://docs.gitlab.com/omnibus/settings/memory_constrained_envs/
 puma['worker_processes'] = 0
 sidekiq['concurrency'] = 10
-prometheus_monitoring['enable'] = false
 EOF
 fi
 
@@ -143,10 +147,10 @@ sleep 60
 # (this will of course vary depending on hardware and resources available to Docker)
 # first start: ~1m 50s until nginx responded (~3m 50s with $LOW_MEM=true), another ~30s until 200 OK
 # subsequent start: ~15s until nginx responded, another ~45s until 200 OK
-#curl --retry 100 --retry-delay 5 --retry-connrefused -L -w "%{http_code}" -o /dev/null http://127.0.0.1:80
+#curl --retry 100 --retry-delay 5 --retry-connrefused -L -w "%{http_code}" -o /dev/null $GITLAB_URL
 
 # wait up to another 4m 15s
-curl --retry 8 --retry-connrefused -s -L -o /dev/null http://127.0.0.1:80
+curl --retry 8 --retry-connrefused -s -L -o /dev/null $GITLAB_URL
 
 if [[ $? -ne 0 ]]
 then
@@ -161,7 +165,13 @@ EOF
   read -p "Try to continue anyway? (y/n [n]): " confirm && [[ $confirm = [yY] || $confirm = [yY][eE][sS] ]] || shutdown_handler
 fi
 
-# 5. if this is the first start of the GitLab server, complete the initial GitLab setup (set default settings, create an admin PAT, create the default user)
+# 5. declare variables used in subsequent steps
+# although these gitlab_config.rb parameters have defaults, we declare and pass them in explicitly because they are re-used later 
+PAT_PREFIX=catma-glpat-
+DU_USERNAME=standalone
+DU_PASSWORD=St4nd@lone
+
+# 6. if this is the first start of the GitLab server, complete the initial GitLab setup (set default settings, create an admin PAT, create the default user)
 #    also generate a CATMA API secret
 if [[ $FIRST_START = "true" ]]
 then
@@ -170,9 +180,10 @@ then
   GITLAB_UPLOADS_DIR=/var/opt/gitlab/gitlab-rails/uploads/
   cp /opt/assets/catma-gitlab-combo-favicon.ico /opt/assets/catma-gitlab-combo-logo-blue-on-white-pill-50a.svg $GITLAB_UPLOADS_DIR
   chown git:git ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-favicon.ico ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-logo-blue-on-white-pill-50a.svg
-  ADMIN_TOKEN_STRING=$(pwgen -snc 20 1)
+  ADMIN_TOKEN=$(pwgen -snc 20 1)
   # https://docs.gitlab.com/administration/operations/rails_console/#using-the-rails-runner
-  gitlab-rails runner /opt/scripts/gitlab_config.rb $ADMIN_TOKEN_STRING &>> /var/log/gitlab/gitlab_config.log
+  gitlab-rails runner /opt/scripts/gitlab_config.rb --app_url $CATMA_URL --admin_token $ADMIN_TOKEN --pat_prefix $PAT_PREFIX --du_username $DU_USERNAME\
+    --du_password $DU_PASSWORD &>> /var/log/gitlab/gitlab_config.log
   if [[ $? -ne 0 ]]
   then
     cat << EOF
@@ -185,11 +196,11 @@ EOF
     read
     shutdown_handler
   fi
-  sed -i "s|^\(GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN=\).*$|\1catma-glpat-$ADMIN_TOKEN_STRING|" /opt/jetty_web/catma_base/webapps/ROOT/catma.properties
+  sed -i "s|^\(GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN=\).*$|\1${PAT_PREFIX}${ADMIN_TOKEN}|" /opt/jetty_web/catma_base/webapps/ROOT/catma.properties
   sed -i "s|^\(API_HMAC_SECRET=\).*$|\1$(pwgen -snc 32 1)|" /opt/jetty_web/catma_base/webapps/ROOT/catma.properties
 fi
 
-# 6. start Jetty
+# 7. start Jetty
 # we need to ensure correct ownership because these directories are specified as volumes - they will thus retain the origin ownership on the host unless we
 # change it
 chown -R jetty:jetty /opt/jetty_web/catma_base/logs /data
@@ -198,9 +209,9 @@ chown jetty:root /opt/jetty_temp
 service jetty start \
   && cat << EOF
 
-$(color_green "Success! You can now access CATMA at http://localhost:${CATMA_PORT} and log in with\nUsername: standalone\nPassword: St4nd@lone")
+$(color_green "Success! You can now access CATMA at $CATMA_URL and log in with\nUsername: ${DU_USERNAME}\nPassword: ${DU_PASSWORD}")
 
-$(color_gray "You can access the underlying GitLab backend at http://localhost:${GITLAB_PORT} and log in with the same credentials.\nFor admin access to GitLab,
+$(color_gray "You can access the underlying GitLab backend at $GITLAB_URL and log in with the same credentials.\nFor admin access to GitLab,
 use the username \"root\" and the password found in \$GITLAB_HOME/config/initial_root_password (you can also get the password by running e.g. \`docker exec -it
 catma-standalone grep 'Password:' /etc/gitlab/initial_root_password\` in a separate terminal). Store the admin password somewhere safe, as you may need it again
 later - the initial_root_password file is automatically deleted if the container is started again more than 24 hours after the first start.")
@@ -208,5 +219,5 @@ later - the initial_root_password file is automatically deleted if the container
 Hit <CTRL/CMD + C> to stop the container
 EOF
 
-# 7. wait for signals
+# 8. wait for signals
 wait

@@ -1,8 +1,8 @@
-BASE_URL=http://localhost:8089
+BASE_URL=<placeholder>
 
 TEMP_DIR=/opt/jetty_temp
 
-GITLAB_SERVER_URL=http://127.0.0.1:80
+GITLAB_SERVER_URL=<placeholder>
 GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN=<placeholder>
 
 GIT_REPOSITORY_BASE_PATH=/data/catma/localgit
@@ -11,8 +11,8 @@ SQLITE_DB_BASE_PATH=/data/catma
 
 DEV_MAIL_LOG_ONLY=true
 
-RESET_PASSWORD_URL=http://localhost:8088/users/password/new
-LOGOUT_URL=http://localhost:8089
+RESET_PASSWORD_URL=<placeholder>
+LOGOUT_URL=<placeholder>
 
 API_GIT_REPOSITORY_BASE_PATH=/data/catma/localgit_api
 API_HMAC_SECRET=<placeholder>

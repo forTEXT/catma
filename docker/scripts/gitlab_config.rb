@@ -15,11 +15,40 @@
 # To look at created PATs: p User.find_by_username('root').personal_access_tokens
 # ref: https://stackoverflow.com/questions/354547/how-do-i-dump-an-objects-fields-to-the-console
 
-if ARGV.length < 1
-  abort "Usage: gitlab-rails runner gitlab_config.rb <admin_token_string>"
+require 'optparse'
+
+options = {
+  # default values
+  pat_prefix: "catma-glpat-",
+  du_username: 'standalone',
+  du_email: 'standalone@catma.de',
+  du_name: 'standalone',
+  du_password: 'St4nd@lone',
+}
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: [sudo] gitlab-rails runner #{$0} -- --app_url <value> --admin_token <value>"
+
+  # required:
+  opts.on("--app_url <value>", "Required: CATMA application URL") { |v| options[:app_url] = v }
+  opts.on("--admin_token <value>", "Required: GitLab admin personal access token (will be prefixed with pat_prefix)") { |v| options[:admin_token] = v }
+  # optional:
+  opts.on("--pat_prefix <value>", "Optional: Personal access token prefix (default: 'catma-glpat-')") { |v| options[:pat_prefix] = v }
+  opts.on("--du_username <value>", "Optional: Username of the automatically created default user (default: 'standalone')") { |v| options[:du_username] = v }
+  opts.on("--du_email <value>", "Optional: Email of the automatically created default user (default: 'standalone@catma.de')") { |v| options[:du_email] = v }
+  opts.on("--du_name <value>", "Optional: Name of the automatically created default user (default: 'standalone')") { |v| options[:du_name] = v }
+  opts.on("--du_password <value>", "Optional: Password of the automatically created default user (default: 'St4nd@lone')") { |v| options[:du_password] = v }
 end
-admin_token_string = ARGV[0]
-pat_prefix = 'catma-glpat-' # TODO: parameterize
+
+begin
+  parser.parse!
+  # check required options manually
+  raise OptionParser::MissingArgument, "--app_url" unless options[:app_url]
+  raise OptionParser::MissingArgument, "--admin_token" unless options[:admin_token]
+rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
+  puts e.message
+  puts parser
+  exit 1
+end
 
 ApplicationSetting.current.update!(
   # these are absolutely necessary for CATMA to work:
@@ -39,7 +68,7 @@ ApplicationSetting.current.update!(
   # these are nice-to-have:
   restricted_visibility_levels: [Gitlab::VisibilityLevel::INTERNAL, Gitlab::VisibilityLevel::PUBLIC],
   gravatar_enabled: false,
-  personal_access_token_prefix: pat_prefix,
+  personal_access_token_prefix: options[:pat_prefix],
   require_personal_access_token_expiry: false,
   user_oauth_applications: false,
   user_show_add_ssh_key_message: false,
@@ -85,7 +114,7 @@ ApplicationSetting.current.update!(
   first_day_of_week: 1 # Monday
 )
 
-# appearance settings TODO: parameterize app URL
+# appearance settings
 appearance = Appearance.first_or_create!
 appearance.update!(
   favicon: File.open("/var/opt/gitlab/gitlab-rails/uploads/catma-gitlab-combo-favicon.ico"),
@@ -94,10 +123,10 @@ appearance.update!(
   description: <<EOF
 This is CATMA's self-managed GitLab backend.
 
-**NB:** Before you can sign in here, you need to have created an account directly in the [CATMA application](https://app.catma.de/)!
+**NB:** Before you can sign in here, you need to have created an account directly in the [CATMA application](#{options[:app_url]})!
 
 Confused? Perhaps you are looking for:\
-→ The [CATMA application](https://app.catma.de/)\
+→ The [CATMA application](#{options[:app_url]})\
 → More information on CATMA's [Git Access](https://catma.de/documentation/git-access/)\
 → The CATMA [website](https://catma.de/), including tutorials, FAQs and other documentation
 EOF
@@ -106,20 +135,22 @@ EOF
 # create the admin PAT, ref: https://docs.gitlab.com/user/profile/personal_access_tokens/#create-a-personal-access-token-programmatically
 admin_user = User.find_by_username('root')
 admin_pat = admin_user.personal_access_tokens.create(scopes: ['api', 'sudo', 'admin_mode'], name: 'CATMA')
-admin_pat.set_token("#{pat_prefix}#{admin_token_string}")
+admin_pat.set_token("#{options[:pat_prefix]}#{options[:admin_token]}")
 admin_pat.save!
 
 # create the default user, ref: https://docs.gitlab.com/user/profile/account/create_accounts/?tab=17.7+and+later#create-a-user-through-the-rails-console
-user = Users::CreateService.new( # TODO: parameterize user details
+user = Users::CreateService.new(
   admin_user,
-  username: 'standalone',
-  email: 'standalone@catma.de',
-  name: 'standalone',
-  password: 'St4nd@lone',
-  password_confirmation: 'St4nd@lone',
+  username: options[:du_username],
+  email: options[:du_email],
+  name: options[:du_name],
+  password: options[:du_password],
+  password_confirmation: options[:du_password],
   organization_id: Organizations::Organization.first.id,
   skip_confirmation: true
 ).execute
 if user.error?
   abort "Failed to create user! Message: #{user.message}; Cause: #{user.cause}"
 end
+
+puts "Completed gitlab_config.rb"

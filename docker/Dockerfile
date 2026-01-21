@@ -13,10 +13,12 @@ LABEL maintainer="CATMA Team" \
 
 SHELL ["/bin/bash", "-c"]
 
-# all of these can be overriden with '--build-arg' at build time
+# all of these can be overriden with '--build-arg <key>=<value>' at build time
 ARG JDK_FILENAME=jdk-21_linux-x64_bin.tar.gz
 ARG JETTY_FILENAME=jetty-home-12.0.30.tar.gz
 ARG CATMA_WAR_FILENAME=catma-7.2-SNAPSHOT.war
+ARG CATMA_VERSION=7.2
+ENV CATMA_VERSION=$CATMA_VERSION
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
@@ -28,11 +30,16 @@ RUN apt-get update \
 # all of these can be overriden with '--env <key>=<value>' at run time
 # see bootstrap.sh for how LOW_MEM is handled
 ENV LOW_MEM=false
-ENV JETTY_JAVA_OPTIONS="-Xms1g -Xmx2g -server"
-# for the port numbers, which are on the **host**, make sure that the left side of the corresponding '--publish' params match as well
-# the host ports are used for some of the URLs configured in catma.properties, see bootstrap.sh
-ENV CATMA_PORT=8089
+# TODO: test if these default JVM memory pool sizes are reasonable in a single user context
+ENV JETTY_JAVA_OPTIONS="-Xms1g -Xmx2g"
+# if you override the ports, make sure that the corresponding '--publish' params of the 'docker run' command match as well
+# if you override a port *and* the corresponding URL, make sure to include the port in the URL and that it matches 
+# if you override GITLAB_URL, make sure that the corresponding '--add-host' param of the 'docker run' command matches as well
+# these ports/URLs end up in config (catma.properties, gitlab.rb) and are output by bootstrap.sh - see that file for further details
 ENV GITLAB_PORT=8088
+ENV GITLAB_URL=http://gitlab.localhost:${GITLAB_PORT}
+ENV CATMA_PORT=8089
+ENV CATMA_URL=http://catma.localhost:${CATMA_PORT}
 
 # expects build to be run with: --build-context srv_assets=</path/to/srv_assets>
 # the srv_assets directory should contain: JDK_FILENAME & JETTY_FILENAME
@@ -69,7 +76,7 @@ FILE1
 jetty.deploy.scanInterval=0
 FILE2
 jetty.http.host=0.0.0.0
-jetty.http.port=8089
+jetty.http.port=${CATMA_PORT}
 FILE3
 JETTY_USER=jetty
 JETTY_HOME=/opt/jetty
@@ -93,11 +100,8 @@ COPY --link --chown=jetty:jetty --chmod=0640 templates/.gitconfig.template /opt/
 COPY --link --chmod=0755 assets /opt/assets
 COPY --link --chmod=0755 scripts /opt/scripts
 
-EXPOSE 80 8089
+EXPOSE $GITLAB_PORT $CATMA_PORT
 
 VOLUME ["/opt/jetty_web/catma_base/logs", "/opt/jetty_temp", "/data/catma"]
 
 CMD ["/opt/scripts/bootstrap.sh"]
-
-#TODOs:
-# - check if the default JETTY_JAVA_OPTIONS are reasonable in this context
