@@ -97,7 +97,9 @@ ApplicationSetting.current.update!(
   #       https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.2-ee/app/models/application_setting_implementation.rb?ref_type=tags (VALID_RUNNER_REGISTRAR_TYPES)
   valid_runner_registrars: [],
   prometheus_metrics_enabled: false,
-  # the following 3 usage/service ping settings may move into 'service_ping_settings' in later versions
+  # the following 3 usage/service ping settings can also be configured in gitlab.rb (https://docs.gitlab.com/administration/settings/usage_statistics/),
+  # however we don't do so, as setting usage_ping_enabled=false in gitlab.rb prevents configuration through the admin area
+  # these settings may move into 'service_ping_settings' in later versions
   usage_ping_enabled: false,
   usage_ping_generation_enabled: false,
   include_optional_metrics_in_service_ping: false,

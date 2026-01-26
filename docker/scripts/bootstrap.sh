@@ -48,7 +48,11 @@ shutdown_handler(){
   then
     service jetty stop &> /dev/null
   fi
-  kill -s TERM $(ps -C init-container -o pid=)
+  INIT_CONTAINER_PID=$(ps -C init-container -o pid=)
+  if [[ $INIT_CONTAINER_PID ]]
+  then
+    kill -s TERM $INIT_CONTAINER_PID
+  fi
   wait
   exit
 }
@@ -84,6 +88,14 @@ if [[ ! -e $GITLAB_OPTIONS_PATH ]]; then
 external_url = '${GITLAB_URL}'
 nginx['listen_port'] = ${GITLAB_PORT}
 gitlab_rails['gitlab_username_changing_enabled'] = false
+gitlab_rails['gitlab_default_projects_features_wiki'] = false
+gitlab_rails['gitlab_default_projects_features_snippets'] = false
+gitlab_rails['gitlab_default_projects_features_builds'] = false
+gitlab_rails['gitlab_default_projects_features_container_registry'] = false
+gitlab_rails['initial_gitlab_product_usage_data'] = false
+registry['enable'] = false
+gitlab_rails['packages_enabled'] = false
+gitlab_rails['dependency_proxy_enabled'] = false
 prometheus_monitoring['enable'] = false
 
 # following are additional recommendations as per: https://docs.gitlab.com/omnibus/settings/memory_constrained_envs/
