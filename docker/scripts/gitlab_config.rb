@@ -56,8 +56,8 @@ ApplicationSetting.current.update!(
   auto_devops_enabled: false,
   default_branch_name: 'master',
   # default_branch_protection: Gitlab::Access::PROTECTION_DEV_CAN_PUSH, # deprecated
-  # refs: https://gitlab.com/gitlab-org/gitlab/-/blob/v18.5.5-ee/app/models/application_setting.rb?ref_type=tags
-  #       https://gitlab.com/gitlab-org/gitlab/-/blob/v18.5.5-ee/app/validators/json_schemas/default_branch_protection_defaults.json?ref_type=tags
+  # refs: https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.2-ee/app/models/application_setting.rb?ref_type=tags
+  #       https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.2-ee/app/validators/json_schemas/default_branch_protection_defaults.json?ref_type=tags
   default_branch_protection_defaults: {
     "allowed_to_push" => [{"access_level" => Gitlab::Access::DEVELOPER}],
     "allow_force_push" => false,
@@ -80,7 +80,7 @@ ApplicationSetting.current.update!(
   silent_mode_enabled: true,
   diagramsnet_enabled: false,
   hide_third_party_offers: true,
-  # ref: https://gitlab.com/gitlab-org/gitlab/-/blob/v18.5.5-ee/app/validators/json_schemas/application_setting_search.json?ref_type=tags
+  # ref: https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.2-ee/app/validators/json_schemas/application_setting_search.json?ref_type=tags
   search: {
     "global_search_issues_enabled" => true,
     "global_search_merge_requests_enabled" => true,
@@ -93,8 +93,8 @@ ApplicationSetting.current.update!(
   suggest_pipeline_enabled: false,
   show_migrate_from_jenkins_banner: false,
   allow_runner_registration_token: false,
-  # refs: https://gitlab.com/gitlab-org/gitlab/-/blob/v18.5.5-ee/app/models/application_setting.rb?ref_type=tags
-  #       https://gitlab.com/gitlab-org/gitlab/-/blob/v18.5.5-ee/app/models/application_setting_implementation.rb?ref_type=tags (VALID_RUNNER_REGISTRAR_TYPES)
+  # refs: https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.2-ee/app/models/application_setting.rb?ref_type=tags
+  #       https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.2-ee/app/models/application_setting_implementation.rb?ref_type=tags (VALID_RUNNER_REGISTRAR_TYPES)
   valid_runner_registrars: [],
   prometheus_metrics_enabled: false,
   # the following 3 usage/service ping settings may move into 'service_ping_settings' in later versions
@@ -102,7 +102,7 @@ ApplicationSetting.current.update!(
   usage_ping_generation_enabled: false,
   include_optional_metrics_in_service_ping: false,
   usage_ping_features_enabled: false,
-  # ref: https://gitlab.com/gitlab-org/gitlab/-/blob/v18.5.5-ee/app/validators/json_schemas/application_setting_service_ping_settings.json?ref_type=tags
+  # ref: https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.2-ee/app/validators/json_schemas/application_setting_service_ping_settings.json?ref_type=tags
   service_ping_settings: {
     "gitlab_environment_toolkit_instance" => false,
     "gitlab_product_usage_data_enabled" => false

@@ -7,7 +7,7 @@
 # https://docs.docker.com/engine/logging/configure/
 
 # syntax=docker/dockerfile:1
-FROM  gitlab/gitlab-ee:18.5.5-ee.0
+FROM  gitlab/gitlab-ee:18.8.2-ee.0
 LABEL maintainer="CATMA Team" \
       version="0.0.1"
 
@@ -37,30 +37,30 @@ ENV JETTY_JAVA_OPTIONS="-Xms1g -Xmx2g"
 # if you override GITLAB_URL, make sure that the corresponding '--add-host' param of the 'docker run' command matches as well
 # these ports/URLs end up in config (catma.properties, gitlab.rb) and are output by bootstrap.sh - see that file for further details
 ENV GITLAB_PORT=8088
-ENV GITLAB_URL=http://gitlab.localhost:${GITLAB_PORT}
+ENV GITLAB_URL="http://gitlab.localhost:${GITLAB_PORT}"
 ENV CATMA_PORT=8089
-ENV CATMA_URL=http://catma.localhost:${CATMA_PORT}
+ENV CATMA_URL="http://catma.localhost:${CATMA_PORT}"
 
 # expects build to be run with: --build-context srv_assets=</path/to/srv_assets>
 # the srv_assets directory should contain: JDK_FILENAME & JETTY_FILENAME
 RUN --mount=from=srv_assets,target=/tmp/srv_assets \
     # install Java
     mkdir -p /opt/java/oracle \
-    && tar -xzf /tmp/srv_assets/${JDK_FILENAME} -C /opt/java/oracle \
+    && tar -xzf "/tmp/srv_assets/${JDK_FILENAME}" -C /opt/java/oracle \
     && JDK_DIR=$(find /opt/java/oracle -maxdepth 1 -type d -name 'jdk*' -exec basename {} \; -quit) \
-    && update-alternatives --install /usr/bin/java java /opt/java/oracle/${JDK_DIR}/bin/java 10 \
-                           --slave /usr/bin/javac javac /opt/java/oracle/${JDK_DIR}/bin/javac \
+    && update-alternatives --install /usr/bin/java java "/opt/java/oracle/${JDK_DIR}/bin/java" 10 \
+                           --slave /usr/bin/javac javac "/opt/java/oracle/${JDK_DIR}/bin/javac" \
     # install and configure Jetty
     && adduser --system --group --home /opt/jetty_usr_home --no-create-home jetty \
-    && tar -xzf /tmp/srv_assets/${JETTY_FILENAME} -C /opt \
+    && tar -xzf "/tmp/srv_assets/${JETTY_FILENAME}" -C /opt \
     && JETTY_DIR=$(find /opt -maxdepth 1 -type d -name 'jetty-home*' -exec basename {} \; -quit) \
     && mkdir -p /opt/jetty_usr_home/run \
     && mkdir /opt/jetty_temp \
     # note that in addition to the ownership changes below, ownership of the logs dir is changed in the bootstrap shell script
     && mkdir -p /opt/jetty_web/catma_base/logs \
-    && chown -R jetty:root /opt/${JETTY_DIR} /opt/jetty_usr_home /opt/jetty_web \
+    && chown -R jetty:root "/opt/${JETTY_DIR}" /opt/jetty_usr_home /opt/jetty_web \
     && chown jetty:jetty /opt/jetty_usr_home/run \
-    && ln -s /opt/${JETTY_DIR} /opt/jetty \
+    && ln -s "/opt/${JETTY_DIR}" /opt/jetty \
     && su jetty -s /bin/bash -c "cd /opt/jetty_web/catma_base \
                                  && java -jar /opt/jetty/start.jar --create-startd \
                                  && java -jar /opt/jetty/start.jar --add-modules=ee8-deploy,http,console-capture,ee8-websocket-javax \
@@ -91,7 +91,7 @@ FILE4
 RUN --mount=from=build_assets,target=/tmp/build_assets \
     mkdir -p /data/catma/localgit \
     && mkdir /data/catma/localgit_api \
-    && unzip /tmp/build_assets/${CATMA_WAR_FILENAME} -d /opt/jetty_web/catma_base/webapps/ROOT/ \
+    && unzip "/tmp/build_assets/${CATMA_WAR_FILENAME}" -d /opt/jetty_web/catma_base/webapps/ROOT/ \
     && cp /opt/jetty_web/catma_base/webapps/ROOT/WEB-INF/classes/catma.db /data/catma/ \
     && chown -R jetty:jetty /data /opt/jetty_web/catma_base/webapps/ROOT/
 
