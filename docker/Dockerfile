@@ -1,21 +1,27 @@
 # CATMA Standalone Dockerfile
 # Sample build command: docker buildx build --platform linux/amd64,linux/arm64 --tag maltem/catma-standalone:0.0.1 --tag maltem/catma-standalone:latest \
 #                       --build-context srv_assets=C:\Code\catma_standalone_assets --build-context build_assets=C:\Code\catma\target --push .
-# Consider adding --no-cache as per https://docs.docker.com/build/building/best-practices/#rebuild-your-images-often
+# Consider adding --pull --no-cache as per https://docs.docker.com/build/building/best-practices/#rebuild-your-images-often
 #
 # Although containers started from this image don't generate much output, you may want to use Docker's 'local' logging driver:
 # https://docs.docker.com/engine/logging/configure/
 
 # syntax=docker/dockerfile:1
-FROM  gitlab/gitlab-ee:18.8.2-ee.0
+FROM  gitlab/gitlab-ee:18.8.2-ee.0 AS base
 LABEL maintainer="CATMA Team" \
       version="0.0.1"
 
 SHELL ["/bin/bash", "-c"]
 
-# all of these can be overriden with '--build-arg <key>=<value>' at build time
+FROM base AS build-arm64
+ARG JDK_FILENAME=jdk-21_linux-aarch64_bin.tar.gz
+
+FROM base AS build-amd64
 ARG JDK_FILENAME=jdk-21_linux-x64_bin.tar.gz
-ARG JETTY_FILENAME=jetty-home-12.0.30.tar.gz
+
+FROM build-${TARGETARCH} AS build
+# all of these can be overriden with '--build-arg <key>=<value>' at build time
+ARG JETTY_FILENAME=jetty-home-12.0.31.tar.gz
 ARG CATMA_WAR_FILENAME=catma-7.2-SNAPSHOT.war
 ARG CATMA_VERSION=7.2
 ENV CATMA_VERSION=$CATMA_VERSION
