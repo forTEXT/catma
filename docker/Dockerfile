@@ -20,8 +20,11 @@ FROM base AS build-amd64
 ARG JDK_FILENAME=jdk-21_linux-x64_bin.tar.gz
 
 FROM build-${TARGETARCH} AS build
+
 # all of these can be overriden with '--build-arg <key>=<value>' at build time
 ARG JETTY_FILENAME=jetty-home-12.0.31.tar.gz
+# some dirs owned by the jetty user are expected to be bind-mounted, therefore we default to a uid that is less likely to be in use on the host
+ENV JETTY_USER_UID=899
 ARG CATMA_WAR_FILENAME=catma-7.2-SNAPSHOT.war
 ARG CATMA_VERSION=7.2
 ENV CATMA_VERSION=$CATMA_VERSION
@@ -57,12 +60,12 @@ RUN --mount=from=srv_assets,target=/tmp/srv_assets \
     && update-alternatives --install /usr/bin/java java "/opt/java/oracle/${JDK_DIR}/bin/java" 10 \
                            --slave /usr/bin/javac javac "/opt/java/oracle/${JDK_DIR}/bin/javac" \
     # install and configure Jetty
-    && adduser --system --group --home /opt/jetty_usr_home --no-create-home jetty \
+    && adduser --system --uid $JETTY_USER_UID --group --home /opt/jetty_usr_home --no-create-home jetty \
     && tar -xzf "/tmp/srv_assets/${JETTY_FILENAME}" -C /opt \
     && JETTY_DIR=$(find /opt -maxdepth 1 -type d -name 'jetty-home*' -exec basename {} \; -quit) \
     && mkdir -p /opt/jetty_usr_home/run \
     && mkdir /opt/jetty_temp \
-    # note that in addition to the ownership changes below, ownership of the logs dir is changed in the bootstrap shell script
+    # note that in addition to the ownership changes below, ownership of the jetty_temp and logs dirs is also changed in the bootstrap shell script
     && mkdir -p /opt/jetty_web/catma_base/logs \
     && chown -R jetty:root "/opt/${JETTY_DIR}" /opt/jetty_usr_home /opt/jetty_web \
     && chown jetty:jetty /opt/jetty_usr_home/run \
@@ -99,6 +102,7 @@ RUN --mount=from=build_assets,target=/tmp/build_assets \
     && mkdir /data/catma/localgit_api \
     && unzip "/tmp/build_assets/${CATMA_WAR_FILENAME}" -d /opt/jetty_web/catma_base/webapps/ROOT/ \
     && cp /opt/jetty_web/catma_base/webapps/ROOT/WEB-INF/classes/catma.db /data/catma/ \
+    # note that in addition to the ownership changes below, ownership of the data dir is also changed in the bootstrap shell script
     && chown -R jetty:jetty /data /opt/jetty_web/catma_base/webapps/ROOT/
 
 COPY --link --chown=jetty:jetty --chmod=0640 templates/catma.properties.template /opt/jetty_web/catma_base/webapps/ROOT/catma.properties

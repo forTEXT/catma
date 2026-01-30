@@ -217,8 +217,8 @@ EOF
 fi
 
 # 7. start Jetty
-# we need to ensure correct ownership because these directories are specified as volumes - they will thus retain the origin ownership on the host unless we
-# change it
+# we need to ensure correct ownership because these directories are expected to be bind-mounted - they will thus retain the origin ownership on the host unless
+# we change it
 chown -R jetty:jetty /opt/jetty_web/catma_base/logs /data
 chown jetty:root /opt/jetty_temp
 
