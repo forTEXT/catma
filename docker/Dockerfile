@@ -9,7 +9,7 @@
 # syntax=docker/dockerfile:1
 FROM  gitlab/gitlab-ee:18.8.2-ee.0 AS base
 LABEL maintainer="CATMA Team" \
-      version="0.0.1"
+      version="1.0.0"
 
 SHELL ["/bin/bash", "-c"]
 
@@ -39,7 +39,6 @@ RUN apt-get update \
 # all of these can be overriden with '--env <key>=<value>' at run time
 # see bootstrap.sh for how LOW_MEM is handled
 ENV LOW_MEM=false
-# TODO: test if these default JVM memory pool sizes are reasonable in a single user context
 ENV JETTY_JAVA_OPTIONS="-Xms1g -Xmx2g"
 # if you override the ports, make sure that the corresponding '--publish' params of the 'docker run' command match as well
 # if you override a port *and* the corresponding URL, make sure to include the port in the URL and that it matches 
