@@ -116,7 +116,11 @@ ApplicationSetting.current.update!(
   first_day_of_week: 1 # Monday
 )
 
-# appearance settings
+# Appearance settings
+# To see the current settings, run the following in a rails console ([sudo] gitlab-rails console):
+# puts Appearance.current.title
+# puts Appearance.current.description
+# p Appearance.current
 appearance = Appearance.first_or_create!
 appearance.update!(
   favicon: File.open("/var/opt/gitlab/gitlab-rails/uploads/catma-gitlab-combo-favicon.ico"),

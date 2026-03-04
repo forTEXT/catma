@@ -1,15 +1,16 @@
 # CATMA Standalone Dockerfile
-# Sample build command: docker buildx build --platform linux/amd64,linux/arm64 --tag maltem/catma-standalone:0.0.1 --tag maltem/catma-standalone:latest \
-#                       --build-context srv_assets=C:\Code\catma_standalone_assets --build-context build_assets=C:\Code\catma\target --push .
+# Sample build command: docker buildx build --platform linux/amd64,linux/arm64 --build-arg CATMA_VERSION=7.2.4 --tag maltem/catma-standalone:7.2.4-gl18.8.4 \
+#                       --tag maltem/catma-standalone:latest --build-context srv_assets=C:\Code\catma_standalone_assets \
+#                       --build-context build_assets=C:\Code\catma\target --push .
 # Consider adding --pull --no-cache as per https://docs.docker.com/build/building/best-practices/#rebuild-your-images-often
 #
 # Although containers started from this image don't generate much output, you may want to use Docker's 'local' logging driver:
 # https://docs.docker.com/engine/logging/configure/
 
 # syntax=docker/dockerfile:1
-FROM  gitlab/gitlab-ee:18.8.2-ee.0 AS base
+FROM  gitlab/gitlab-ee:18.8.4-ee.0 AS base
 LABEL maintainer="CATMA Team" \
-      version="1.0.0"
+      version="1.0.1"
 
 SHELL ["/bin/bash", "-c"]
 
