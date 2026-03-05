@@ -10,7 +10,7 @@
 # syntax=docker/dockerfile:1
 FROM  gitlab/gitlab-ee:18.8.4-ee.0 AS base
 LABEL maintainer="CATMA Team" \
-      version="1.0.1"
+      version="1.1.0"
 
 SHELL ["/bin/bash", "-c"]
 
@@ -64,54 +64,52 @@ RUN --mount=from=srv_assets,target=/tmp/srv_assets \
     && tar -xzf "/tmp/srv_assets/${JETTY_FILENAME}" -C /opt \
     && JETTY_DIR=$(find /opt -maxdepth 1 -type d -name 'jetty-home*' -exec basename {} \; -quit) \
     && mkdir -p /opt/jetty_usr_home/run \
-    && mkdir /opt/jetty_temp \
-    # note that in addition to the ownership changes below, ownership of the jetty_temp and logs dirs is also changed in the bootstrap shell script
-    && mkdir -p /opt/jetty_web/catma_base/logs \
+    && mkdir -p /opt/jetty_web/catma_base \
     && chown -R jetty:root "/opt/${JETTY_DIR}" /opt/jetty_usr_home /opt/jetty_web \
     && chown jetty:jetty /opt/jetty_usr_home/run \
     && ln -s "/opt/${JETTY_DIR}" /opt/jetty \
     && su jetty -s /bin/bash -c "cd /opt/jetty_web/catma_base \
                                  && java -jar /opt/jetty/start.jar --create-startd \
-                                 && java -jar /opt/jetty/start.jar --add-modules=ee8-deploy,http,console-capture,ee8-websocket-javax \
+                                 && java -jar /opt/jetty/start.jar --add-modules=ee8-deploy,ee8-websocket-javax,http,http2c,console-capture,forwarded,requestlog \
                                  && mkdir webapps/ROOT" \
     && cp /opt/jetty/bin/jetty.sh /etc/init.d/jetty \
-    && <<FILE1 cat >> /opt/jetty_web/catma_base/start.d/console-capture.ini \
-    && <<FILE2 cat >> /opt/jetty_web/catma_base/start.d/ee8-deploy.ini \
-    && <<FILE3 cat >> /opt/jetty_web/catma_base/start.d/http.ini \
-    && <<FILE4 cat > /etc/default/jetty
-jetty.console-capture.retainDays=30
-jetty.console-capture.timezone=UTC
-FILE1
+    && <<FILE1 cat >> /opt/jetty_web/catma_base/start.d/ee8-deploy.ini \
+    && <<FILE2 cat >> /opt/jetty_web/catma_base/start.d/http.ini \
+    && <<FILE3 cat >> /opt/jetty_web/catma_base/start.d/console-capture.ini \
+    && <<FILE4 cat >> /opt/jetty_web/catma_base/start.d/requestlog.ini \
+    && <<FILE5 cat > /etc/default/jetty
 jetty.deploy.scanInterval=0
-FILE2
+FILE1
 jetty.http.host=0.0.0.0
 jetty.http.port=${CATMA_PORT}
+FILE2
+jetty.console-capture.retainDays=30
+jetty.console-capture.timezone=UTC
 FILE3
+jetty.requestlog.retainDays=30
+FILE4
 JETTY_USER=jetty
 JETTY_HOME=/opt/jetty
 JETTY_BASE=/opt/jetty_web/catma_base
 JETTY_RUN=/opt/jetty_usr_home/run
 TMPDIR=/opt/jetty_temp
 JAVA_OPTIONS="${JETTY_JAVA_OPTIONS}"
-FILE4
+FILE5
 
 # expects build to be run with: --build-context build_assets=</path/to/build_assets> (typically /target relative to the code dir)
 # the build_assets directory should contain: CATMA_WAR_FILENAME
 RUN --mount=from=build_assets,target=/tmp/build_assets \
-    mkdir -p /data/catma/localgit \
-    && mkdir /data/catma/localgit_api \
-    && unzip "/tmp/build_assets/${CATMA_WAR_FILENAME}" -d /opt/jetty_web/catma_base/webapps/ROOT/ \
-    && cp /opt/jetty_web/catma_base/webapps/ROOT/WEB-INF/classes/catma.db /data/catma/ \
-    # note that in addition to the ownership changes below, ownership of the data dir is also changed in the bootstrap shell script
-    && chown -R jetty:jetty /data /opt/jetty_web/catma_base/webapps/ROOT/
+    unzip "/tmp/build_assets/${CATMA_WAR_FILENAME}" -d /opt/jetty_web/catma_base/webapps/ROOT/ \
+    && chown -R jetty:jetty /opt/jetty_web/catma_base/webapps/ROOT/
 
-COPY --link --chown=jetty:jetty --chmod=0640 templates/catma.properties.template /opt/jetty_web/catma_base/webapps/ROOT/catma.properties
+COPY --link --parents --chmod=0755 assets scripts templates /opt/catma/
+# we *could* also copy the .gitconfig template in the bootstrap script, it's just easier to do it all with one command here
+# files copied to bind-mounted locations (the volumes declared below are expected to be bind-mounted), e.g. the catma.properties template, **have** to be copied
+# in the bootstrap script, as they would otherwise be obscured by the bind mount
 COPY --link --chown=jetty:jetty --chmod=0640 templates/.gitconfig.template /opt/jetty_usr_home/.gitconfig
-COPY --link --chmod=0755 assets /opt/assets
-COPY --link --chmod=0755 scripts /opt/scripts
 
 EXPOSE $GITLAB_PORT $CATMA_PORT
 
 VOLUME ["/opt/jetty_web/catma_base/logs", "/opt/jetty_temp", "/data/catma"]
 
-CMD ["/opt/scripts/bootstrap.sh"]
+CMD ["/opt/catma/scripts/bootstrap.sh"]

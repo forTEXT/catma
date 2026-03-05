@@ -62,8 +62,48 @@ trap shutdown_handler INT TERM
 
 print_logo
 
-# 1. update config files based on environment variables
-CATMA_PROPERTIES_PATH='/opt/jetty_web/catma_base/webapps/ROOT/catma.properties'
+# 1. create directories that are expected to be bind-mounted, copy template files, and ensure correct ownership
+if [[ ! -d /opt/jetty_web/catma_base/logs ]]
+then
+  mkdir /opt/jetty_web/catma_base/logs
+fi
+
+if [[ ! -d /opt/jetty_temp ]]
+then
+  mkdir -p /opt/jetty_temp
+fi
+
+if [[ ! -d /data/catma ]]
+then
+  mkdir -p /data/catma/localgit /data/catma/localgit_api
+fi
+
+# copy template files
+# these can later be updated to allow for schema changes or new properties (e.g. `cp -b ...` and copy secrets from the backup file)
+if [[ ! -e /data/catma/catma.db ]]
+then
+  cp /opt/jetty_web/catma_base/webapps/ROOT/WEB-INF/classes/catma.db /data/catma/
+fi
+
+# we place the properties file in the data directory and symlink it into the webapp directory because certain properties would otherwise be lost if the
+# container is deleted (see step 7, where some properties are only set on the very first start of the GitLab server)
+CATMA_PROPERTIES_PATH='/data/catma/catma.properties'
+if [[ ! -e $CATMA_PROPERTIES_PATH ]]
+then
+  cp /opt/catma/templates/catma.properties.template "$CATMA_PROPERTIES_PATH"
+fi
+
+if [[ ! -e /opt/jetty_web/catma_base/webapps/ROOT/catma.properties ]]
+then
+  ln -s "$CATMA_PROPERTIES_PATH" /opt/jetty_web/catma_base/webapps/ROOT/catma.properties
+fi
+
+# ensure correct ownership and permissions (bind-mounted directories will retain the origin ownership on the host unless we change it)
+chown -R jetty:jetty /opt/jetty_web/catma_base/logs /data
+chmod 0640 "$CATMA_PROPERTIES_PATH"
+chown jetty:root /opt/jetty_temp
+
+# 2. update config files based on environment variables
 sed -i "s|^\(JAVA_OPTIONS=\"\).*$|\1${JETTY_JAVA_OPTIONS} -server\"|" /etc/default/jetty
 sed -i "s|^\(BASE_URL=\).*$|\1${CATMA_URL}/|" "$CATMA_PROPERTIES_PATH" # note trailing /, see CATMAPropertyKey
 # the following requires '--add-host=gitlab.localhost=127.0.0.1' as part of the 'docker run' command because gitlab.localhost doesn't automatically resolve to
@@ -72,7 +112,7 @@ sed -i "s|^\(GITLAB_SERVER_URL=\).*$|\1${GITLAB_URL}|" "$CATMA_PROPERTIES_PATH"
 sed -i "s|^\(LOGOUT_URL=\).*$|\1${CATMA_URL}|" "$CATMA_PROPERTIES_PATH"
 sed -i "s|^\(RESET_PASSWORD_URL=\).*$|\1${GITLAB_URL}/users/password/new|" "$CATMA_PROPERTIES_PATH"
 
-# 2. if /etc/gitlab/gitlab.rb doesn't exist then we're starting for the first time - set a flag for later use, copy the template file and set some initial
+# 3. if /etc/gitlab/gitlab.rb doesn't exist then we're starting for the first time - set a flag for later use, copy the template file and set some initial
 #    config options
 #    this is partially copied from GitLab's init-container script, ref: https://gitlab.com/gitlab-org/omnibus-gitlab/-/blob/master/docker/assets/init-container
 GITLAB_OPTIONS_PATH='/etc/gitlab/gitlab.rb'
@@ -104,7 +144,7 @@ sidekiq['concurrency'] = 10
 EOF
 fi
 
-# 3. handle $LOW_MEM (optionally add settings for an even smaller memory footprint, at the expense of performance)
+# 4. handle $LOW_MEM (optionally add settings for an even smaller memory footprint, at the expense of performance)
 LOW_MEM_MARKER='## LOW MEMORY SETTINGS (NB: do not add anything beyond this point, as it will be discarded if LOW_MEM=false) ##'
 if [[ $LOW_MEM = 'true' || $LOW_MEM = 'on' ]]
 then
@@ -152,7 +192,7 @@ else
   fi
 fi
 
-# 4. start GitLab
+# 5. start GitLab
 GITLAB_INIT_LOG_PATH='/var/log/gitlab/gitlab_init.log'
 echo -e '\n\nStarting GitLab ... (this will take a while, especially on the first run)'
 echo -e "\n--- $(date)\n\n" >> "$GITLAB_INIT_LOG_PATH"
@@ -180,13 +220,13 @@ EOF
   read -p 'Try to continue anyway? (y/n [n]): ' confirm && [[ $confirm = [yY] || $confirm = [yY][eE][sS] ]] || shutdown_handler
 fi
 
-# 5. declare variables used in subsequent steps
-# although these gitlab_config.rb parameters have defaults, we declare and pass them in explicitly because they are re-used later 
+# 6. declare variables used in subsequent steps
+#    although these gitlab_config.rb parameters have defaults, we declare and pass them in explicitly because they are re-used later
 PAT_PREFIX=catma-glpat-
 DU_USERNAME=standalone
 DU_PASSWORD=St4nd@lone
 
-# 6. if this is the first start of the GitLab server, complete the initial GitLab setup (set default settings, create an admin PAT, create the default user)
+# 7. if this is the first start of the GitLab server, complete the initial GitLab setup (set default settings, create an admin PAT, create the default user)
 #    also generate a CATMA API secret
 if [[ $FIRST_START = 'true' ]]
 then
@@ -194,12 +234,12 @@ then
   echo -e 'Configuring GitLab ...'
   echo -e "\n--- $(date)\n\n" >> "$GITLAB_CONFIG_LOG_PATH"
   GITLAB_UPLOADS_DIR='/var/opt/gitlab/gitlab-rails/uploads/'
-  cp /opt/assets/catma-gitlab-combo-favicon.ico /opt/assets/catma-gitlab-combo-logo-blue-on-white-pill-50a.svg "$GITLAB_UPLOADS_DIR"
+  cp /opt/catma/assets/catma-gitlab-combo-favicon.ico /opt/catma/assets/catma-gitlab-combo-logo-blue-on-white-pill-50a.svg "$GITLAB_UPLOADS_DIR"
   chown git:git ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-favicon.ico ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-logo-blue-on-white-pill-50a.svg
   ADMIN_TOKEN=$(pwgen -snc 20 1)
   # https://docs.gitlab.com/administration/operations/rails_console/#using-the-rails-runner
-  gitlab-rails runner /opt/scripts/gitlab_config.rb --app_url "$CATMA_URL" --admin_token "$ADMIN_TOKEN" --pat_prefix "$PAT_PREFIX" --du_username "$DU_USERNAME"\
-    --du_password "$DU_PASSWORD" &>> "$GITLAB_CONFIG_LOG_PATH"
+  gitlab-rails runner /opt/catma/scripts/gitlab_config.rb --app_url "$CATMA_URL" --admin_token "$ADMIN_TOKEN" --pat_prefix "$PAT_PREFIX" \
+    --du_username "$DU_USERNAME" --du_password "$DU_PASSWORD" &>> "$GITLAB_CONFIG_LOG_PATH"
   if [[ $? -ne 0 ]]
   then
     cat << EOF
@@ -216,12 +256,7 @@ EOF
   sed -i "s|^\(API_HMAC_SECRET=\).*$|\1$(pwgen -snc 32 1)|" "$CATMA_PROPERTIES_PATH"
 fi
 
-# 7. start Jetty
-# we need to ensure correct ownership because these directories are expected to be bind-mounted - they will thus retain the origin ownership on the host unless
-# we change it
-chown -R jetty:jetty /opt/jetty_web/catma_base/logs /data
-chown jetty:root /opt/jetty_temp
-
+# 8. start Jetty
 service jetty start \
   && cat << EOF
 
@@ -235,5 +270,8 @@ later - the initial_root_password file is automatically deleted if the container
 Hit <CTRL/CMD + C> to stop the container
 EOF
 
-# 8. wait for signals
+# 9. wait for signals
+# TODO: improve wait logic in case init-container exits with a non-zero code and the user chooses to continue (step 5)
+#       currently in that scenario, if the subsequent steps succeed, Jetty will start and the container will immediately exit because there is no background
+#       process to wait for
 wait
