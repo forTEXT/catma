@@ -4,13 +4,13 @@
 #                       --build-context build_assets=C:\Code\catma\target --push .
 # Consider adding --pull --no-cache as per https://docs.docker.com/build/building/best-practices/#rebuild-your-images-often
 #
-# Although containers started from this image don't generate much output, you may want to use Docker's 'local' logging driver:
+# Although containers started from this image don't generate much direct output, you may want to use Docker's 'local' logging driver:
 # https://docs.docker.com/engine/logging/configure/
 
 # syntax=docker/dockerfile:1
 FROM  gitlab/gitlab-ee:18.8.4-ee.0 AS base
 LABEL maintainer="CATMA Team" \
-      version="1.1.0"
+      version="1.1.1"
 
 SHELL ["/bin/bash", "-c"]
 
@@ -25,7 +25,7 @@ FROM build-${TARGETARCH} AS build
 # all of these can be overriden with '--build-arg <key>=<value>' at build time
 ARG JETTY_FILENAME=jetty-home-12.0.31.tar.gz
 # some dirs owned by the jetty user are expected to be bind-mounted, therefore we default to a uid that is less likely to be in use on the host
-ENV JETTY_USER_UID=899
+ARG JETTY_USER_UID=899
 ARG CATMA_WAR_FILENAME=catma-7.2-SNAPSHOT.war
 ARG CATMA_VERSION=7.2
 ENV CATMA_VERSION=$CATMA_VERSION
