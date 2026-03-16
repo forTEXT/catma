@@ -243,7 +243,7 @@ then
   if [[ $? -ne 0 ]]
   then
     cat << EOF
-$(color_red 'Error! Couldn't complete the initial configuration of GitLab.')
+$(color_red "Error! Couldn't complete the initial configuration of GitLab.")
 $(color_gray "To troubleshoot, open a terminal in the still running container (e.g. \`docker exec -it catma-standalone /bin/bash\`) and inspect
 ${GITLAB_CONFIG_LOG_PATH} (e.g. \`cat ${GITLAB_CONFIG_LOG_PATH}\`) - you can send the details of the problem to support@catma.de")
 
