@@ -262,7 +262,8 @@
           "title": "Occurrences",
           "domain": true,
           "labels": true,
-          "ticks": true
+          "ticks": true,
+          "tickMinStep": 1
         },
         {
           "scale": "x",
