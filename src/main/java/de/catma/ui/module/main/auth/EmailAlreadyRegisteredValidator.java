@@ -8,6 +8,7 @@ import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
 import de.catma.ui.module.main.ErrorHandler;
 
 import java.io.IOException;
+import java.util.Locale;
 
 /**
  * Checks whether an account with the given email address already exists.
@@ -22,7 +23,7 @@ public class EmailAlreadyRegisteredValidator implements Validator<String> {
 	@Override
 	public ValidationResult apply(String value, ValueContext context) {
 		try {
-			if (remoteGitManagerPrivileged.emailOrUsernameExists(value)) {
+			if (remoteGitManagerPrivileged.emailOrUsernameExists(value.toLowerCase(Locale.ROOT))) {
 				return ValidationResult.error("Email address is already registered");
 			}
 
