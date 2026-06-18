@@ -37,8 +37,7 @@ public class FreqOptionsStep extends VerticalLayout implements WizardStep {
 	private TextField freq1Input;
 	private TextField freq2Input;
 	private Label andLabel;
-	private FreqComparator exactlyFreqComp;
-	
+
 	public FreqOptionsStep(
 			int stepNo,
 			Project project, WizardContext context, 
@@ -53,7 +52,6 @@ public class FreqOptionsStep extends VerticalLayout implements WizardStep {
 		this.progressStep = progressStep;
 				
 		initComponents();
-		freqComparatorCombo.setValue(exactlyFreqComp);
 		initActions();
 	}
 	
@@ -72,15 +70,15 @@ public class FreqOptionsStep extends VerticalLayout implements WizardStep {
 			queryTree.removeLast();
 		}
 		
-		StringBuilder builder = new StringBuilder("freq "); //$NON-NLS-1$
+		StringBuilder builder = new StringBuilder("freq ");
 		FreqComparator curComparator = freqComparatorCombo.getValue(); 
 		
 		builder.append(curComparator.getComparator());
-		builder.append(" "); //$NON-NLS-1$
+		builder.append(" ");
 		builder.append(freq1Input.getValue());
 		
 		if (curComparator.isRange()) {
-			builder.append("-"); //$NON-NLS-1$
+			builder.append("-");
 			builder.append(freq2Input.getValue());
 		}
 		
@@ -104,26 +102,26 @@ public class FreqOptionsStep extends VerticalLayout implements WizardStep {
 		searchPanel.setSpacing(true);
 	
 		List<FreqComparator> freqComparators = new ArrayList<FreqComparator>();
-		exactlyFreqComp = 
-				new FreqComparator("exactly", "=");  //$NON-NLS-2$
+		FreqComparator exactlyFreqComp = new FreqComparator("exactly", "=");
 		freqComparators.add(exactlyFreqComp);
 		
 		freqComparators.add(
-                new FreqComparator("more than", ">")); //$NON-NLS-2$
+                new FreqComparator("more than", ">"));
 		freqComparators.add(
-                new FreqComparator("less than", "<"));  //$NON-NLS-2$
+                new FreqComparator("less than", "<"));
 		freqComparators.add(
-                new FreqComparator("more or equal than", ">=")); //$NON-NLS-2$
+                new FreqComparator("more or equal than", ">="));
 		freqComparators.add(
-                new FreqComparator("less or equal than", "<="));  //$NON-NLS-2$
+                new FreqComparator("less or equal than", "<="));
 		freqComparators.add(
-                new FreqComparator("between", "=", true)); //$NON-NLS-2$
+                new FreqComparator("between", "=", true));
 		
 		searchPanel.addComponent(new Label("The word shall appear")); 
 		
 		freqComparatorCombo = new ComboBox<FreqComparator>(null, freqComparators);
 		freqComparatorCombo.setEmptySelectionAllowed(false);
-		
+		freqComparatorCombo.setValue(exactlyFreqComp);
+
 		searchPanel.addComponent(freqComparatorCombo);
 		
 		freq1Input = new TextField();
@@ -151,7 +149,7 @@ public class FreqOptionsStep extends VerticalLayout implements WizardStep {
 		curQueryField.setReadOnly(true);
 		curQueryField.setVisible(false);
 		curQueryField.setWidth("100%");
-		
+
 		addComponent(curQueryField);
 		setComponentAlignment(curQueryField, Alignment.BOTTOM_CENTER);
 	}
