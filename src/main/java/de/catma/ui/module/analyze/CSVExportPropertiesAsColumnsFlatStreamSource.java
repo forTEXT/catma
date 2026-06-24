@@ -171,7 +171,7 @@ public class CSVExportPropertiesAsColumnsFlatStreamSource implements StreamSourc
         	            				kwicProvider.getSourceDocumentName(),
         	            				kwicProvider.getDocumentLength(),
         	            				kwic.getKeyword(),
-        	            				kwic.toString(),
+        	            				kwic.getStringForExport(),
         	            				range.getStartPoint(),
         	            				range.getEndPoint(),
         	            				tRow.getMarkupCollectionId(),        	            				
@@ -215,7 +215,7 @@ public class CSVExportPropertiesAsColumnsFlatStreamSource implements StreamSourc
         	            				kwicProvider.getSourceDocumentName(),
         	            				kwicProvider.getDocumentLength(),
         	            				kwic.getKeyword(),
-        	            				kwic.toString(),
+        	            				kwic.getStringForExport(),
         	            				range.getStartPoint(),
         	            				range.getEndPoint()
         	            		));
@@ -244,7 +244,7 @@ public class CSVExportPropertiesAsColumnsFlatStreamSource implements StreamSourc
             	            				kwicProvider.getSourceDocumentName(),
             	            				kwicProvider.getDocumentLength(),
             	            				kwic.getKeyword(),
-            	            				kwic.toString(),
+            	            				kwic.getStringForExport(),
             	            				range.getStartPoint(),
             	            				range.getEndPoint()
             	            		));
@@ -275,7 +275,7 @@ public class CSVExportPropertiesAsColumnsFlatStreamSource implements StreamSourc
     	            				kwicProvider.getSourceDocumentName(),
     	            				kwicProvider.getDocumentLength(),
     	            				kwic.getKeyword(),
-    	            				kwic.toString(),
+    	            				kwic.getStringForExport(),
     	            				row.getRange().getStartPoint(),
     	            				row.getRange().getEndPoint());
     	            	}

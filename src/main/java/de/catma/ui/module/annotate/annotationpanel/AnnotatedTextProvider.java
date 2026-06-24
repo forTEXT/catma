@@ -54,7 +54,7 @@ public class AnnotatedTextProvider {
 
 		try {
 			KeywordInSpanContext kwic = kwicProvider.getKwic(range, contextSize);
-			builder.append(HtmlEscaper.escape(kwic.getBackwardContext()));
+			builder.append(HtmlEscaper.escape(kwic.getLeftContext()));
 
 			builder.append("<span");
 			builder.append(" class=\"annotation-details-tag-color\"");
@@ -70,7 +70,7 @@ public class AnnotatedTextProvider {
 							keywordLength)));
 			builder.append("</span>");	
 		
-			builder.append(HtmlEscaper.escape(kwic.getForwardContext()));
+			builder.append(HtmlEscaper.escape(kwic.getRightContext()));
 		}
 		catch (IOException e) {
 			((ErrorHandler) UI.getCurrent()).showAndLogError(
@@ -118,7 +118,7 @@ public class AnnotatedTextProvider {
 			List<KeywordInSpanContext> kwics = kwicProvider.getKwic(Range.mergeRanges(new TreeSet<>(ranges)), contextSize);
 			String conc = "";
 			for (KeywordInSpanContext kwic : kwics) {
-				builder.append(HtmlEscaper.escape(kwic.getBackwardContext()));
+				builder.append(HtmlEscaper.escape(kwic.getLeftContext()));
 
 				builder.append("<span");
 				if (tagDefinition != null) { // can happen when switching back to synch mode
@@ -141,7 +141,7 @@ public class AnnotatedTextProvider {
 								LARGE_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH)));
 				builder.append("</span>");	
 			
-				builder.append(HtmlEscaper.escape(kwic.getForwardContext()));
+				builder.append(HtmlEscaper.escape(kwic.getRightContext()));
 				builder.append(conc);
 				conc = " [" + HORIZONTAL_ELLIPSIS + "] ";
 			}

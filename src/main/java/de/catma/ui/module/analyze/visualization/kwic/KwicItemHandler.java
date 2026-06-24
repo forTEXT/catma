@@ -62,7 +62,7 @@ public class KwicItemHandler {
 	public String getBackwardContext(QueryResultRow row) {
 		String backwardContext = "N/A";
 		try {
-			backwardContext = spanContextCache.get(row).getBackwardContext();
+			backwardContext = spanContextCache.get(row).getLeftContext();
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, "Error retrieving backward context for " + row, e);
 		}
@@ -72,7 +72,7 @@ public class KwicItemHandler {
 	public String getForwardContext(QueryResultRow row) {
 		String forwardContext = "N/A";
 		try {
-			forwardContext = spanContextCache.get(row).getForwardContext();
+			forwardContext = spanContextCache.get(row).getRightContext();
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, "Error retrieving forward context for " + row, e);
 		}

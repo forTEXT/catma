@@ -84,21 +84,44 @@ public class KeywordInContext {
     public int getRelativeKeywordStartPos() {
         return relativeKeywordStartPos;
     }
-    
-    @Override
-    public String toString() {
-        return getBackwardContext() 
-        		+ "***" + keyword + "***" 
-        		+ getForwardContext();
+
+    /**
+     * Returns the KWIC string to be exported.
+     * Based on the direction of the text, the left and right context is swapped.
+     * @return the KWIC string to be exported
+     */
+    public String getStringForExport() {
+        if (rtl) {
+            return getRightContext()
+                    + "***" + keyword + "***"
+                    + getLeftContext();
+        }
+        return getLeftContext()
+                + "***" + keyword + "***"
+                + getRightContext();
     }
-    
-    public String getBackwardContext() {
+
+    /**
+     * Returns the left context, based on the direction of the text.
+     * This string is shown in the KWIC view in the **left** column, which
+     * corresponds to the word before the keyword for left-to-right text
+     * and to the word after the keyword for right-to-left text.
+     * @return the left context of the KWIC keyword
+     */
+    public String getLeftContext() {
     	return rtl?
     			getKwic().substring(getRelativeKeywordStartPos()+keyword.length()):
     			getKwic().substring(0,getRelativeKeywordStartPos());
     }
-    
-    public String getForwardContext() {
+
+    /**
+     * Returns the right context, based on the direction of the text.
+     * This string is shown in the KWIC view in the **right** column, which
+     * corresponds to the word after the keyword for left-to-right text
+     * and to the word before the keyword for right-to-left text.
+     * @return the right context of the KWIC keyword
+     */
+    public String getRightContext() {
     	return rtl?
     		getKwic().substring(0,getRelativeKeywordStartPos()):
     		getKwic().substring(getRelativeKeywordStartPos()+keyword.length());

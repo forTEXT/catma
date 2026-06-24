@@ -106,7 +106,7 @@ public class CSVExportFlatStreamSource implements StreamSource {
         	            				kwicProvider.getSourceDocumentName(),
         	            				kwicProvider.getDocumentLength(),
         	            				kwic.getKeyword(),
-        	            				kwic.toString(),
+        	            				kwic.getStringForExport(),
         	            				range.getStartPoint(),
         	            				range.getEndPoint(),
         	            				tRow.getMarkupCollectionId(),        	            				
@@ -134,7 +134,7 @@ public class CSVExportFlatStreamSource implements StreamSource {
         	            				kwicProvider.getSourceDocumentName(),
         	            				kwicProvider.getDocumentLength(),
         	            				kwic.getKeyword(),
-        	            				kwic.toString(),
+        	            				kwic.getStringForExport(),
         	            				range.getStartPoint(),
         	            				range.getEndPoint(),
         	            				"", "", "", "", "", "", "", "", "", // empty fields for tag rows
@@ -152,7 +152,7 @@ public class CSVExportFlatStreamSource implements StreamSource {
             	            				kwicProvider.getSourceDocumentName(),
             	            				kwicProvider.getDocumentLength(),
             	            				kwic.getKeyword(),
-            	            				kwic.toString(),
+            	            				kwic.getStringForExport(),
             	            				range.getStartPoint(),
             	            				range.getEndPoint(),
             	            				"", "", "", "", "", "", "", "", "", // empty fields for tag rows
@@ -173,7 +173,7 @@ public class CSVExportFlatStreamSource implements StreamSource {
     	            				kwicProvider.getSourceDocumentName(),
     	            				kwicProvider.getDocumentLength(),
     	            				kwic.getKeyword(),
-    	            				kwic.toString(),
+    	            				kwic.getStringForExport(),
     	            				row.getRange().getStartPoint(),
     	            				row.getRange().getEndPoint());
     	            	}
