@@ -3,6 +3,7 @@ package de.catma.ui.module.analyze.querybuilder;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.RadioButtonGroup;
@@ -168,7 +169,11 @@ public class ComplexTypeSelectionStep extends VerticalLayout implements WizardSt
 		tagMatchModeCombo = new ComboBox<>("Please choose what you consider a match:", tagMatchModeOptions); 
 		
 		tagMatchModeCombo.setDescription(
-			"The three different match modes influence the way tags refine your search results:<ul><li>exact match - the tag type boundaries have to match exactly to keep a result item in the result set</li><li>boundary match - result items that should be kept in the result set must start and end within the boundaries of the tag</li><li>overlap - the result items that should be kept in the result set must overlap with the range of the tag</li></ul>"); 
+			"The three different match modes influence the way tags refine your search results:" +
+					"<ul><li>exact match - the tag type boundaries have to match exactly to keep a result item in the result set</li>" +
+					"<li>boundary match - result items that should be kept in the result set must start and end within the boundaries " +
+					"of the tag</li><li>overlap - the result items that should be kept in the result set must overlap with the range " +
+					"of the tag</li></ul>", ContentMode.HTML);
 		tagMatchModeCombo.setValue(exactMatchItem);
 		
 		addComponent(tagMatchModeCombo);
