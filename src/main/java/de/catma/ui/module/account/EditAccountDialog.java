@@ -141,7 +141,8 @@ public class EditAccountDialog extends Window {
 		buttonPanel.setComponentAlignment(btnCancel, Alignment.BOTTOM_RIGHT);
 		buttonPanel.setComponentAlignment(btnSave, Alignment.BOTTOM_RIGHT);
 		buttonPanel.setExpandRatio(btnSave, 1f);
-		
+
+		tfName.focus();
 		content.addComponent(lDescription);
 		content.addComponent(tfName);
 		content.addComponent(tfUsername);

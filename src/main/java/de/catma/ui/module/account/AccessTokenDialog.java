@@ -121,6 +121,7 @@ public class AccessTokenDialog extends Window {
 		createButtonLayout.addComponent(btnCreatePersonalAccessToken);
 		createButtonLayout.setComponentAlignment(btnCreatePersonalAccessToken, Alignment.MIDDLE_CENTER);
 
+		tfName.focus();
 		tokenRequestLayout.addComponent(tfName);
 		tokenRequestLayout.addComponent(dfDate);
 		tokenRequestLayout.addComponent(createButtonLayout);
