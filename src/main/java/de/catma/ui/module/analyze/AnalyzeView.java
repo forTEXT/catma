@@ -569,7 +569,7 @@ public class AnalyzeView extends HorizontalLayout
 		
 		
 		String name = 
-				"Doubletree " 
+				"DoubleTree "
 						+ LocalDateTime.now().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM));
 		
 		VizMaxPanel vizMaxPanel = 
