@@ -333,7 +333,7 @@ public class AnalyzeView extends HorizontalLayout
 		queryBox.setDataProvider(new ListDataProvider<>(queryProposals));
 		queryBox.setPlaceholder("Select or enter a free query");
 		queryBox.setWidth("100%");
-
+		
 		progressBar = new ProgressBar();
 		progressBar.setIndeterminate(false);
 		progressBar.setVisible(false);
@@ -344,11 +344,10 @@ public class AnalyzeView extends HorizontalLayout
 		
 		HorizontalLayout queryPanel = new HorizontalLayout();
 		queryPanel.setSizeFull();
-
-		queryPanel.setExpandRatio(queryBox, 1.0f);
-
 		queryBox.focus();
 		queryPanel.addComponents(btQueryBuilder, queryBox, progressBar);
+		queryPanel.setExpandRatio(queryBox, 1.0f);
+		
 		searchPanel.addComponents(queryPanel, btExecuteSearch);
 
 		return searchPanel;
