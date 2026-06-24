@@ -758,6 +758,7 @@ public class QueryResultPanel extends VerticalLayout {
 		queryInfo = new TextField();
 		queryInfo.setWidth("90%");
 		queryInfo.addStyleName("analyze-card-infobar");
+		queryInfo.setReadOnly(true);
 		
 		addComponent(queryInfo);
 	}
