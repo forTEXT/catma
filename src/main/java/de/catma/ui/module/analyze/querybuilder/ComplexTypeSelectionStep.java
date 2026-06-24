@@ -43,13 +43,13 @@ public class ComplexTypeSelectionStep extends VerticalLayout implements WizardSt
 	}
 	
 	static enum ComplexTypeOption {
-		UNION(","), //$NON-NLS-1$
-		EXCLUSION("-"), //$NON-NLS-1$
-		REFINMENT("where"), //$NON-NLS-1$
+		UNION(","),
+		EXCLUSION("-"),
+		REFINMENT("where"),
 		;
 		String queryElement;
 		
-		private ComplexTypeOption(String queryElement) {
+		ComplexTypeOption(String queryElement) {
 			this.queryElement = queryElement;
 		}
 		
@@ -117,7 +117,7 @@ public class ComplexTypeSelectionStep extends VerticalLayout implements WizardSt
 	private void handleComplexTypeChange() {
 		queryTree.removeLast();
 
-		String postfix = ""; //$NON-NLS-1$
+		String postfix = "";
 		if(!complexTypeSelect.getValue().equals(
 			ComplexTypeOption.UNION)) {
 			postfix = ((TagMatchModeItem)tagMatchModeCombo.getValue()).getTagMatchMode().name().toLowerCase();
@@ -140,7 +140,7 @@ public class ComplexTypeSelectionStep extends VerticalLayout implements WizardSt
 		setMargin(true);
 		
 		complexTypeSelect = 
-				new RadioButtonGroup<>("", Arrays.<ComplexTypeOption>asList(ComplexTypeOption.values())); //$NON-NLS-1$
+				new RadioButtonGroup<>("", Arrays.<ComplexTypeOption>asList(ComplexTypeOption.values()));
 		
 		complexTypeSelect.setItemCaptionGenerator(option -> {
 			switch (option) {
@@ -151,6 +151,8 @@ public class ComplexTypeSelectionStep extends VerticalLayout implements WizardSt
 			}
 			
 		});
+
+		complexTypeSelect.focus();
 		
 		addComponent(complexTypeSelect);
 		setComponentAlignment(complexTypeSelect, Alignment.MIDDLE_CENTER);

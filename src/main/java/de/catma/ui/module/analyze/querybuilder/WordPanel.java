@@ -132,7 +132,8 @@ public class WordPanel extends FormLayout {
 		}
 
 		startsWithField = new TextField();
-		startsWithField.setCaption(MessageFormat.format("The {0} word starts with", next)); 
+		startsWithField.setCaption(MessageFormat.format("The {0} word starts with", next));
+		startsWithField.focus();
 		addComponent(startsWithField);
 		
 		containsField = new TextField();

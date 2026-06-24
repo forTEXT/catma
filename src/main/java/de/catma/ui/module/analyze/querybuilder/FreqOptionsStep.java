@@ -139,7 +139,9 @@ public class FreqOptionsStep extends VerticalLayout implements WizardStep {
 		searchPanel.addComponent(freq2Input);
 		searchPanel.setExpandRatio(freq2Input, 0.5f);
 		
-		searchPanel.addComponent(new Label("times.")); 
+		searchPanel.addComponent(new Label("times."));
+
+		freq1Input.focus();
 
 		addComponent(searchPanel);
 		setExpandRatio(searchPanel, 1);
