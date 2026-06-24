@@ -192,7 +192,8 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 						() -> getFilteredQueryResult(), 
 						project, 
 						kwicItemHandler.getKwicProviderCache(), 
-						((BackgroundServiceProvider)UI.getCurrent())),
+						((BackgroundServiceProvider)UI.getCurrent()),
+						contextSizeSupplier),
 					"CATMA-Query-Result_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
 		csvPropertiesAsColumnsResource.setCacheTime(0);
 		csvPropertiesAsColumnsResource.setMIMEType("text/comma-separated-values");

@@ -880,7 +880,8 @@ public class QueryResultPanel extends VerticalLayout {
 						() -> getFilteredQueryResult(), 
 						project, 
 						kwicProviderCache, 
-						((BackgroundServiceProvider)UI.getCurrent())),
+						((BackgroundServiceProvider)UI.getCurrent()),
+						() -> contextSize),
 					"CATMA-Query-Result_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
 		csvPropertiesAsColumnsResource.setCacheTime(0);
 		csvPropertiesAsColumnsResource.setMIMEType("text/comma-separated-values");

@@ -52,15 +52,18 @@ public class CSVExportPropertiesAsColumnsFlatStreamSource implements StreamSourc
     private final Project project;
     private final LoadingCache<String, KwicProvider> kwicProviderCache;
     private final BackgroundServiceProvider backgroundServiceProvider;
+    private final Supplier<Integer> contextSizeSupplier;
 
     public CSVExportPropertiesAsColumnsFlatStreamSource(
             Supplier<QueryResult> queryResultSupplier, Project project,
-            LoadingCache<String, KwicProvider> kwicProviderCache, BackgroundServiceProvider backgroundServiceProvider) {
+            LoadingCache<String, KwicProvider> kwicProviderCache, BackgroundServiceProvider backgroundServiceProvider,
+            Supplier<Integer> contextSizeSupplier) {
         super();
         this.queryResultSupplier = queryResultSupplier;
         this.project = project;
         this.kwicProviderCache = kwicProviderCache;
         this.backgroundServiceProvider = backgroundServiceProvider;
+        this.contextSizeSupplier = contextSizeSupplier;
     }
 
     @Override
@@ -162,7 +165,7 @@ public class CSVExportPropertiesAsColumnsFlatStreamSource implements StreamSourc
                                                              List<Range> mergedRanges =
                                                                      Range.mergeRanges(new TreeSet<>((tRow).getRanges()));
                                                              for (Range range : mergedRanges) {
-                                                                 KeywordInSpanContext kwic = kwicProvider.getKwic(range, 5);
+                                                                 KeywordInSpanContext kwic = kwicProvider.getKwic(range, contextSizeSupplier.get());
                                                                  List<Object> values = new ArrayList<>();
                                                                  // add common field values
                                                                  values.addAll(List.of(
@@ -204,7 +207,7 @@ public class CSVExportPropertiesAsColumnsFlatStreamSource implements StreamSourc
                                                              List<Range> mergedRanges =
                                                                      Range.mergeRanges(new TreeSet<>((cRow).getRanges()));
                                                              for (Range range : mergedRanges) {
-                                                                 KeywordInSpanContext kwic = kwicProvider.getKwic(range, 5);
+                                                                 KeywordInSpanContext kwic = kwicProvider.getKwic(range, contextSizeSupplier.get());
 
                                                                  List<Object> values = new ArrayList<>();
 
@@ -268,7 +271,7 @@ public class CSVExportPropertiesAsColumnsFlatStreamSource implements StreamSourc
                                                              }
                                                          }
                                                          else {
-                                                             KeywordInSpanContext kwic = kwicProvider.getKwic(row.getRange(), 5);
+                                                             KeywordInSpanContext kwic = kwicProvider.getKwic(row.getRange(), contextSizeSupplier.get());
                                                              csvPrinter.printRecord(
                                                                      row.getQueryId().toSerializedString(),
                                                                      row.getSourceDocumentId(),
