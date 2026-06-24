@@ -1,6 +1,6 @@
 {
   "$schema": "https://vega.github.io/schema/vega/v5.8.json",
-  "name": "wordcloud for tag queries",
+  "name": "Wordcloud for tag queries",
   "autosize": {"type": "pad", "resize": true},
   "background": "white",
   "data": [

@@ -1,6 +1,6 @@
 {
   "$schema": "https://vega.github.io/schema/vega/v5.0.json",
-  "name": "wordcloud for phrase queries",
+  "name": "Wordcloud for phrase queries",
   "autosize": {"type": "pad", "resize": true},
   "background": "white",
   "data": [
@@ -54,7 +54,7 @@
       "name": "numberOfTypesLimit",
       "value": 20,
       "bind": {
-        "name": "No. of Types",
+        "name": "No. of types",
         "step": 1,
         "input": "range",
         "min": 1,
