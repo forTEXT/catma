@@ -111,7 +111,7 @@ public class VizMaxPanel extends VerticalLayout  {
 						item -> handleItemSelection(item));
 				
 				queryResultPanel.addOptionsMenuItem(
-					"Select all", 
+					"Select All",
 					mi -> handleRowsSelection(queryResultPanel.getFilteredQueryResult()));
 				
 				queryResultPanel.setSizeFull();
