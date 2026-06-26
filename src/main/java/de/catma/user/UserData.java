@@ -1,5 +1,7 @@
 package de.catma.user;
 
+import java.util.Locale;
+
 public class UserData {
 
 	private String username;
@@ -21,10 +23,10 @@ public class UserData {
 		this.password = password;
 	}
 	public String getEmail() {
-		return email;
+		return email.toLowerCase(Locale.ROOT);
 	}
 	public void setEmail(String email) {
-		this.email = email;
+		this.email = email.toLowerCase(Locale.ROOT);
 	}
 	public String getName() {
 		return name;

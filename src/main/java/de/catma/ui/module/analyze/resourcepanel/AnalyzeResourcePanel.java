@@ -244,7 +244,7 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 		documentTree
 			.addColumn(documentTreeItem -> documentTreeItem.getName())
 			.setCaption("Name")
-			.setWidth(300);
+			.setWidth(282);
 	
 
 		documentTree
@@ -259,7 +259,8 @@ public class AnalyzeResourcePanel extends VerticalLayout {
 
 		documentActionGridComponent.setSelectionModeFixed(Grid.SelectionMode.MULTI);
 		documentActionGridComponent.getActionGridBar().setMoreOptionsBtnVisible(false);
-		documentActionGridComponent.getActionGridBar().setMargin(new MarginInfo(false, false, false, true));
+		documentActionGridComponent.getActionGridBar().setAddBtnVisible(false);
+		documentActionGridComponent.getActionGridBar().setMargin(new MarginInfo(false, true, false, true));
 
 		addComponent(documentActionGridComponent);
 

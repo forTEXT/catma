@@ -63,7 +63,8 @@ public class SearchTypeSelectionStep extends VerticalLayout implements WizardSte
 		rgSteps = new RadioButtonGroup<>("", nextSteps);
 		rgSteps.setValue(nextSteps.get(0));
 		nextStep = nextSteps.get(0);
-		
+		rgSteps.focus();
+
 		addComponent(rgSteps);
 		setComponentAlignment(rgSteps, Alignment.MIDDLE_CENTER);
 		

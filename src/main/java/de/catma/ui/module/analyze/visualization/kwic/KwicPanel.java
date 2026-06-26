@@ -91,7 +91,7 @@ import de.catma.util.Pair;
 
 public class KwicPanel extends VerticalLayout implements Visualization {
 	private enum ColumnId {
-		COLLECION_NAME, TAG, PROPERTY_NAME, PROPERTY_VALUE, START_POS,
+		COLLECTION_NAME, TAG, PROPERTY_NAME, PROPERTY_VALUE, START_POS,
 		;
 	}
 
@@ -192,8 +192,9 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 						() -> getFilteredQueryResult(), 
 						project, 
 						kwicItemHandler.getKwicProviderCache(), 
-						((BackgroundServiceProvider)UI.getCurrent())),
-					"CATMA-Query-Result_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
+						((BackgroundServiceProvider)UI.getCurrent()),
+						contextSizeSupplier),
+					"CATMA-KWIC-With-Properties-As-Columns_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
 		csvPropertiesAsColumnsResource.setCacheTime(0);
 		csvPropertiesAsColumnsResource.setMIMEType("text/comma-separated-values");
 		
@@ -639,7 +640,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		kwicGrid.addColumn(row -> kwicItemHandler.getCollectionName(row))
 				.setCaption("Collection")
 				.setWidth(200)
-				.setId(ColumnId.COLLECION_NAME.name())
+				.setId(ColumnId.COLLECTION_NAME.name())
 				.setHidable(true)
 				.setHidden(true);
 
@@ -733,7 +734,7 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 		}
 
 		if (showTagColumns) {
-			kwicGrid.getColumn(ColumnId.COLLECION_NAME.name()).setHidden(false);
+			kwicGrid.getColumn(ColumnId.COLLECTION_NAME.name()).setHidden(false);
 			kwicGrid.getColumn(ColumnId.TAG.name()).setHidden(false);
 			if (showPropertyColumns) {
 				kwicGrid.getColumn(ColumnId.PROPERTY_NAME.name()).setHidden(false);

@@ -18,7 +18,8 @@
           "field": "relStartOffset",
           "as": ["binStart", "binEnd"],
           "extent": [0, 100],
-          "maxbins": 10
+          "maxbins": 10,
+          "signal": "bins"
         }
       ]
     },
@@ -38,6 +39,26 @@
           ],
           "ops": ["count"],
           "as": ["countPerBin"]
+        },
+        {
+          "type": "impute",
+          "field": "countPerBin",
+          "key": "binStart",
+          "keyvals": {
+            "signal": "sequence(bins.start, bins.stop, bins.step)"
+          },
+          "groupby": [
+            "tagPath",
+            "tagColor",
+            "sourceDocumentTitle",
+            "sourceDocumentId"
+          ],
+          "value": 0
+        },
+        {
+          "type": "formula",
+          "expr": "datum.binStart + bins.step",
+          "as": "binEnd"
         },
         {
           "type": "collect",
@@ -155,7 +176,8 @@
           "title": "Occurrences",
           "domain": true,
           "labels": true,
-          "ticks": true
+          "ticks": true,
+          "tickMinStep": 1
         },
         {
           "scale": "x",

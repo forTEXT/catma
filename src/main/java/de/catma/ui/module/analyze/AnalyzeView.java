@@ -344,6 +344,7 @@ public class AnalyzeView extends HorizontalLayout
 		
 		HorizontalLayout queryPanel = new HorizontalLayout();
 		queryPanel.setSizeFull();
+		queryBox.focus();
 		queryPanel.addComponents(btQueryBuilder, queryBox, progressBar);
 		queryPanel.setExpandRatio(queryBox, 1.0f);
 		
@@ -569,7 +570,7 @@ public class AnalyzeView extends HorizontalLayout
 		
 		
 		String name = 
-				"Doubletree " 
+				"DoubleTree "
 						+ LocalDateTime.now().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM));
 		
 		VizMaxPanel vizMaxPanel = 

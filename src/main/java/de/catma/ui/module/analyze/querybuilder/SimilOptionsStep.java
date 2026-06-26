@@ -54,6 +54,7 @@ public class SimilOptionsStep extends VerticalLayout implements WizardStep {
 		setMargin(true);
 		
 		exampleInput = new TextField("The word is similar to");
+		exampleInput.focus();
 		
 		addComponent(exampleInput);
 		

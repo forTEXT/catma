@@ -89,6 +89,7 @@ public class CollocOptionsStep extends VerticalLayout implements WizardStep {
 		searchPanel.addStyleName("query-builder-colloc-options-step-search-panel");
 	
 		wordInput = new TextField("Search for all occurrences of");
+		wordInput.focus();
 		searchPanel.addComponent(wordInput);
 		
 		collocInput = new TextField("that appear near"); 

@@ -11,10 +11,10 @@ public class VegaHelpWindow extends Window {
 	public VegaHelpWindow() {
 		super("Help | Vega");
 		initComponents();
-		setHeight("500px"); //$NON-NLS-1$
-		setWidth("400px"); //$NON-NLS-1$
+		setHeight("500px");
+		setWidth("400px");
 		center();
-		setStyleName("help-windows"); //$NON-NLS-1$
+		setStyleName("help-windows");
 	}
 
 	private void initComponents() {
@@ -46,10 +46,10 @@ public class VegaHelpWindow extends Window {
 				"</ul> \\\n" + 
 				"</p>\\\n" + 
 				"<p>If the annotation has more than one reference to the text, i.e. there are more than one startOffset - endOffset pair, a row for each text range is included.</p>\\\n" +
-				"For infos on how to construct a visalization specification see the <a href=\"https://vega.github.io/vega-lite/docs/\" target=\"_blank\">Vega-Lite documentation</a>. \\\n" + 
+				"For infos on how to construct a visualization specification see the <a href=\"https://vega.github.io/vega-lite/docs/\" target=\"_blank\">Vega-Lite documentation</a>. \\\n" +
 				"If you need more flexibility and power see the <a href=\"https://vega.github.io/vega/docs/\" target=\"_blank\">Vega documentation></a>.", 
 				ContentMode.HTML);
-		content.addComponent( helpText);
+		content.addComponent(helpText);
 		setContent(content);
 		
 	}

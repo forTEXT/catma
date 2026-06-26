@@ -758,6 +758,7 @@ public class QueryResultPanel extends VerticalLayout {
 		queryInfo = new TextField();
 		queryInfo.setWidth("90%");
 		queryInfo.addStyleName("analyze-card-infobar");
+		queryInfo.setReadOnly(true);
 		
 		addComponent(queryInfo);
 	}
@@ -864,7 +865,7 @@ public class QueryResultPanel extends VerticalLayout {
 						() -> getDisplaySetting().equals(DisplaySetting.GROUPED_BY_TAG),
 						kwicProviderCache, 
 						((BackgroundServiceProvider)UI.getCurrent())),
-					"CATMA-Query-Result_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
+					"CATMA-Query-Result-Grouped_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
 		csvGroupedByPhraseExportResource.setCacheTime(0);
 		csvGroupedByPhraseExportResource.setMIMEType("text/comma-separated-values");
 		
@@ -880,8 +881,9 @@ public class QueryResultPanel extends VerticalLayout {
 						() -> getFilteredQueryResult(), 
 						project, 
 						kwicProviderCache, 
-						((BackgroundServiceProvider)UI.getCurrent())),
-					"CATMA-Query-Result_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
+						((BackgroundServiceProvider)UI.getCurrent()),
+						() -> contextSize),
+					"CATMA-Query-Result-With-Properties-As-Columns_Export-" + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME) + ".csv");
 		csvPropertiesAsColumnsResource.setCacheTime(0);
 		csvPropertiesAsColumnsResource.setMIMEType("text/comma-separated-values");
 		
