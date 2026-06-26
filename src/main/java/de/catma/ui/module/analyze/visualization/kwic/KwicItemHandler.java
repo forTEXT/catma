@@ -66,7 +66,7 @@ public class KwicItemHandler {
             backwardContext = spanContextCache.get(row).getLeftContext();
         }
         catch (Exception e) {
-            logger.log(Level.SEVERE, "Error retrieving backward context for " + row, e);
+            logger.log(Level.SEVERE, "Error retrieving left context for " + row, e);
         }
         return backwardContext;
     }
@@ -77,7 +77,7 @@ public class KwicItemHandler {
             forwardContext = spanContextCache.get(row).getRightContext();
         }
         catch (Exception e) {
-            logger.log(Level.SEVERE, "Error retrieving forward context for " + row, e);
+            logger.log(Level.SEVERE, "Error retrieving right context for " + row, e);
         }
         return forwardContext;
     }
