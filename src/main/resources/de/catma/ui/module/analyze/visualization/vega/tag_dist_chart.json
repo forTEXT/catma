@@ -48,7 +48,8 @@
             "signal": "sequence(bins.start, bins.stop, bins.step)"
           },
           "groupby": [
-            "phrase",
+            "tagPath",
+            "tagColor",
             "sourceDocumentTitle",
             "sourceDocumentId"
           ],
