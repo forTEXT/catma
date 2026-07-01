@@ -26,6 +26,10 @@ public class UserData {
 		return email == null ? null : email.toLowerCase(Locale.ROOT);
 	}
 	public void setEmail(String email) {
+        if (email == null) {
+            this.email = null;
+            return;
+        }
 		this.email = email.toLowerCase(Locale.ROOT);
 	}
 	public String getName() {
