@@ -8,9 +8,9 @@
 # https://docs.docker.com/engine/logging/configure/
 
 # syntax=docker/dockerfile:1
-FROM  gitlab/gitlab-ee:18.11.3-ee.0 AS base
+FROM  gitlab/gitlab-ee:18.11.6-ee.0 AS base
 LABEL maintainer="CATMA Team" \
-      version="1.1.2"
+      version="1.1.3"
 
 SHELL ["/bin/bash", "-c"]
 
@@ -26,8 +26,8 @@ FROM build-${TARGETARCH} AS build
 ARG JETTY_FILENAME=jetty-home-12.0.31.tar.gz
 # some dirs owned by the jetty user are expected to be bind-mounted, therefore we default to a uid that is less likely to be in use on the host
 ARG JETTY_USER_UID=899
-ARG CATMA_WAR_FILENAME=catma-7.2-SNAPSHOT.war
-ARG CATMA_VERSION=7.2
+ARG CATMA_WAR_FILENAME=catma-7.3-SNAPSHOT.war
+ARG CATMA_VERSION=7.3
 ENV CATMA_VERSION=$CATMA_VERSION
 
 ARG DEBIAN_FRONTEND=noninteractive
