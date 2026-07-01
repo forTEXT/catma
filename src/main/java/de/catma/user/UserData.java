@@ -23,7 +23,7 @@ public class UserData {
 		this.password = password;
 	}
 	public String getEmail() {
-		return email.toLowerCase(Locale.ROOT);
+		return email == null ? null : email.toLowerCase(Locale.ROOT);
 	}
 	public void setEmail(String email) {
 		this.email = email.toLowerCase(Locale.ROOT);
