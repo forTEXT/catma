@@ -204,9 +204,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 	private MenuItem miCommit;
 	private MenuItem miCopyProject;
 
-	private MenuItem miShareResources;
-	private ProjectResourceExportApiDialog projectResourceExportApiDialog;
-
 	private ProjectEventPanel projectEventPanel;
 
 	public ProjectView(ProjectsManager projectsManager, EventBus eventBus) {
@@ -690,12 +687,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		miCopyProject = hugeCardMoreOptionsContextMenu.addItem(
 				"Create a Copy of this Project", menuItem -> handleCopyProjectRequest()
 		);
-		
-		
-		hugeCardMoreOptionsContextMenu.addSeparator();
-		miShareResources = hugeCardMoreOptionsContextMenu.addItem(
-				"Share Project Resources (Experimental API)", menuItem -> handleShareProjectResources()
-		);
 	}
 
 	private void handleCopyProjectRequest() {
@@ -950,7 +941,6 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		btnSynchronize.setEnabled(controlsEnabled);
 
 		miCommit.setEnabled(controlsEnabled);
-		miShareResources.setEnabled(controlsEnabled);
 	}
 
 	private void setToggleViewButtonStateBasedOnMemberCount() {
@@ -2429,20 +2419,9 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 		dlg.show();
 	}
 
-	private void handleShareProjectResources() {
-		if (projectResourceExportApiDialog == null) {
-			projectResourceExportApiDialog = new ProjectResourceExportApiDialog(project);
-		}
-		projectResourceExportApiDialog.show();
-	}
-
 	public void close() {
 		try {
 			eventBus.unregister(this);
-
-			if (projectResourceExportApiDialog != null) {
-				projectResourceExportApiDialog.removeRequestHandlerFromVaadinService();
-			}
 			
 			if (projectEventPanel != null) {
 				projectEventPanel.close();

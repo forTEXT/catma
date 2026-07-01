@@ -1391,12 +1391,6 @@ $contribution-color: blue;
     text-align: right;
   }
 
-  /* Project Resource Export API Dialog */
-  .pre-api-dialog .jsclipboardbutton-label-invisible {
-    //display: none; // breaks the clipboard button
-    color: transparent;
-  }
-
   /* Error Dialog */
   .error-dialog {
     background-color: #D32F2F;

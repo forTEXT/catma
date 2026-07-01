@@ -18834,10 +18834,6 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	text-align: right;
 }
 
-.catma .pre-api-dialog .jsclipboardbutton-label-invisible {
-	color: transparent;
-}
-
 .catma .error-dialog {
 	background-color: #D32F2F;
 	color: #F0DCDC;
