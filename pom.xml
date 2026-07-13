@@ -350,6 +350,14 @@
 			<artifactId>xom</artifactId>
 			<version>1.3.9</version>
 		</dependency>
+		<!-- Force specific version of xalan to avoid a dependency conflict - otherwise using the `jetty:run` Maven goal causes a later version (2.7.3) to be
+			 pulled and used, which is missing dependencies (see https://issues.apache.org/jira/browse/XALANJ-2649)
+		 -->
+		<dependency>
+			<groupId>xalan</groupId>
+			<artifactId>xalan</artifactId>
+			<version>2.7.2</version>
+		</dependency>
 
 		<!-- JSON handling -->
 		<dependency>
