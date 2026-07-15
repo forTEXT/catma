@@ -25,7 +25,7 @@ package de.catma.properties;
  */
 public enum CATMAPropertyKey {
 	// important that this has a trailing slash because of how it's used in some places (TODO: handle both variants for all URLs)
-	BASE_URL("http://localhost:8080/catma/"),
+	BASE_URL("http://localhost:8080/"),
 
 	TEMP_DIR,
 
