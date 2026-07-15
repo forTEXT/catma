@@ -1,3 +1,6 @@
+# see https://github.com/forTEXT/catma/blob/master/src/main/resources/catma.properties
+# for explanations, as well as other available properties that you may want to set
+
 BASE_URL=<placeholder>
 
 TEMP_DIR=/opt/jetty_temp

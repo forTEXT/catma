@@ -203,8 +203,10 @@ properties (see the reference file [here](https://github.com/forTEXT/catma/blob/
 - `SIGNUP_TOKEN_KEY`
 - `GOOGLE_RECAPTCHA_*`
 
-Alternatively, user accounts can be created directly using the [GitLab API](https://docs.gitlab.com/api/users/#create-a-user). Creating user accounts using the
-GitLab admin interface requires GitLab to be configured to be able to send emails.
+Alternatively, regular email/password-based user accounts can be created directly within GitLab. By default, creating user accounts using the GitLab admin
+interface requires GitLab to be configured to be able to send emails, because email confirmation is a strict requirement. You can change the email confirmation
+settings at: *Settings → General → New user account restrictions*. User accounts can also be created directly using the
+[GitLab API](https://docs.gitlab.com/api/users/#create-a-user).
 
 To enable **Google account logins**, edit `catma.properties` and set the `GOOGLE_OAUTH_*` properties. You will also need to configure the GitLab OmniAuth
 settings in `gitlab.rb` as follows:
