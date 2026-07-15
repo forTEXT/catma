@@ -1,4 +1,4 @@
-<div style="text-align: center; background-color: #fff;">
+<div align="center" style="text-align: center; background-color: #fff;">
     <a href="https://catma.de">
         <img style="width: 25%;" src="doc/logos/catma-tailright-final-cmyk_rotated.svg" alt="CATMA Logo"/>
     </a>
@@ -16,9 +16,9 @@
 
 # Introduction
 
-CATMA is a web-based, open-source and free-to-use application for text annotation and analysis.
+CATMA is a web-based, open-source, and free-to-use application for text annotation and analysis.
 
-![img](doc/screenshots/catma-6-annotate.png)
+![Screenshot of CATMA's 'Annotate' module](doc/screenshots/catma-6-annotate.png)
 
 With CATMA, users such as literary scholars can work in the way that best suits their scientific objectives: qualitative or quantitative, bottom-up and
 exploratory or descriptive and taxonomy-based, alone or as a team.
@@ -43,7 +43,7 @@ Apart from the application itself, CATMA uses a GitLab instance as its backend t
 Please check the [FAQs](https://catma.de/how-to/faqs/), the [compact manual](https://catma.de/how-to/compact-manual/), the
 [tutorials](https://catma.de/how-to/tutorials/), and the other materials available on [our website](https://catma.de) for an answer to your question first.
 
-Still stuck or unsure? Then feel free to send an email to [support@catma.de](mailto://support@catma.de) and we will get back to you as soon as possible. If you
+Still stuck or unsure? Then feel free to send an email to support@catma.de and we will get back to you as soon as possible. If you
 think you have found a bug, or if you would like to request a feature, you can also [create a new issue](https://github.com/forTEXT/catma/issues/new/choose).
 
 # Host Your Own Instance

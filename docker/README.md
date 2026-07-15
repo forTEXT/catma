@@ -64,13 +64,13 @@ To **start the container again at a later stage**, execute the following in your
 `docker start -ai catma-standalone`
 
 Upon starting the container you should see the following:\
-![img](https://raw.githubusercontent.com/forTEXT/catma/refs/heads/master/docker/catma_standalone_starting.png)
+![CATMA Standalone terminal output - starting](screenshots/catma_standalone_starting.png)
 
 Especially the first time you start the container, it will take a few minutes for everything to start up, varying depending on hardware and resources available
 to Docker. Subsequent starts should be a bit faster.
 
 Eventually, you should see the following:\
-![img](https://raw.githubusercontent.com/forTEXT/catma/refs/heads/master/docker/catma_standalone_started.png)
+![CATMA Standalone terminal output - started](screenshots/catma_standalone_started.png)
 
 You can now access CATMA and the underlying GitLab backend at the URLs displayed and log in as described.
 
@@ -104,7 +104,7 @@ The first `--publish` parameter publishes the port of CATMA – 8088 by default.
 Sometimes, especially when the resources available to Docker are constrained, it can happen that GitLab fails to start properly. An informational message will
 be displayed if GitLab is not running after a few minutes, including steps that you can take to troubleshoot the problem:
 
-![img](https://raw.githubusercontent.com/forTEXT/catma/refs/heads/master/docker/catma_standalone_start_aborted.png)
+![CATMA Standalone terminal output - start aborted](screenshots/catma_standalone_start_aborted.png)
 
 It might be enough to simply try again before spending time on analyzing the cause. To do so, answer "n" to the prompt to continue anyway and wait for the
 container to stop, then start it again as before.
@@ -181,7 +181,7 @@ configuration steps are required if you plan to make your instance accessible mo
 
 To expose CATMA and/or GitLab beyond the host machine, you could set up a reverse proxy and/or modify the `--publish` parameters to change the host ports and
 the interface they are published on (or use `--expose` instead if the reverse proxy is also a container on the same internal network). Also see the `*_PORT` and
-`*_URL` environment variables in [the Dockerfile](https://github.com/forTEXT/catma/blob/master/docker/Dockerfile#L44-L51) and how these are used.
+`*_URL` environment variables in [the Dockerfile](Dockerfile#L44-L51) and how these are used.
 
 For exposure to the internet you should definitely set up a reverse proxy and terminate SSL connections at the proxy. In that case, set the `*_URL` environment
 variables to the real, external URLs, and treat the `*_PORT` environment variables as the internal ports only. Also see the
@@ -192,12 +192,12 @@ variables to the real, external URLs, and treat the `*_PORT` environment variabl
 Modify the following to make your deployment more suitable for multi-user use (will require a container restart):
 
 1. Set significantly higher minimum and maximum memory limits for the Jetty server via the `JETTY_JAVA_OPTIONS` environment variable, and make sure that you
-have `LOW_MEM=false` (the default) – see [the Dockerfile](https://github.com/forTEXT/catma/blob/master/docker/Dockerfile#L42-L43)
+have `LOW_MEM=false` (the default) – see [the Dockerfile](Dockerfile#L42-L43)
 2. Edit `$GITLAB_HOME/config/gitlab.rb` (or `/etc/gitlab/gitlab.rb` within the container) and comment the `puma['worker_processes']` and
 `sidekiq['concurrency']` lines at the end of the file, so that the defaults will apply
 
 To enable **user registration**, edit `$CATMA_HOME/data/catma.properties` (or `/data/catma/catma.properties` within the container) and set the following
-properties (see the reference file [here](https://github.com/forTEXT/catma/blob/master/src/main/resources/catma.properties)):
+properties (see the reference file [here](../src/main/resources/catma.properties)):
 - `DEV_MAIL_LOG_ONLY=false`
 - `MAIL_*`
 - `SIGNUP_TOKEN_KEY`
@@ -294,4 +294,4 @@ the host machine. You may also be interested in creating a self-contained backup
 ### Building Your Own Image
 
 If you would like to build your own CATMA Standalone image, for example, with your own build of CATMA, or to make some other change, refer to
-[the Dockerfile](https://github.com/forTEXT/catma/blob/master/docker/Dockerfile).
+[the Dockerfile](Dockerfile).
