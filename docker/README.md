@@ -254,8 +254,8 @@ you can follow the steps under [Gitlab Fails to Start](#gitlab-fails-to-start)).
 
 If you want to keep your data, the update process may be more complicated than switching directly to the latest version. This is because the GitLab server may
 also have been updated, and sometimes it isn't possible to skip some intermediate GitLab versions. Before proceeding, you should check
-[this page](https://hub.docker.com/repository/docker/maltem/catma-standalone/tags) to see whether we have published any versions of the image between the one
-that you have now and the latest one (the "latest" tag is always an alias for an actual version tag).
+[this page](https://hub.docker.com/r/maltem/catma-standalone/tags) to see whether we have published any versions of the image between the one that you have now
+and the latest one (the "latest" tag is always an alias for an actual version tag).
 
 If there are intermediate versions, but the GitLab version **hasn't** changed, you can update straight to the latest version. (Our version tags are structured
 as follows: `<CATMA version>-gl<GitLab version>`. For example, for the CATMA Standalone image tagged `7.2.4-gl18.8.4`, the GitLab version is 18.8.4.)
