@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.contextmenu.ContextMenu;
+import com.vaadin.data.provider.GridSortOrder;
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.data.provider.Query;
 import com.vaadin.icons.VaadinIcons;
@@ -217,9 +219,21 @@ public class KwicPanel extends VerticalLayout implements Visualization {
 	
 	public QueryResultRowArray getFilteredQueryResult() {
 		QueryResultRowArray result = new QueryResultRowArray();
+
+		// build an in-memory comparator that reflects the current sort order of the grid in the UI
+		Comparator<QueryResultRow> inMemorySorting = null;
+		for (GridSortOrder<QueryResultRow> sortOrder : kwicGrid.getSortOrder()) {
+			Comparator<QueryResultRow> columnComparator =
+					sortOrder.getSorted().getComparator(sortOrder.getDirection());
+			inMemorySorting = (inMemorySorting == null)
+					? columnComparator
+					: inMemorySorting.thenComparing(columnComparator);
+		}
+
 		kwicDataProvider.fetch(
-				new Query<QueryResultRow, SerializablePredicate<QueryResultRow>>())
-		.forEach(row -> result.add(row));
+				new Query<QueryResultRow, SerializablePredicate<QueryResultRow>>(
+						0, Integer.MAX_VALUE, Collections.emptyList(), inMemorySorting, null))
+                .forEach(row -> result.add(row));
 
 		return result;
 	}
