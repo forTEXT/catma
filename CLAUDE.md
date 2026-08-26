@@ -11,7 +11,7 @@ CATMA has **no database of its own for project data**: a self-managed **GitLab s
 ## Prerequisites & one-time setup
 
 - JDK 21, Maven.
-- A dedicated self-managed GitLab server (<v19) with admin access. Not needed to compile, but needed to run or to execute the GitLab-backed tests.
+- A dedicated self-managed GitLab server with admin access, plus an instance-wide OAuth application registered on it (see `doc/SELF-HOSTING.md`). Not needed to compile, but needed to run or to execute the GitLab-backed tests.
 - **A forked dependency must be installed into the local Maven repo or the build will fail** (`org.vaadin:elements 0.2.3-CATMA`). Download URL and the exact `mvn install:install-file` command are in `doc/DEVELOPMENT.md`. `gitlab4j-api` uses the stock release (5.x — the 6.x line is Jakarta-based and incompatible with the javax stack).
 
 Full setup instructions: `doc/DEVELOPMENT.md`. Self-hosting: `doc/SELF-HOSTING.md`. Docker/standalone: `docker/README.md`.
@@ -68,6 +68,7 @@ All runtime settings are enum constants in `de.catma.properties.CATMAPropertyKey
 - Local working copies live under `GIT_REPOSITORY_BASE_PATH/<user-identifier>/<project>`; the API has its own separate clone area (`API_GIT_REPOSITORY_BASE_PATH`).
 - Repository layout inside a project: `tagsets/`, `collections/`, `documents/` (constants at the top of `GitProjectHandler`). Annotation collections are stored as **paged** JSON-LD Web Annotation files, capped by `MAX_ANNOTATION_PAGE_FILE_SIZE_BYTES` so that diffs stay viewable in GitLab.
 - `GitlabManagerPrivileged` (admin token) vs `GitlabManagerRestricted` (per-user token) — the split matters for permissions; `de.catma.rbac` maps GitLab roles onto `RBACRole`/`RBACPermission`.
+- Sign-in is an **OAuth authorization code flow** against the GitLab server (`de.catma.oauth.GitLabOauthHandler`); the resulting access token is refreshed by `GitLabOauthTokenProvider` and used both as the gitlab4j auth token and as the Git-over-HTTPS password. Google Sign-in is separate (`GoogleOauthHandler` + an admin-created impersonation token).
 - `repository/git/resource/provider` selects *which* revision a project is read at (`SynchronizedResourceProvider` for the user's own branch, `LatestContributionsResourceProvider` for viewing others' unmerged work).
 
 **Serialization must be byte-stable across writes** so that Git diffs stay minimal. `SerializationHelper` builds a GSON instance around `SortedReflectiveTypeAdapterFactory`, which sorts fields deterministically. This requires the locally-added `com.google.gson.internal.bind.SortedFieldTypeAdapterWrapper` in `src/main/java/com/google/gson/internal/` — a class placed in Gson's own package on purpose. Similarly, `src/main/java/org/gitlab4j/api/Extended*.java` patch gitlab4j from inside its package. Don't "clean these up" into `de.catma`.

@@ -57,6 +57,7 @@ import com.google.gson.JsonParser;
 
 import de.catma.document.comment.Comment;
 import de.catma.document.comment.Reply;
+import de.catma.oauth.GitLabOauthTokenProvider;
 import de.catma.project.BackendPager;
 import de.catma.project.CommitInfo;
 import de.catma.project.MergeRequestInfo;
@@ -86,18 +87,22 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 	private final GitLabApi restrictedGitLabApi;
 	private final Cache<String, List<?>> gitlabModelsCache;
 
+	// null unless the session was authenticated using the OAuth authorization code flow (see GitLabOauthHandler)
+	private final GitLabOauthTokenProvider oauthTokenProvider;
+
 	private GitUser user;
 
 	public GitlabManagerRestricted(String userImpersonationToken) throws IOException {
-		this(new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), userImpersonationToken));
+		this(new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), userImpersonationToken), null);
 	}
 
-	public GitlabManagerRestricted(String username, String password) throws IOException {
-		this(oauth2Login(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), username, password));
+	public GitlabManagerRestricted(GitLabOauthTokenProvider oauthTokenProvider) throws IOException {
+		this(oauth2Api(oauthTokenProvider), oauthTokenProvider);
 	}
 
-	private GitlabManagerRestricted(GitLabApi api) throws IOException {
+	private GitlabManagerRestricted(GitLabApi api, GitLabOauthTokenProvider oauthTokenProvider) throws IOException {
 		this.restrictedGitLabApi = api;
+		this.oauthTokenProvider = oauthTokenProvider;
 
 		// cache rapid calls to getProjectReferences, like getProjectReferences().size() and getProjectReferences() from DashboardView
 		this.gitlabModelsCache = CacheBuilder.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
@@ -110,13 +115,16 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 		}
 	}
 
-	private static GitLabApi oauth2Login(String url, String username, String password) throws IOException {
-		try {
-			return GitLabApi.oauth2Login(url, username, password);
-		}
-		catch (GitLabApiException e) {
-			throw new IOException(e);
-		}
+	private static GitLabApi oauth2Api(GitLabOauthTokenProvider oauthTokenProvider) {
+		GitLabApi gitLabApi = new GitLabApi(
+				CATMAPropertyKey.GITLAB_SERVER_URL.getValue(),
+				org.gitlab4j.api.Constants.TokenType.OAUTH2_ACCESS,
+				oauthTokenProvider.getAccessToken()
+		);
+		// the access token expires (2 hours by default) and is refreshed by the provider, so every request has to ask for the current one rather than reuse
+		// the token that was set above
+		gitLabApi.setAuthTokenSupplier(oauthTokenProvider::getAccessToken);
+		return gitLabApi;
 	}
 
 
@@ -140,7 +148,9 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 	@Override
 	public String getPassword() {
-		return restrictedGitLabApi.getAuthToken();
+		// this is used as the password for Git over HTTPS (see JGitCredentialsManager), so for OAuth sessions we have to go through the provider to make sure
+		// that we hand out a token that hasn't expired
+		return oauthTokenProvider != null ? oauthTokenProvider.getAccessToken() : restrictedGitLabApi.getAuthToken();
 	}
 
 	@Override
@@ -150,13 +160,13 @@ public class GitlabManagerRestricted extends GitlabManagerCommon implements Remo
 
 	@Override
 	public void refreshUserCredentials() throws IOException {
-		try {
-			logger.info("Attempting to refresh user credentials...");
-			restrictedGitLabApi.oauth2RefreshAccessToken();
+		if (oauthTokenProvider == null) {
+			// impersonation and personal access tokens can't be refreshed, the user has to sign in again
+			throw new IOException("Failed to refresh user credentials, this session is not based on OAuth tokens");
 		}
-		catch (GitLabApiException e) {
-			throw new IOException("Failed to refresh user credentials", e);
-		}
+
+		logger.info("Attempting to refresh user credentials...");
+		oauthTokenProvider.forceRefresh();
 	}
 
 

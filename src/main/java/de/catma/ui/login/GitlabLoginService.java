@@ -1,6 +1,7 @@
 package de.catma.ui.login;
 
 import com.vaadin.server.VaadinSession;
+import de.catma.oauth.GitLabOauthTokenProvider;
 import de.catma.repository.git.GitUser;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
@@ -29,9 +30,9 @@ public class GitlabLoginService implements LoginService {
 	}
 
 	@Override
-	public void login(String username, String password) throws IOException {
-		remoteGitManagerRestricted = remoteGitManagerFactory.createFromUsernameAndPassword(username, password);
-		logLoginEvent("username/password");
+	public void loggedInFromGitLabOauth(GitLabOauthTokenProvider oauthTokenProvider) throws IOException {
+		remoteGitManagerRestricted = remoteGitManagerFactory.createFromOauthTokenProvider(oauthTokenProvider);
+		logLoginEvent("GitLab OAuth");
 	}
 
 	@Override

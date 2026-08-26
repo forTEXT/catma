@@ -7,6 +7,8 @@ TEMP_DIR=/opt/jetty_temp
 
 GITLAB_SERVER_URL=<placeholder>
 GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN=<placeholder>
+GITLAB_OAUTH_CLIENT_ID=<placeholder>
+GITLAB_OAUTH_CLIENT_SECRET=<placeholder>
 
 GIT_REPOSITORY_BASE_PATH=/data/catma/localgit
 

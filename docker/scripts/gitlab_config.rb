@@ -31,6 +31,7 @@ parser = OptionParser.new do |opts|
   # required:
   opts.on("--app_url <value>", "Required: CATMA application URL") { |v| options[:app_url] = v }
   opts.on("--admin_token <value>", "Required: GitLab admin personal access token (will be prefixed with pat_prefix)") { |v| options[:admin_token] = v }
+  opts.on("--oauth_creds_path <value>", "Required: Path to write the OAuth application credentials to") { |v| options[:oauth_creds_path] = v }
   # optional:
   opts.on("--pat_prefix <value>", "Optional: Personal access token prefix (default: 'catma-glpat-')") { |v| options[:pat_prefix] = v }
   opts.on("--du_username <value>", "Optional: Username of the automatically created default user (default: 'standalone')") { |v| options[:du_username] = v }
@@ -44,6 +45,7 @@ begin
   # check required options manually
   raise OptionParser::MissingArgument, "--app_url" unless options[:app_url]
   raise OptionParser::MissingArgument, "--admin_token" unless options[:admin_token]
+  raise OptionParser::MissingArgument, "--oauth_creds_path" unless options[:oauth_creds_path]
 rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
   puts e.message
   puts parser
@@ -52,7 +54,7 @@ end
 
 ApplicationSetting.current.update!(
   # these are absolutely necessary for CATMA to work:
-  password_authentication_enabled_for_web: true, # apparently, this also enables the (deprecated) resource owner password credentials (ROPC) flow
+  password_authentication_enabled_for_web: true, # users sign in on GitLab's own login page as part of the OAuth flow
   auto_devops_enabled: false,
   default_branch_name: 'master',
   # default_branch_protection: Gitlab::Access::PROTECTION_DEV_CAN_PUSH, # deprecated
@@ -143,6 +145,28 @@ admin_user = User.find_by_username('root')
 admin_pat = admin_user.personal_access_tokens.create(scopes: ['api', 'sudo', 'admin_mode'], name: 'CATMA')
 admin_pat.set_token("#{options[:pat_prefix]}#{options[:admin_token]}")
 admin_pat.save!
+
+# create the instance-wide OAuth application that CATMA users sign in through
+# this replaces the resource owner password credentials (ROPC) grant, which GitLab removed in version 19.0
+# it has to be done here rather than through the Applications API, because that API doesn't expose the 'trusted' attribute
+# 'trusted' skips the user authorization (consent) step, which is appropriate because CATMA is a first-party application
+# refs: https://docs.gitlab.com/integration/oauth_provider/#create-an-instance-wide-application
+#       https://docs.gitlab.com/api/oauth2/
+# NB: application secrets are stored hashed, so the plaintext secret is only available here, immediately after creation
+oauth_app = Doorkeeper::Application.create!(
+  name: 'CATMA',
+  redirect_uri: ["#{options[:app_url]}/", "#{options[:app_url]}/api/v1/auth/gitlab/callback"].join("\n"),
+  scopes: 'api write_repository',
+  confidential: true,
+  trusted: true
+)
+# these are read by bootstrap.sh and written to catma.properties
+# we write them to a file rather than stdout, because stdout is captured in a log file and the secret shouldn't end up there
+File.write(
+  options[:oauth_creds_path],
+  "GITLAB_OAUTH_CLIENT_ID=#{oauth_app.uid}\nGITLAB_OAUTH_CLIENT_SECRET=#{oauth_app.plaintext_secret}\n"
+)
+File.chmod(0600, options[:oauth_creds_path])
 
 # create the default user, ref: https://docs.gitlab.com/user/profile/account/create_accounts/?tab=17.7+and+later#create-a-user-through-the-rails-console
 user = Users::CreateService.new(

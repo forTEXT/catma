@@ -13,7 +13,11 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.UI;
 import de.catma.backgroundservice.*;
 import de.catma.hazelcast.HazelCastService;
+import de.catma.oauth.GitLabOauthHandler;
+import de.catma.oauth.GitLabOauthTokenProvider;
+import de.catma.oauth.GitLabOauthTokens;
 import de.catma.oauth.GoogleOauthHandler;
+import de.catma.oauth.OauthConstants;
 import de.catma.oauth.OauthIdentity;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.GitlabManagerRestricted;
@@ -72,8 +76,8 @@ public class CatmaApplication extends UI
 
 		loginService = new GitlabLoginService(new RemoteGitManagerFactory() {
 			@Override
-			public RemoteGitManagerRestricted createFromUsernameAndPassword(String username, String password) throws IOException {
-				return new GitlabManagerRestricted(username, password);
+			public RemoteGitManagerRestricted createFromOauthTokenProvider(GitLabOauthTokenProvider oauthTokenProvider) throws IOException {
+				return new GitlabManagerRestricted(oauthTokenProvider);
 			}
 
 			@Override
@@ -162,28 +166,52 @@ public class CatmaApplication extends UI
 
 	private boolean handleRequestOauth(VaadinRequest request) {
 		// do we have an oauth authentication process ongoing?
+		// both providers redirect back to BASE_URL, so we use the provider stored in the session to determine which one this callback belongs to
+		Object oauthProvider = VaadinSession.getCurrent().getAttribute(OauthConstants.OAUTH_PROVIDER_SESSION_ATTRIBUTE_NAME);
+
 		if (request.getParameter("code") != null
-				&& VaadinSession.getCurrent().getAttribute(GoogleOauthHandler.OAUTH_CSRF_TOKEN_SESSION_ATTRIBUTE_NAME) != null
+				&& VaadinSession.getCurrent().getAttribute(OauthConstants.OAUTH_CSRF_TOKEN_SESSION_ATTRIBUTE_NAME) != null
+				&& oauthProvider != null
 		) {
 			// yes, handle oauth authentication result
 			Map<String, String> additionalStateParams = null;
 
 			try {
-				Pair<OauthIdentity, Map<String, String>> resultPair = GoogleOauthHandler.handleCallbackAndGetIdentity(
-						request.getParameter("code"),
-						request.getParameter("state"),
-						request.getParameter("error"),
-						CATMAPropertyKey.BASE_URL.getValue(),
-						HttpClients.createDefault(),
-						VaadinSession.getCurrent()::getAttribute,
-						VaadinSession.getCurrent()::setAttribute
-				);
+				if (OauthConstants.OauthProvider.GITLAB.name().equals(oauthProvider)) {
+					Pair<GitLabOauthTokens, Map<String, String>> resultPair = GitLabOauthHandler.handleCallbackAndGetTokens(
+							request.getParameter("code"),
+							request.getParameter("state"),
+							request.getParameter("error"),
+							CATMAPropertyKey.BASE_URL.getValue(),
+							HttpClients.createDefault(),
+							VaadinSession.getCurrent()::getAttribute,
+							VaadinSession.getCurrent()::setAttribute
+					);
 
-				OauthIdentity oauthIdentity = resultPair.getFirst();
-				additionalStateParams = resultPair.getSecond();
+					additionalStateParams = resultPair.getSecond();
 
-				// log the user in
-				loginService.loggedInFromThirdParty(oauthIdentity.identifier(), oauthIdentity.provider(), oauthIdentity.email(), oauthIdentity.name());
+					// log the user in
+					loginService.loggedInFromGitLabOauth(
+							new GitLabOauthTokenProvider(resultPair.getFirst(), CATMAPropertyKey.BASE_URL.getValue(), HttpClients::createDefault)
+					);
+				}
+				else {
+					Pair<OauthIdentity, Map<String, String>> resultPair = GoogleOauthHandler.handleCallbackAndGetIdentity(
+							request.getParameter("code"),
+							request.getParameter("state"),
+							request.getParameter("error"),
+							CATMAPropertyKey.BASE_URL.getValue(),
+							HttpClients.createDefault(),
+							VaadinSession.getCurrent()::getAttribute,
+							VaadinSession.getCurrent()::setAttribute
+					);
+
+					OauthIdentity oauthIdentity = resultPair.getFirst();
+					additionalStateParams = resultPair.getSecond();
+
+					// log the user in
+					loginService.loggedInFromThirdParty(oauthIdentity.identifier(), oauthIdentity.provider(), oauthIdentity.email(), oauthIdentity.name());
+				}
 			}
 			catch (Exception e) {
 				showAndLogError("Error during login", e);
@@ -194,7 +222,7 @@ public class CatmaApplication extends UI
 
 			eventBus.post(new RouteToDashboardEvent());
 
-			// handle our own action and token parameters if present (for invitations - also see AuthenticationDialog.googleLinkClickListener)
+			// handle our own action and token parameters if present (for invitations - also see AuthenticationDialog.oauthLinkClickListener)
 			if (additionalStateParams != null && additionalStateParams.containsKey(Parameter.ACTION.getKey())
 					&& additionalStateParams.containsKey(Parameter.TOKEN.getKey())
 			) {

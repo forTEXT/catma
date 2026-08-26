@@ -46,7 +46,7 @@ import de.catma.api.v1.fixture.AuthFixtures;
 import de.catma.api.v1.oauth.HashMapSessionStorageHandler;
 import de.catma.api.v1.oauth.interfaces.HttpClientFactory;
 import de.catma.api.v1.oauth.interfaces.SessionStorageHandler;
-import de.catma.oauth.GoogleOauthHandler;
+import de.catma.oauth.OauthConstants;
 import de.catma.properties.CATMAProperties;
 import de.catma.properties.CATMAPropertyKey;
 
@@ -97,6 +97,9 @@ class AuthServiceTest extends JerseyTest {
 		properties.setProperty(CATMAPropertyKey.GOOGLE_OAUTH_ACCESS_TOKEN_REQUEST_URL.name(), "http://oauthprovider.local/token");
 		properties.setProperty(CATMAPropertyKey.GOOGLE_OAUTH_CLIENT_ID.name(), "dummy_client_id");
 		properties.setProperty(CATMAPropertyKey.GOOGLE_OAUTH_CLIENT_SECRET.name(), "dummy_client_secret");
+		properties.setProperty(CATMAPropertyKey.GITLAB_SERVER_URL.name(), "http://gitlab.local");
+		properties.setProperty(CATMAPropertyKey.GITLAB_OAUTH_CLIENT_ID.name(), "dummy_gitlab_client_id");
+		properties.setProperty(CATMAPropertyKey.GITLAB_OAUTH_CLIENT_SECRET.name(), "dummy_gitlab_client_secret");
 		
 		CATMAProperties.INSTANCE.setProperties(properties);
 	}
@@ -150,31 +153,21 @@ class AuthServiceTest extends JerseyTest {
 	}
 	
 	@Test
-	void authentificationWithBasicAuthHeaderShouldReturnJwtWithIdentPayload() throws Exception {
-		AuthFixtures.setUpValidUsernamePasswordAuth(DUMMY_USER_IDENTIFIER, remoteGitManagerRestrictedFactoryMock);
-		
+	void authentificationWithBasicAuthHeaderShouldReturn400BadRequest() {
+		// username/password authentication relied on GitLab's resource owner password credentials grant, which was removed in GitLab 19.0
+		// clients must use the /auth/gitlab endpoint or an access token instead
 		Response response = target(AUTH_TARGET)
 				.request()
 				.header(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
 				.header(
 						HttpHeaders.AUTHORIZATION,
-						AuthConstants.AUTHENTICATION_SCHEME_BASIC_PREFIX
-								+ new String(Base64.getEncoder().encode("dummyUsername:dummyPassword".getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)
+						"Basic " + new String(
+								Base64.getEncoder().encode("dummyUsername:dummyPassword".getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8
+						)
 				)
 				.post(null);
-		
-		assertEquals(Status.OK.getStatusCode(), response.getStatus());
-		
-		String token = IOUtils.toString((InputStream)response.getEntity(), StandardCharsets.UTF_8);
-		
-		SignedJWT signedJWT = SignedJWT.parse(token);
-		JWSVerifier verifier = new MACVerifier(CATMAPropertyKey.API_HMAC_SECRET.getValue());
-		
-		assertTrue(signedJWT.verify(verifier));
-		
-		String userIdentifier = signedJWT.getJWTClaimsSet().getSubject();
-		
-		assertEquals(DUMMY_USER_IDENTIFIER, userIdentifier);
+
+		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
 	}
 	
 	@Test
@@ -191,26 +184,73 @@ class AuthServiceTest extends JerseyTest {
 	}
 	
 	@Test
-	void authentificationWithUserPasswordParamsShouldReturnJwtWithIdentPayload() throws Exception {
-		AuthFixtures.setUpValidUsernamePasswordAuth(DUMMY_USER_IDENTIFIER, remoteGitManagerRestrictedFactoryMock);
-		
+	void authentificationWithUserPasswordParamsShouldReturn400BadRequest() {
+		// as above - username/password authentication is no longer supported
 		Response response = target(AUTH_TARGET)
 				.request()
 //				.header(HttpHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded") // is implied by the below
 				.post(Entity.form(new Form().param("username", "dummyUsername").param("password", "dummyPassword")));
-		
-		assertEquals(Status.OK.getStatusCode(), response.getStatus());
-		
-		String token = IOUtils.toString((InputStream)response.getEntity(), StandardCharsets.UTF_8);
-		
+
+		assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+	}
+
+	@Test
+	void successfulGitLabOauthAuthentificationShouldReturnJwtWithIdentPayload() throws Exception {
+		Response authRedirectResponse = target(AUTH_TARGET + "/gitlab").request().get();
+		assertEquals(Status.TEMPORARY_REDIRECT.getStatusCode(), authRedirectResponse.getStatus());
+		assertTrue(authRedirectResponse.getLocation().toString().startsWith(CATMAPropertyKey.GITLAB_SERVER_URL.getValue() + "/oauth/authorize"));
+
+		String query = authRedirectResponse.getLocation().getQuery();
+		List<NameValuePair> queryParams = URLEncodedUtils.parse(URLDecoder.decode(query, StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+		Map<String, String> queryParamsMap = queryParams.stream().collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue));
+		String state = queryParamsMap.get("state");
+
+		AuthFixtures.setUpValidGitLabOauth(DUMMY_USER_IDENTIFIER, remoteGitManagerRestrictedFactoryMock, httpClientFactoryMock);
+
+		Response authResponse = target(AUTH_TARGET + "/gitlab/callback")
+				.queryParam("code", "dummy_code")
+				.queryParam("state", state)
+				.request().get();
+		assertEquals(Status.OK.getStatusCode(), authResponse.getStatus());
+
+		String token = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
+
 		SignedJWT signedJWT = SignedJWT.parse(token);
 		JWSVerifier verifier = new MACVerifier(CATMAPropertyKey.API_HMAC_SECRET.getValue());
-		
+
 		assertTrue(signedJWT.verify(verifier));
-		
+
 		String userIdentifier = signedJWT.getJWTClaimsSet().getSubject();
-		
+
 		assertEquals(DUMMY_USER_IDENTIFIER, userIdentifier);
+	}
+
+	@Test
+	void gitLabOauthCallbackWithoutRequiredParamsShouldReturn400BadRequest() {
+		Response authResponse = target(AUTH_TARGET + "/gitlab/callback").request().get(); // no 'code' or 'state' params
+		assertEquals(Status.BAD_REQUEST.getStatusCode(), authResponse.getStatus());
+	}
+
+	@Test
+	void gitLabOauthCallbackWithInvalidStateShouldReturn500InternalServerError() throws Exception {
+		// need to do this so that the error is not due to a missing session attribute (CSRF token)
+		target(AUTH_TARGET + "/gitlab").request().get();
+
+		AuthFixtures.setUpValidGitLabOauth(DUMMY_USER_IDENTIFIER, remoteGitManagerRestrictedFactoryMock, httpClientFactoryMock);
+
+		String invalidState = String.format("%s=%s", OauthConstants.CSRF_TOKEN_STATE_PARAMETER_NAME, "invalid_state");
+
+		Response authResponse = target(AUTH_TARGET + "/gitlab/callback")
+				.queryParam("code", "dummy_code")
+				.queryParam("state", invalidState)
+				.request().get();
+		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), authResponse.getStatus());
+
+		// any failure produces a 500 response, and GitLabOauthHandler purposefully doesn't provide the caller with the exact reason
+		// the following exceptions should be logged:
+		// 1. SEVERE: GitLab OAuth: Internal error: CSRF token verification failed
+		// 2. SEVERE: Failed to process OAuth callback
+		//    de.catma.oauth.OauthException: Authentication failed, inspect logs
 	}
 	
 	@Test
@@ -302,7 +342,7 @@ class AuthServiceTest extends JerseyTest {
 				httpClientFactoryMock
 		);
 
-		String invalidState = String.format("%s=%s", GoogleOauthHandler.CSRF_TOKEN_STATE_PARAMETER_NAME, "invalid_state");
+		String invalidState = String.format("%s=%s", OauthConstants.CSRF_TOKEN_STATE_PARAMETER_NAME, "invalid_state");
 
 		Response authResponse = target(AUTH_TARGET + "/google/callback")
 				.queryParam("code", "dummy_code")

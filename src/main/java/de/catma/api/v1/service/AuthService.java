@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
 import java.util.logging.Level;
@@ -26,12 +25,15 @@ import com.nimbusds.jwt.SignedJWT;
 
 import de.catma.api.v1.AuthConstants;
 import de.catma.api.v1.backend.AccessTokenRemoteGitManagerRestrictedProvider;
-import de.catma.api.v1.backend.CredentialsRemoteGitManagerRestrictedProvider;
+import de.catma.api.v1.backend.OauthTokenRemoteGitManagerRestrictedProvider;
 import de.catma.api.v1.backend.interfaces.RemoteGitManagerPrivilegedFactory;
 import de.catma.api.v1.backend.interfaces.RemoteGitManagerRestrictedFactory;
 import de.catma.api.v1.oauth.interfaces.HttpClientFactory;
 import de.catma.api.v1.oauth.interfaces.SessionStorageHandler;
 import de.catma.api.v1.cache.RemoteGitManagerRestrictedProviderCache;
+import de.catma.oauth.GitLabOauthHandler;
+import de.catma.oauth.GitLabOauthTokenProvider;
+import de.catma.oauth.GitLabOauthTokens;
 import de.catma.oauth.GoogleOauthHandler;
 import de.catma.oauth.OauthException;
 import de.catma.oauth.OauthIdentity;
@@ -80,23 +82,19 @@ public class AuthService {
 	@Produces(MediaType.TEXT_PLAIN)
 	// swagger:
 	@Operation(
-			description = "Authenticate using one of: 'Authorization' header ('Basic' or 'Bearer' schemes), 'access_token' form parameter, or 'username' and " +
-					"'password' form parameters. The options should be viewed as mutually exclusive. The form parameters are merely an alternative to using " +
-					"the 'Authorization' header with the corresponding scheme. Returns a JWT that should be used to authenticate requests to any of the " +
-					"other, non-authentication endpoints (which only accept bearer authentication). Note that you won't be able to test the header option " +
-					"in Swagger UI.",
+			description = "Authenticate with a CATMA access token, supplied either in the 'Authorization' header ('Bearer' scheme) or as the " +
+					"'access_token' form parameter. The options should be viewed as mutually exclusive. Returns a JWT that should be used to authenticate " +
+					"requests to any of the other, non-authentication endpoints (which only accept bearer authentication). Note that you won't be able to " +
+					"test the header option in Swagger UI. If you don't have an access token, use the /auth/gitlab or /auth/google endpoints instead.",
 			requestBody = @RequestBody(
-					description = "Optional form parameters, partially required if no 'Authorization' header is supplied. Send either a CATMA access token " +
-							"or your username and password.",
+					description = "Optional form parameter, required if no 'Authorization' header is supplied. Send a CATMA access token.",
 					// the content schema is detected just fine automatically if we don't define the requestBody at all, but if we define it with only the
 					// description, then the parameters aren't displayed
 					content = @Content(
 							schema = @Schema(
 									type = "object",
 									properties = {
-											@StringToClassMapItem(key = AuthConstants.AUTH_ENDPOINT_TOKEN_FORM_PARAMETER_NAME, value = String.class),
-											@StringToClassMapItem(key = "username", value = String.class),
-											@StringToClassMapItem(key = "password", value = String.class)
+											@StringToClassMapItem(key = AuthConstants.AUTH_ENDPOINT_TOKEN_FORM_PARAMETER_NAME, value = String.class)
 									}
 							)
 					)
@@ -108,9 +106,8 @@ public class AuthService {
 			}
 	)
 	public Response authenticate(
-			@HeaderParam(HttpHeaders.AUTHORIZATION) String authorization, // basic (username/password) or bearer (token) auth schemes
-			@FormParam(AuthConstants.AUTH_ENDPOINT_TOKEN_FORM_PARAMETER_NAME) String accessToken,
-			@FormParam("username") String username, @FormParam("password") String password)
+			@HeaderParam(HttpHeaders.AUTHORIZATION) String authorization, // bearer (token) auth scheme
+			@FormParam(AuthConstants.AUTH_ENDPOINT_TOKEN_FORM_PARAMETER_NAME) String accessToken)
 	{
 		try {
 			if (authorization != null) {
@@ -118,24 +115,9 @@ public class AuthService {
 					String bearerToken = authorization.substring(AuthConstants.AUTHENTICATION_SCHEME_BEARER_PREFIX.length());
 					return Response.ok(authenticateWithBackendToken(bearerToken)).build();
 				}
-				else if (authorization.toLowerCase().startsWith(AuthConstants.AUTHENTICATION_SCHEME_BASIC_PREFIX.toLowerCase())) {
-					String[] usernamePassword = new String(
-							Base64.getDecoder().decode(
-									authorization.substring(AuthConstants.AUTHENTICATION_SCHEME_BASIC_PREFIX.length()).getBytes(StandardCharsets.UTF_8)
-							),
-							StandardCharsets.UTF_8
-					).split(":");
-
-					if (usernamePassword.length == 2) {
-						return Response.ok(authenticateWithUsernamePassword(usernamePassword[0], usernamePassword[1])).build();
-					}
-				}
 			}
 			else if (accessToken != null) {
 				return Response.ok(authenticateWithBackendToken(accessToken)).build();
-			}
-			else if (username != null && password != null) {
-				return Response.ok(authenticateWithUsernamePassword(username, password)).build();
 			}
 
 			return Response.status(Status.BAD_REQUEST).build();
@@ -145,8 +127,8 @@ public class AuthService {
 
 			// check for exceptions caused by invalid credentials
 			String message = ExceptionUtil.getMessageFor("org.gitlab4j.api.GitLabApiException", e);
-			if (message != null && (message.equals("invalid_grant") || message.equals("invalid_token") || message.equals("401 Unauthorized"))) {
-				// 'invalid_grant' = invalid username / password, 'invalid_token' or 401 = invalid token
+			if (message != null && (message.equals("invalid_token") || message.equals("401 Unauthorized"))) {
+				// 'invalid_token' or 401 = invalid token
 				return Response.status(Status.UNAUTHORIZED).build();
 			}
 
@@ -154,6 +136,78 @@ public class AuthService {
 		}
 	}
 	
+	@GET
+	@Path("/gitlab")
+	// swagger:
+	@Operation(
+			description = "Authenticate with your CATMA account. Only use this if you log in to CATMA with a username/email address and password. A browser " +
+					"is required to complete the OAuth flow. Redirects to CATMA's GitLab backend and, if successfully authenticated, responds in the same " +
+					"way as the /auth endpoint. Note that you won't be able to test this in Swagger UI (but you can easily visit the URL in a separate tab " +
+					"to try it out).",
+			responses = {
+					@ApiResponse(responseCode = "307", description = "Redirect to GitLab login")
+			}
+	)
+	public Response gitLabOauth() {
+		try {
+			URI authorizationUri = GitLabOauthHandler.getOauthAuthorizationRequestUri(
+					// appends '/callback' to the current URL path and strips any query params (as they would cause a redirectUrl mismatch)
+					uriInfo.getRequestUriBuilder().path("callback").replaceQuery("").build().toString(),
+					sessionStorageHandler::setAttribute,
+					null
+			);
+
+			return Response.temporaryRedirect(authorizationUri).build();
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Failed to perform OAuth redirection", e);
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
+	}
+
+	@Produces(MediaType.TEXT_PLAIN)
+	@GET
+	@Path("/gitlab/callback")
+	// swagger:
+	@Hidden
+	public Response gitLabOauthCallback(@QueryParam("code") String authorizationCode, @QueryParam("state") String state, @QueryParam("error") String error) {
+		try {
+			// state should always be present; if we don't get a code, we *should* get an error
+			if (state == null || (authorizationCode == null && error == null)) {
+				return Response.status(Status.BAD_REQUEST).build();
+			}
+
+			if (authorizationCode == null && error.equals("access_denied")) {
+				// the user cancelled the auth process with GitLab or didn't allow the requested access
+				String requestUrl = uriInfo.getRequestUri().toString();
+				String gitLabAuthUrl = requestUrl.substring(0, requestUrl.lastIndexOf("/")); // removes '/callback' and any query params
+				return Response.ok(
+						"You seem to have cancelled the sign-in or you didn't allow the requested access. " +
+								"To restart the process and try again, please visit the following URL:\n" + gitLabAuthUrl
+				).build();
+			}
+
+			// strips any query params (prevents redirectUrl mismatch)
+			String redirectUrl = uriInfo.getRequestUriBuilder().replaceQuery("").build().toString();
+
+			Pair<GitLabOauthTokens, Map<String, String>> resultPair = GitLabOauthHandler.handleCallbackAndGetTokens(
+					authorizationCode,
+					state,
+					error,
+					redirectUrl,
+					httpClientFactory.create(),
+					sessionStorageHandler::getAttribute,
+					sessionStorageHandler::setAttribute
+			);
+
+			return Response.ok(authenticateWithOauthTokens(resultPair.getFirst(), redirectUrl)).build();
+		}
+		catch (Exception e) {
+			logger.log(Level.SEVERE, "Failed to process OAuth callback", e);
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
+	}
+
 	@GET
 	@Path("/google")
 	// swagger:
@@ -220,11 +274,16 @@ public class AuthService {
 		return createJWToken(remoteGitManagerRestricted.getUser());
 	}
 	
-	private String authenticateWithUsernamePassword(String username, String password) throws IOException, JOSEException {
-		RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitMangerRestrictedFactory.create(username, password);
+	private String authenticateWithOauthTokens(GitLabOauthTokens oauthTokens, String redirectUrl) throws IOException, JOSEException {
+		GitLabOauthTokenProvider oauthTokenProvider = new GitLabOauthTokenProvider(oauthTokens, redirectUrl, httpClientFactory::create);
 
-		remoteGitManagerRestrictedProviderCache.put(remoteGitManagerRestricted.getUsername(), new CredentialsRemoteGitManagerRestrictedProvider(username, password, remoteGitMangerRestrictedFactory));
-		
+		RemoteGitManagerRestricted remoteGitManagerRestricted = remoteGitMangerRestrictedFactory.create(oauthTokenProvider);
+
+		remoteGitManagerRestrictedProviderCache.put(
+				remoteGitManagerRestricted.getUsername(),
+				new OauthTokenRemoteGitManagerRestrictedProvider(oauthTokenProvider, remoteGitMangerRestrictedFactory)
+		);
+
 		return createJWToken(remoteGitManagerRestricted.getUser());
 	}
 	

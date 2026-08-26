@@ -11,7 +11,6 @@ public class AuthConstants {
     );
 
     public static final String AUTHENTICATION_SCHEME_BEARER_PREFIX = "Bearer ";
-    public static final String AUTHENTICATION_SCHEME_BASIC_PREFIX = "Basic ";
 
     // form parameters - if Authorization header is not used
     // initial auth only, GitLab impersonation or personal access token, swapped for a JWT

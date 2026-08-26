@@ -121,9 +121,7 @@ public class NotLoggedInMainView extends VerticalFlexLayout {
 
 		LabelButton btnSignUp = new LabelButton("Sign Up", event -> {
 			if (signupEmail != null) {				
-				CreateUserDialog createUserDialog = new CreateUserDialog(
-						"Create User", signupEmail, 
-						eventBus, loginService, initService, hazelCastService, sqliteService);
+				CreateUserDialog createUserDialog = new CreateUserDialog("Create User", signupEmail);
 				createUserDialog.show();
 				signupEmail = null;
 			}

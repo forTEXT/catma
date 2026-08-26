@@ -1,15 +1,12 @@
 package de.catma.ui.module.main.auth;
 
 import com.github.appreciated.material.MaterialTheme;
-import com.google.common.base.Joiner;
 import com.google.common.eventbus.EventBus;
-import com.vaadin.data.Binder;
-import com.vaadin.data.ValidationException;
-import com.vaadin.data.ValidationResult;
 import com.vaadin.event.Action;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.ThemeResource;
+import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.properties.CATMAPropertyKey;
@@ -18,40 +15,27 @@ import de.catma.ui.CatmaApplication;
 import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
-import de.catma.ui.module.main.ErrorHandler;
-import de.catma.user.UserData;
-import de.catma.util.ExceptionUtil;
 
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /**
  * SignInDialog allows users to sign in using one of three options:
- *  - username / email address and password
+ *  - a CATMA account (OAuth authorization code flow against the GitLab backend, where the user enters their credentials)
  *  - Google (OpenID Connect)
  *  - personal access token (hidden - accessed via keyboard shortcut Alt+P)
  *
  */
 public class SignInDialog extends AuthenticationDialog implements Action.Handler {
-	private final Logger logger = Logger.getLogger(this.getClass().getName());
-
 	private final LoginService loginservice;
 	private final InitializationService initService;
 	private final HazelCastService hazelCastService;
 	private final SqliteService sqliteService;
 	private final EventBus eventBus;
 
-	private final UserData userData = new UserData();
-
-	private final Binder<UserData> userDataBinder = new Binder<>();
-
 	private final Action personalAccessTokenAction =
 			new ShortcutAction("Alt+P", ShortcutAction.KeyCode.P, new int[] { ShortcutAction.ModifierKey.ALT });
 
 	private VerticalLayout regularSignInLayout;
-	private TextField tfUsername;
 	private Button btnRegularSignIn;
 	private Button googleSignInLink;
 
@@ -60,7 +44,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 	private Button btnPatSignIn;
 
 	public SignInDialog(
-			String caption, 
+			String caption,
 			LoginService loginService,
 			InitializationService initService,
 			HazelCastService hazelCastService,
@@ -95,7 +79,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 
 			if (regularSignInLayout.isVisible()) {
 				btnPatSignIn.removeClickShortcut();
-				tfUsername.focus();
+				btnRegularSignIn.focus();
 				btnRegularSignIn.setClickShortcut(ShortcutAction.KeyCode.ENTER);
 			}
 			else if (patSignInLayout.isVisible()) {
@@ -117,40 +101,9 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 	private void initActions() {
 		addActionHandler(this);
 
-		btnRegularSignIn.addClickListener(click -> {
-			// validate the bean
-			try {
-				userDataBinder.writeBean(userData);
-			}
-			catch (ValidationException e) {
-				Notification.show(
-						Joiner
-						.on("\n")
-						.join(e.getValidationErrors()
-								.stream()
-								.map(ValidationResult::getErrorMessage)
-								.collect(Collectors.toList())
-						)
-						, Notification.Type.ERROR_MESSAGE
-				);
-				return;
-			}
-
-			try {
-				loginservice.login(userData.getUsername(), userData.getPassword());
-				initMainView();
-			}
-			catch (IOException e) {
-				// TODO: distinguish between different types of exception, don't assume...
-				Notification.show("Login error", "Username or password wrong!", Notification.Type.ERROR_MESSAGE);
-
-				// TODO: under which circumstances does this occur (and is it relevant for btnPatSignIn's click listener too)?
-				String message = ExceptionUtil.getMessageFor("org.gitlab4j.api.GitLabApiException", e);
-				if (message != null && !message.equals("invalid_grant")) {
-					logger.log(Level.SEVERE, "Login services", e);
-				}
-			}
-		});
+		// this redirects to the GitLab backend, where the user enters their credentials - we return via the OAuth callback
+		// (see CatmaApplication.handleRequestOauth), so there is nothing else to do here
+		btnRegularSignIn.addClickListener(this::gitLabLinkClickListener);
 
 		googleSignInLink.addClickListener(this::googleLinkClickListener);
 
@@ -180,23 +133,15 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 		Label lblChoice = new Label("Please choose one of the options below:");
 		lblChoice.setWidth("100%");
 
-		Panel pnlEmail = new Panel("Option 1: Username / Email Address and Password");
+		Panel pnlEmail = new Panel("Option 1: CATMA Account");
 		pnlEmail.setStyleName("email-panel");
 		VerticalLayout pnlEmailContent = new VerticalLayout();
 
-		tfUsername = new TextField("Username or Email Address");
-		tfUsername.setWidth("100%");
-
-		userDataBinder.forField(tfUsername)
-				.asRequired("Username / email address is required")
-				.bind(UserData::getUsername, UserData::setUsername);
-
-		PasswordField pfPassword = new PasswordField("Password");
-		pfPassword.setWidth("100%");
-
-		userDataBinder.forField(pfPassword)
-				.asRequired("Password is required")
-				.bind(UserData::getPassword, UserData::setPassword);
+		Label lblRegularSignIn = new Label(
+				"You will be redirected to CATMA's GitLab backend, where you can sign in with your username or email address and your password.",
+				ContentMode.HTML
+		);
+		lblRegularSignIn.setWidth("100%");
 
 		HorizontalLayout hlForgotPasswordAndButton = new HorizontalLayout();
 		hlForgotPasswordAndButton.setWidth("100%");
@@ -215,8 +160,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 		hlForgotPasswordAndButton.setComponentAlignment(btnRegularSignIn, Alignment.BOTTOM_RIGHT);
 		hlForgotPasswordAndButton.setExpandRatio(forgotPasswordLink, 1f);
 
-		pnlEmailContent.addComponent(tfUsername);
-		pnlEmailContent.addComponent(pfPassword);
+		pnlEmailContent.addComponent(lblRegularSignIn);
 		pnlEmailContent.addComponent(hlForgotPasswordAndButton);
 		pnlEmail.setContent(pnlEmailContent);
 
@@ -288,7 +232,7 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 	@Override
 	public void attach() {
 		super.attach();
-		tfUsername.focus();
+		btnRegularSignIn.focus();
 	}
 
 	public void show() {

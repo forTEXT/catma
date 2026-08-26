@@ -42,11 +42,6 @@ import java.util.stream.Collectors;
  *    that can then be used to authenticate the user.
  */
 public class GoogleOauthHandler {
-    public static final String OAUTH_CSRF_TOKEN_SESSION_ATTRIBUTE_NAME = "OAUTH_CSRF_TOKEN";
-    private static final String OAUTH_NONCE_SESSION_ATTRIBUTE_NAME = "OAUTH_NONCE";
-
-    public static final String CSRF_TOKEN_STATE_PARAMETER_NAME = "csrf_token";
-
     private static final Logger logger = Logger.getLogger(GoogleOauthHandler.class.getName());
 
     /**
@@ -69,10 +64,12 @@ public class GoogleOauthHandler {
         String nonce = new BigInteger(130, new SecureRandom()).toString(32);
 
         // add csrfToken and nonce to the session - these are verified later in the flow (handleCallbackAndGetIdentity)
-        sessionSetAttributeFn.accept(OAUTH_CSRF_TOKEN_SESSION_ATTRIBUTE_NAME, csrfToken);
-        sessionSetAttributeFn.accept(OAUTH_NONCE_SESSION_ATTRIBUTE_NAME, nonce);
+        sessionSetAttributeFn.accept(OauthConstants.OAUTH_CSRF_TOKEN_SESSION_ATTRIBUTE_NAME, csrfToken);
+        sessionSetAttributeFn.accept(OauthConstants.OAUTH_NONCE_SESSION_ATTRIBUTE_NAME, nonce);
+        // the provider allows the callback to be dispatched to this handler rather than GitLabOauthHandler
+        sessionSetAttributeFn.accept(OauthConstants.OAUTH_PROVIDER_SESSION_ATTRIBUTE_NAME, OauthConstants.OauthProvider.GOOGLE.name());
 
-        String state = String.format("%s=%s", CSRF_TOKEN_STATE_PARAMETER_NAME, csrfToken);
+        String state = String.format("%s=%s", OauthConstants.CSRF_TOKEN_STATE_PARAMETER_NAME, csrfToken);
 
         // extra parameters that allow us to recover the context when the user returns to our application (eg: action and token for invitations)
         if (optionalStateParams != null && !optionalStateParams.isEmpty()) {
@@ -119,8 +116,8 @@ public class GoogleOauthHandler {
             @NotNull Function<String, Object> sessionGetAttributeFn, @NotNull BiConsumer<String, Object> sessionSetAttributeFn
     ) throws OauthException {
         try {
-            Object expectedCsrfToken = sessionGetAttributeFn.apply(OAUTH_CSRF_TOKEN_SESSION_ATTRIBUTE_NAME);
-            Object expectedNonce = sessionGetAttributeFn.apply(OAUTH_NONCE_SESSION_ATTRIBUTE_NAME);
+            Object expectedCsrfToken = sessionGetAttributeFn.apply(OauthConstants.OAUTH_CSRF_TOKEN_SESSION_ATTRIBUTE_NAME);
+            Object expectedNonce = sessionGetAttributeFn.apply(OauthConstants.OAUTH_NONCE_SESSION_ATTRIBUTE_NAME);
 
             if (expectedCsrfToken == null || expectedNonce == null) {
                 throw new OauthException("Internal error: Either one of or both CSRF token and nonce were not present in the session");
@@ -137,7 +134,7 @@ public class GoogleOauthHandler {
             // verify csrf token
             // this is the only state parameter that we care about in this context, any others are not related to the OAuth flow
             // we remove it from the parameters map so that the remaining ones can be returned to the caller
-            String receivedCsrfToken = stateParamsMap.remove(CSRF_TOKEN_STATE_PARAMETER_NAME);
+            String receivedCsrfToken = stateParamsMap.remove(OauthConstants.CSRF_TOKEN_STATE_PARAMETER_NAME);
             if (!receivedCsrfToken.equals(expectedCsrfToken)) {
                 throw new OauthException("Internal error: CSRF token verification failed");
             }
@@ -198,8 +195,9 @@ public class GoogleOauthHandler {
         }
         finally {
             // clear the session attributes (prevents replay attacks)
-            sessionSetAttributeFn.accept(OAUTH_CSRF_TOKEN_SESSION_ATTRIBUTE_NAME, null);
-            sessionSetAttributeFn.accept(OAUTH_NONCE_SESSION_ATTRIBUTE_NAME, null);
+            sessionSetAttributeFn.accept(OauthConstants.OAUTH_CSRF_TOKEN_SESSION_ATTRIBUTE_NAME, null);
+            sessionSetAttributeFn.accept(OauthConstants.OAUTH_NONCE_SESSION_ATTRIBUTE_NAME, null);
+            sessionSetAttributeFn.accept(OauthConstants.OAUTH_PROVIDER_SESSION_ATTRIBUTE_NAME, null);
         }
     }
 }

@@ -78,9 +78,7 @@ public class RequestTokenHandler {
 					
 					@Override
 					public void tokenValid(AccountSignupToken signupToken) {
-						CreateUserDialog createUserDialog = new CreateUserDialog(
-								"Create User", signupToken.email(), 
-								eventBus, loginService, initService, hazelCastService, sqliteService);
+						CreateUserDialog createUserDialog = new CreateUserDialog("Create User", signupToken.email());
 						createUserDialog.show();
 					}
 					

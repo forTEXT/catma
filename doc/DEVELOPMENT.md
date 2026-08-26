@@ -82,6 +82,8 @@ BASE_URL=http://localhost:8080/
 TEMP_DIR=/your/path/to/catma/temp
 GITLAB_SERVER_URL=http://localhost:8088
 GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN=your-admin-personal-access-token
+GITLAB_OAUTH_CLIENT_ID=your-oauth-application-id
+GITLAB_OAUTH_CLIENT_SECRET=your-oauth-application-secret
 GIT_REPOSITORY_BASE_PATH=/your/path/to/catma/repo/git
 SQLITE_DB_BASE_PATH=/your/path/to/catma/db
 RESET_PASSWORD_URL=http://localhost:8088/users/password/new
@@ -92,6 +94,28 @@ API_HMAC_SECRET=your-long-and-random-secret
 
 Finally, you can simply run the following to start the Jetty server:
 `mvn jetty:run`
+
+#### The GitLab OAuth Application
+
+Signing in to CATMA is an OAuth authorization code flow against your GitLab server, so you have to register an application there before anyone can log in.
+In GitLab, go to *Admin → Applications → New application* and set:
+- **Name**: CATMA
+- **Redirect URI** (one per line):
+  ```
+  http://localhost:8080/
+  http://localhost:8080/api/v1/auth/gitlab/callback
+  ```
+  These must match `BASE_URL` exactly (including the trailing slash), plus the same value with `api/v1/auth/gitlab/callback` appended for the REST API.
+- **Confidential**: checked
+- **Trusted**: checked - this skips the authorization (consent) screen, which is appropriate because CATMA is a first-party application
+- **Scopes**: `api` and `write_repository`
+
+Copy the resulting *Application ID* and *Secret* into `GITLAB_OAUTH_CLIENT_ID` and `GITLAB_OAUTH_CLIENT_SECRET`. The secret is stored hashed by GitLab and is
+only shown immediately after creation.
+
+Note that this replaces the resource owner password credentials (ROPC) grant that CATMA used previously, which GitLab removed in version 19.0. Users now enter
+their credentials on GitLab's own login page rather than in CATMA, which is why *Settings → General → Sign-in restrictions → Allow password and passkey
+authentication for the web interface* must remain enabled.
 
 #### Additional Notes
 

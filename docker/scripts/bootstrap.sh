@@ -237,9 +237,11 @@ then
   cp /opt/catma/assets/catma-gitlab-combo-favicon.ico /opt/catma/assets/catma-gitlab-combo-logo-blue-on-white-pill-50a.svg "$GITLAB_UPLOADS_DIR"
   chown git:git ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-favicon.ico ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-logo-blue-on-white-pill-50a.svg
   ADMIN_TOKEN=$(pwgen -snc 20 1)
+  # the OAuth application credentials are written to a file rather than stdout, as stdout ends up in the log file above
+  OAUTH_CREDS_PATH=$(mktemp)
   # https://docs.gitlab.com/administration/operations/rails_console/#using-the-rails-runner
   gitlab-rails runner /opt/catma/scripts/gitlab_config.rb --app_url "$CATMA_URL" --admin_token "$ADMIN_TOKEN" --pat_prefix "$PAT_PREFIX" \
-    --du_username "$DU_USERNAME" --du_password "$DU_PASSWORD" &>> "$GITLAB_CONFIG_LOG_PATH"
+    --oauth_creds_path "$OAUTH_CREDS_PATH" --du_username "$DU_USERNAME" --du_password "$DU_PASSWORD" &>> "$GITLAB_CONFIG_LOG_PATH"
   if [[ $? -ne 0 ]]
   then
     cat << EOF
@@ -254,6 +256,13 @@ EOF
   fi
   sed -i "s|^\(GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN=\).*$|\1${PAT_PREFIX}${ADMIN_TOKEN}|" "$CATMA_PROPERTIES_PATH"
   sed -i "s|^\(API_HMAC_SECRET=\).*$|\1$(pwgen -snc 32 1)|" "$CATMA_PROPERTIES_PATH"
+
+  # OAuth application credentials, as written by gitlab_config.rb (these are what users sign in through, see GitLabOauthHandler)
+  # shellcheck disable=SC1090
+  source "$OAUTH_CREDS_PATH"
+  rm -f "$OAUTH_CREDS_PATH"
+  sed -i "s|^\(GITLAB_OAUTH_CLIENT_ID=\).*$|\1${GITLAB_OAUTH_CLIENT_ID}|" "$CATMA_PROPERTIES_PATH"
+  sed -i "s|^\(GITLAB_OAUTH_CLIENT_SECRET=\).*$|\1${GITLAB_OAUTH_CLIENT_SECRET}|" "$CATMA_PROPERTIES_PATH"
 fi
 
 # 8. start Jetty

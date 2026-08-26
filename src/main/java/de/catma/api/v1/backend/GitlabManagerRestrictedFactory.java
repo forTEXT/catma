@@ -3,6 +3,7 @@ package de.catma.api.v1.backend;
 import java.io.IOException;
 
 import de.catma.api.v1.backend.interfaces.RemoteGitManagerRestrictedFactory;
+import de.catma.oauth.GitLabOauthTokenProvider;
 import de.catma.repository.git.managers.GitlabManagerRestricted;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 
@@ -14,8 +15,8 @@ public class GitlabManagerRestrictedFactory implements RemoteGitManagerRestricte
 	}
 
 	@Override
-	public RemoteGitManagerRestricted create(String username, String password) throws IOException {
-		return new GitlabManagerRestricted(username, password);
+	public RemoteGitManagerRestricted create(GitLabOauthTokenProvider oauthTokenProvider) throws IOException {
+		return new GitlabManagerRestricted(oauthTokenProvider);
 	}
 
 }

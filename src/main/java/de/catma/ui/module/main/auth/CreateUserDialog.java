@@ -1,7 +1,6 @@
 package de.catma.ui.module.main.auth;
 
 import com.google.common.base.Joiner;
-import com.google.common.eventbus.EventBus;
 import com.vaadin.data.Binder;
 import com.vaadin.data.ValidationException;
 import com.vaadin.server.Page;
@@ -9,51 +8,35 @@ import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
 import com.vaadin.ui.Notification.Type;
 
-import de.catma.hazelcast.HazelCastService;
+import de.catma.oauth.OauthConstants;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
-import de.catma.sqlite.SqliteService;
-import de.catma.ui.CatmaApplication;
-import de.catma.ui.events.routing.RouteToDashboardEvent;
-import de.catma.ui.login.InitializationService;
-import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.user.UserData;
-import de.catma.user.signup.AccountSignupToken;
 
 import java.io.IOException;
 import java.util.stream.Collectors;
 
 /**
  * Dialog for user creation. The email address has already been verified and must not be changed.
+ * <p>
+ * The account is created on the GitLab backend, after which the user is sent through the OAuth flow to sign in with the credentials they just chose (we can't
+ * sign them in directly, as that would require the deprecated and since removed resource owner password credentials grant).
  */
-public class CreateUserDialog extends Window {
+public class CreateUserDialog extends AuthenticationDialog {
 	private final String emailAddress;
 	private final RemoteGitManagerPrivileged gitlabManagerPrivileged;
 
 	private final Binder<UserData> userBinder = new Binder<>();
 	private final UserData userData = new UserData();
-	
-	private final EventBus eventBus;
-	private final InitializationService initService;
-	private final LoginService loginservice;
-	private final HazelCastService hazelCastService;
-	private final SqliteService sqliteService;
 
 
-	public CreateUserDialog(
-			String caption, final String emailAddress, EventBus eventBus, 
-			LoginService loginservice, InitializationService initService, HazelCastService hazelCastService, SqliteService sqliteService) {
+	public CreateUserDialog(String caption, final String emailAddress) {
 		super(caption);
 
 		this.emailAddress = emailAddress;
 		this.gitlabManagerPrivileged = new GitlabManagerPrivileged();
-		this.eventBus = eventBus;
-		this.loginservice = loginservice;
-		this.initService = initService;
-		this.hazelCastService = hazelCastService;
-		this.sqliteService = sqliteService;
 
 		setWidth("50%");
 		setHeight("80%");
@@ -66,7 +49,11 @@ public class CreateUserDialog extends Window {
 		VerticalLayout content = new VerticalLayout();
 		content.setSizeFull();
 		
-		Label lDescription = new Label("Please complete your sign-up by filling out this form:", ContentMode.HTML);
+		Label lDescription = new Label(
+				"Please complete your sign-up by filling out this form.<br />"
+						+ "You will then be redirected to CATMA's GitLab backend, where you can sign in with the credentials you choose here.",
+				ContentMode.HTML
+		);
 		
 		TextField tfUsername = new TextField("Username");
 		tfUsername.setWidth("100%");
@@ -147,13 +134,13 @@ public class CreateUserDialog extends Window {
 						userData.getEmail(),
 						userData.getUsername(), userData.getPassword(),
 						userData.getUsername());
-				
-				loginservice.login(userData.getUsername(), userData.getPassword());
-				
-				initMainView();
-				
+
+				// send the user through the OAuth flow to sign in with the credentials they just chose
+				// we must not forward the action and token request parameters, as the signup token has already been consumed at this point
+				redirectToOauthProvider(OauthConstants.OauthProvider.GITLAB, false);
+				return;
 			} catch (IOException e) {
-				((ErrorHandler) UI.getCurrent()).showAndLogError("Couldn't create token in backend", e);
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Couldn't create user in backend", e);
 			}
 			this.close();
 		});
@@ -169,13 +156,5 @@ public class CreateUserDialog extends Window {
 		super.close();
 		Page.getCurrent().replaceState(CATMAPropertyKey.BASE_URL.getValue());
 	}
-	
-	private void initMainView() {
-		Component mainView = initService.newEntryPage(eventBus, loginservice, hazelCastService, sqliteService);
-		UI.getCurrent().setContent(mainView);
-		eventBus.post(new RouteToDashboardEvent());
-		close();
-		((CatmaApplication)UI.getCurrent()).handleRequestToken();
-	}
-	
+
 }

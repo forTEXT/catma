@@ -70,6 +70,11 @@ public enum CATMAPropertyKey {
 	GOOGLE_OAUTH_CLIENT_ID,
 	GOOGLE_OAUTH_CLIENT_SECRET,
 
+	// credentials of the instance-wide OAuth application that must be registered on the GitLab server (see doc/SELF-HOSTING.md)
+	// the corresponding endpoints are derived from GITLAB_SERVER_URL
+	GITLAB_OAUTH_CLIENT_ID,
+	GITLAB_OAUTH_CLIENT_SECRET,
+
 	ABOUT_URL("https://catma.de"),
 	IMPRINT_URL("https://catma.de/about/imprint/"),
 	TERMS_OF_USE_URL("https://catma.de/documentation/terms-of-use/"),
