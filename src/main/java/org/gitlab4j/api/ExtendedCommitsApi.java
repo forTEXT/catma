@@ -7,6 +7,12 @@ import javax.ws.rs.core.Form;
 import org.gitlab4j.api.models.Commit;
 import org.gitlab4j.api.utils.ISO8601;
 
+/**
+ * Extends {@link CommitsApi} with support for the <code>author</code> query parameter, which is absent from all of upstream's <code>getCommits</code>
+ * overloads (as of 5.8.1), and returns an {@link EnhancedPager} rather than a {@link Pager}.
+ * <p>
+ * NB: this class lives in gitlab4j's own package because it needs package-private members ({@link GitLabApiForm}, {@link AbstractApi#getProjectIdOrPath}).
+ */
 public class ExtendedCommitsApi extends CommitsApi {
 
 	public ExtendedCommitsApi(GitLabApi gitLabApi) {

@@ -96,16 +96,9 @@ template is `src/main/resources/catma.properties`.
 purpose. Similarly, `src/main/java/org/gitlab4j/api/EnhancedPager.java` and `Extended*.java` patch gitlab4j from inside its package (they need
 package-private members like `GitLabApiForm`, `AbstractApi.get` and the `Pager` constructor). Don't "clean these up" into `de.catma`.
 
-Each of those exists because upstream is still missing something, so check before assuming any of them is redundant:
-
-- `EnhancedPager` is a full copy of `Pager` with the bounds check in `page()` removed. GitLab's commits endpoint returns no `X-Total`/`X-Total-Pages`
-  headers, which leaves upstream's `totalPages`/`totalItems` at `-1` — its `X-Next-Page` fallback only rescues `hasNext()`. `page()` still tests
-  `pageNumber > totalPages && pageNumber > kaminariNextPage`, and with `totalPages == -1` the left side is true for every valid page number, so the
-  guard collapses to `pageNumber > kaminariNextPage` and throws `NoSuchElementException` on any forward jump of more than one page — which
-  `ProjectEventPanel` permits via `setAllowInputPastLastPageNumber(true)`. On the last page `kaminariNextPage` also becomes `-1`, after which every
-  page number throws.
-- `ExtendedCommitsApi` adds the `author` query parameter, absent from all of upstream's `getCommits` overloads.
-- `ExtendedProject`/`ExtendedProjectApi` add `import_error`; `ExtendedProjectFilter`/`ExtendedGroupFilter` add the `active` parameter.
+Each exists because upstream is still missing something — the class comment in each one says what, so read it before assuming any of them is redundant.
+`EnhancedPager` is a copy of upstream's `Pager` rather than a subclass: when bumping gitlab4j-api, diff it against the new `Pager` and port any upstream
+changes across.
 
 ### In-memory graph & indexing
 
@@ -168,3 +161,23 @@ language detection).
 - Existing Java sources are indented with **tabs**; lines run long (the `.editorconfig` — a large IDEA export — sets `max_line_length = 160` but
   declares spaces at the root level, which the codebase does not follow). Match the surrounding file.
 - `.aiignore` marks files that should not be fed to AI tooling (all `*.properties`, `doc/`, `.run/`, `testdocs/`, build output).
+
+### Where documentation belongs
+
+Put an explanation next to the thing it explains, at the narrowest scope that fits, and write it only once:
+
+- **Why a class or workaround exists** → a comment in that class. This is the default for anything surprising: a local patch of a third-party class, a
+  field that must not be reordered, a guard that looks removable. Someone editing the file must be able to see the reason without consulting git.
+- **How a subsystem fits together** → this file, at a level that stays true as the code changes. Don't restate what a class comment already says.
+- **Operator-facing setup** → `doc/`, `docker/README.md` and the `catma.properties` template.
+- **Why a change was made** → the commit message.
+
+### Commit messages
+
+Subject in the imperative, then a blank line, then prose explaining **why**. Keep it short — a reader wanting the detail has the diff, the code comments
+and this file.
+
+- State conclusions directly. Don't narrate the investigation that produced them ("diffing X against Y shows…", "after checking…") and don't cite
+  evidence for your own claims.
+- Explain the motivation and any non-obvious consequence. Don't list what changed file by file — the diff already says that.
+- If a detail is needed to work on the code rather than to understand the change, it belongs in a comment, not here.
