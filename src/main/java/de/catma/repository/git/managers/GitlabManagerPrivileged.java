@@ -12,7 +12,7 @@ import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.NotificationSettingsApi;
 import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.*;
-import org.gitlab4j.api.models.PersonalAccessToken.Scope;
+import org.gitlab4j.api.models.ImpersonationToken.Scope;
 
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -52,13 +52,13 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 		UserApi userApi = privilegedGitLabApi.getUserApi();
 
 		try {
-			List<PersonalAccessToken> impersonationTokens = userApi.getImpersonationTokens(
+			List<ImpersonationToken> impersonationTokens = userApi.getImpersonationTokens(
 				user.getId(), ImpersonationState.ACTIVE
 			);
 
 			// revoke the default token if it exists already
 			// we do this because the actual token string is only returned on creation and we don't store it
-			for (PersonalAccessToken token : impersonationTokens) {
+			for (ImpersonationToken token : impersonationTokens) {
 				if (token.getName().equals(GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME)) {
 					userApi.revokeImpersonationToken(user.getId(), token.getId());
 					break;
@@ -89,7 +89,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 		UserApi userApi = privilegedGitLabApi.getUserApi();
 
 		try {
-			PersonalAccessToken personalAccessToken = userApi.createPersonalAccessToken(
+			ImpersonationToken personalAccessToken = userApi.createPersonalAccessToken(
 					userId,
 					tokenName,
 					// GitLab ignores anything but the date component and interprets it as UTC
@@ -178,7 +178,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 		UserApi userApi = privilegedGitLabApi.getUserApi();
 
 		try {
-			PersonalAccessToken impersonationToken = userApi.createImpersonationToken(
+			ImpersonationToken impersonationToken = userApi.createImpersonationToken(
 					userId,
 					tokenName,
 					// GitLab ignores anything but the date component and interprets it as UTC

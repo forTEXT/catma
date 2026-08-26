@@ -14,7 +14,7 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.UserApi;
-import org.gitlab4j.api.models.PersonalAccessToken;
+import org.gitlab4j.api.models.ImpersonationToken;
 import org.gitlab4j.api.models.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -106,7 +106,7 @@ public class GitLabServerManagerTest {
 		assertEquals(gitlabManagerRestricted.getUser().getName(), matchedUser.getName());
 
 		// assert that the user has the expected impersonation token
-		List<PersonalAccessToken> impersonationTokens = userApi.getImpersonationTokens(gitlabManagerRestricted.getUser().getUserId());
+		List<ImpersonationToken> impersonationTokens = userApi.getImpersonationTokens(gitlabManagerRestricted.getUser().getUserId());
 
 		assertEquals(1, impersonationTokens.size());
 		assertEquals(GitlabManagerPrivileged.GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME, impersonationTokens.get(0).getName());

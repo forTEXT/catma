@@ -39,15 +39,16 @@ If you use IDEA, there are a few additional points worth noting:
 
 ### Forked Dependencies
 
-CATMA currently uses forked versions of `gitlab4j-api` and `org.vaadin.elements`. You need to install the custom builds in your local Maven repository using
-`mvn install:install-file -Dfile=<path-to-dependency-jar-file> -DpomFile=<path-to-dependency-pom-file>` (the installation commands are also shown in the next
+CATMA currently uses a forked version of `org.vaadin.elements`. You need to install the custom build in your local Maven repository using
+`mvn install:install-file -Dfile=<path-to-dependency-jar-file> -DpomFile=<path-to-dependency-pom-file>` (the installation command is also shown in the next
 section). The CATMA build won't succeed otherwise!
 
-You can find the pre-built JAR files and associated pom.xml files here:
-- gitlab4j-api - [JAR](https://github.com/forTEXT/gitlab4j-api/releases/download/gitlab4j-api-5.0.1-CATMA-v3/gitlab4j-api-5.0.1-CATMA-v3.jar)
-  | [pom.xml](https://github.com/forTEXT/gitlab4j-api/raw/refs/tags/gitlab4j-api-5.0.1-CATMA-v3/pom.xml)
+You can find the pre-built JAR file and associated pom.xml file here:
 - serverside-elements - [JAR](https://github.com/forTEXT/serverside-elements/releases/download/0.2.3-CATMA/elements-0.2.3-CATMA.jar)
   | [pom.xml](https://github.com/forTEXT/serverside-elements/raw/refs/tags/0.2.3-CATMA/elements/pom.xml)
+
+Note that `gitlab4j-api` used to be forked as well, but we now use the stock release from Maven Central. Stay on the 5.x line - 6.x requires Jakarta EE
+(`jakarta.ws.rs`, Jersey 3.x) and is incompatible with CATMA's javax-based stack (Vaadin 8, Jersey 2.x, `javax.servlet`).
 
 ### Building & Running for Testing Purposes
 
@@ -60,13 +61,10 @@ test, and cleaning up again) and are quite slow as a result.
 ```
 apt update && apt install openjdk-21-jdk maven git curl
 
-curl -L https://github.com/forTEXT/gitlab4j-api/releases/download/gitlab4j-api-5.0.1-CATMA-v3/gitlab4j-api-5.0.1-CATMA-v3.jar -o gitlab4j-api-5.0.1-CATMA-v3.jar
-curl -L https://github.com/forTEXT/gitlab4j-api/raw/refs/tags/gitlab4j-api-5.0.1-CATMA-v3/pom.xml -o gitlab4j-api-5.0.1-CATMA-v3.pom.xml
 curl -L https://github.com/forTEXT/serverside-elements/releases/download/0.2.3-CATMA/elements-0.2.3-CATMA.jar -o elements-0.2.3-CATMA.jar
 curl -L https://github.com/forTEXT/serverside-elements/raw/refs/tags/0.2.3-CATMA/elements/pom.xml -o elements-0.2.3-CATMA.pom.xml
 
 mvn install:install-file -Dfile=elements-0.2.3-CATMA.jar -DpomFile=elements-0.2.3-CATMA.pom.xml
-mvn install:install-file -Dfile=gitlab4j-api-5.0.1-CATMA-v3.jar -DpomFile=gitlab4j-api-5.0.1-CATMA-v3.pom.xml
 
 git clone https://github.com/forTEXT/catma
 cd catma

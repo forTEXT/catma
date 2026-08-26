@@ -12,7 +12,7 @@ CATMA has **no database of its own for project data**: a self-managed **GitLab s
 
 - JDK 21, Maven.
 - A dedicated self-managed GitLab server (<v19) with admin access. Not needed to compile, but needed to run or to execute the GitLab-backed tests.
-- **Two forked dependencies must be installed into the local Maven repo or the build will fail** (`gitlab4j-api 5.0.1-CATMA-v3`, `org.vaadin:elements 0.2.3-CATMA`). Download URLs and the exact `mvn install:install-file` commands are in `doc/DEVELOPMENT.md`.
+- **A forked dependency must be installed into the local Maven repo or the build will fail** (`org.vaadin:elements 0.2.3-CATMA`). Download URL and the exact `mvn install:install-file` command are in `doc/DEVELOPMENT.md`. `gitlab4j-api` uses the stock release (5.x — the 6.x line is Jakarta-based and incompatible with the javax stack).
 
 Full setup instructions: `doc/DEVELOPMENT.md`. Self-hosting: `doc/SELF-HOSTING.md`. Docker/standalone: `docker/README.md`.
 

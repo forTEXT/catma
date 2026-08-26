@@ -244,12 +244,13 @@
 		</dependency>
 
 		<!-- GitLab -->
-		<!-- TODO: update and review/remove custom/extended classes, e.g. EnhancedPager -->
+		<!-- NB: 5.x is the latest javax-based release line, 6.x requires Jakarta EE (jakarta.ws.rs, Jersey 3.x) and is therefore incompatible with our
+		     javax stack (Vaadin 8, Jersey 2.x, javax.servlet) -->
+		<!-- the remaining custom/extended classes in src/main/java/org/gitlab4j/api patch gaps that still exist upstream (see the class comments) -->
 		<dependency>
 			<groupId>org.gitlab4j</groupId>
 			<artifactId>gitlab4j-api</artifactId>
-			<!-- https://github.com/forTEXT/gitlab4j-api/releases/tag/gitlab4j-api-5.0.1-CATMA-v3 -->
-			<version>5.0.1-CATMA-v3</version>
+			<version>5.8.1</version>
 			<exclusions>
 				<!-- provided by Jetty -->
 				<exclusion>
