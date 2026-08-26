@@ -13,653 +13,653 @@
         <option name="configFiles">
           <list>
             <JettyConfigFile>
-              <option name="path" value="modules\deploy.mod" />
+              <option name="path" value="modules/deploy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="active" value="true" />
-              <option name="path" value="modules\http.mod" />
+              <option name="path" value="modules/http.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="active" value="true" />
-              <option name="path" value="modules\jmx.mod" />
+              <option name="path" value="modules/jmx.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\acceptratelimit.mod" />
+              <option name="path" value="modules/acceptratelimit.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\alpn-java.mod" />
+              <option name="path" value="modules/alpn-java.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\alpn.mod" />
+              <option name="path" value="modules/alpn.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\bytebufferpool-quadratic.mod" />
+              <option name="path" value="modules/bytebufferpool-quadratic.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\bytebufferpool.mod" />
+              <option name="path" value="modules/bytebufferpool.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\client.mod" />
+              <option name="path" value="modules/client.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\connectionlimit.mod" />
+              <option name="path" value="modules/connectionlimit.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\conscrypt.mod" />
+              <option name="path" value="modules/conscrypt.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\console-capture.mod" />
+              <option name="path" value="modules/console-capture.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\core-demos.mod" />
+              <option name="path" value="modules/core-demos.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\core-deploy.mod" />
+              <option name="path" value="modules/core-deploy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\cross-origin.mod" />
+              <option name="path" value="modules/cross-origin.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\customrequestlog.mod" />
+              <option name="path" value="modules/customrequestlog.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\debuglog.mod" />
+              <option name="path" value="modules/debuglog.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\delay-until-content.mod" />
+              <option name="path" value="modules/delay-until-content.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\demo-handler.mod" />
+              <option name="path" value="modules/demo-handler.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\demo-jaas.mod" />
+              <option name="path" value="modules/demo-jaas.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\demo-moved-context.mod" />
+              <option name="path" value="modules/demo-moved-context.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\demo-realm.mod" />
+              <option name="path" value="modules/demo-realm.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\demo-root.mod" />
+              <option name="path" value="modules/demo-root.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\demos.mod" />
+              <option name="path" value="modules/demos.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\disable-urlcache.mod" />
+              <option name="path" value="modules/disable-urlcache.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee-webapp.mod" />
+              <option name="path" value="modules/ee-webapp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-annotations.mod" />
+              <option name="path" value="modules/ee10-annotations.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-apache-jsp.mod" />
+              <option name="path" value="modules/ee10-apache-jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-cdi-decorate.mod" />
+              <option name="path" value="modules/ee10-cdi-decorate.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-cdi-spi.mod" />
+              <option name="path" value="modules/ee10-cdi-spi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-cdi.mod" />
+              <option name="path" value="modules/ee10-cdi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-async-rest.mod" />
+              <option name="path" value="modules/ee10-demo-async-rest.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-jaas.mod" />
+              <option name="path" value="modules/ee10-demo-jaas.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-jetty.mod" />
+              <option name="path" value="modules/ee10-demo-jetty.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-jndi.mod" />
+              <option name="path" value="modules/ee10-demo-jndi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-jsp.mod" />
+              <option name="path" value="modules/ee10-demo-jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-mock-resources.mod" />
+              <option name="path" value="modules/ee10-demo-mock-resources.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-proxy.mod" />
+              <option name="path" value="modules/ee10-demo-proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-rewrite.mod" />
+              <option name="path" value="modules/ee10-demo-rewrite.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-simple.mod" />
+              <option name="path" value="modules/ee10-demo-simple.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-spec.mod" />
+              <option name="path" value="modules/ee10-demo-spec.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demos.mod" />
+              <option name="path" value="modules/ee10-demos.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-deploy.mod" />
+              <option name="path" value="modules/ee10-deploy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-fcgi-proxy.mod" />
+              <option name="path" value="modules/ee10-fcgi-proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-glassfish-jstl.mod" />
+              <option name="path" value="modules/ee10-glassfish-jstl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-jaspi-default-auth-config-factory.mod" />
+              <option name="path" value="modules/ee10-jaspi-default-auth-config-factory.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-jaspi-demo.mod" />
+              <option name="path" value="modules/ee10-jaspi-demo.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-jaspi.mod" />
+              <option name="path" value="modules/ee10-jaspi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-jndi.mod" />
+              <option name="path" value="modules/ee10-jndi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-jsp.mod" />
+              <option name="path" value="modules/ee10-jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-jstl.mod" />
+              <option name="path" value="modules/ee10-jstl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-plus.mod" />
+              <option name="path" value="modules/ee10-plus.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-proxy.mod" />
+              <option name="path" value="modules/ee10-proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-quickstart.mod" />
+              <option name="path" value="modules/ee10-quickstart.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-security.mod" />
+              <option name="path" value="modules/ee10-security.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-servlet.mod" />
+              <option name="path" value="modules/ee10-servlet.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-servlets.mod" />
+              <option name="path" value="modules/ee10-servlets.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-webapp.mod" />
+              <option name="path" value="modules/ee10-webapp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-websocket-jakarta.mod" />
+              <option name="path" value="modules/ee10-websocket-jakarta.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-websocket-jetty-client-webapp.mod" />
+              <option name="path" value="modules/ee10-websocket-jetty-client-webapp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-websocket-jetty.mod" />
+              <option name="path" value="modules/ee10-websocket-jetty.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-annotations.mod" />
+              <option name="path" value="modules/ee8-annotations.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-apache-jsp.mod" />
+              <option name="path" value="modules/ee8-apache-jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-async-rest.mod" />
+              <option name="path" value="modules/ee8-demo-async-rest.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-jaas.mod" />
+              <option name="path" value="modules/ee8-demo-jaas.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-jetty.mod" />
+              <option name="path" value="modules/ee8-demo-jetty.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-jndi.mod" />
+              <option name="path" value="modules/ee8-demo-jndi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-jsp.mod" />
+              <option name="path" value="modules/ee8-demo-jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-mock-resources.mod" />
+              <option name="path" value="modules/ee8-demo-mock-resources.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-moved-context.mod" />
+              <option name="path" value="modules/ee8-demo-moved-context.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-proxy.mod" />
+              <option name="path" value="modules/ee8-demo-proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-rewrite.mod" />
+              <option name="path" value="modules/ee8-demo-rewrite.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-simple.mod" />
+              <option name="path" value="modules/ee8-demo-simple.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-spec.mod" />
+              <option name="path" value="modules/ee8-demo-spec.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demos.mod" />
+              <option name="path" value="modules/ee8-demos.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="active" value="true" />
-              <option name="path" value="modules\ee8-deploy.mod" />
+              <option name="path" value="modules/ee8-deploy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-glassfish-jstl.mod" />
+              <option name="path" value="modules/ee8-glassfish-jstl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-jndi.mod" />
+              <option name="path" value="modules/ee8-jndi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-jsp.mod" />
+              <option name="path" value="modules/ee8-jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-jstl.mod" />
+              <option name="path" value="modules/ee8-jstl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-openid.mod" />
+              <option name="path" value="modules/ee8-openid.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-plus.mod" />
+              <option name="path" value="modules/ee8-plus.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-proxy.mod" />
+              <option name="path" value="modules/ee8-proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-quickstart.mod" />
+              <option name="path" value="modules/ee8-quickstart.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-security.mod" />
+              <option name="path" value="modules/ee8-security.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-servlet.mod" />
+              <option name="path" value="modules/ee8-servlet.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-servlets.mod" />
+              <option name="path" value="modules/ee8-servlets.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-webapp.mod" />
+              <option name="path" value="modules/ee8-webapp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="active" value="true" />
-              <option name="path" value="modules\ee8-websocket-javax.mod" />
+              <option name="path" value="modules/ee8-websocket-javax.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-websocket-jetty-client-webapp.mod" />
+              <option name="path" value="modules/ee8-websocket-jetty-client-webapp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-websocket-jetty-client.mod" />
+              <option name="path" value="modules/ee8-websocket-jetty-client.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-websocket-jetty.mod" />
+              <option name="path" value="modules/ee8-websocket-jetty.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-annotations.mod" />
+              <option name="path" value="modules/ee9-annotations.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-apache-jsp.mod" />
+              <option name="path" value="modules/ee9-apache-jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-cdi-decorate.mod" />
+              <option name="path" value="modules/ee9-cdi-decorate.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-cdi-spi.mod" />
+              <option name="path" value="modules/ee9-cdi-spi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-cdi.mod" />
+              <option name="path" value="modules/ee9-cdi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-async-rest.mod" />
+              <option name="path" value="modules/ee9-demo-async-rest.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-jaas.mod" />
+              <option name="path" value="modules/ee9-demo-jaas.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-jetty.mod" />
+              <option name="path" value="modules/ee9-demo-jetty.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-jndi.mod" />
+              <option name="path" value="modules/ee9-demo-jndi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-jsp.mod" />
+              <option name="path" value="modules/ee9-demo-jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-mock-resources.mod" />
+              <option name="path" value="modules/ee9-demo-mock-resources.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-proxy.mod" />
+              <option name="path" value="modules/ee9-demo-proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-rewrite.mod" />
+              <option name="path" value="modules/ee9-demo-rewrite.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-simple.mod" />
+              <option name="path" value="modules/ee9-demo-simple.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-spec.mod" />
+              <option name="path" value="modules/ee9-demo-spec.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demos.mod" />
+              <option name="path" value="modules/ee9-demos.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-deploy.mod" />
+              <option name="path" value="modules/ee9-deploy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-fcgi-proxy.mod" />
+              <option name="path" value="modules/ee9-fcgi-proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-glassfish-jstl.mod" />
+              <option name="path" value="modules/ee9-glassfish-jstl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-jaspi-default-auth-config-factory.mod" />
+              <option name="path" value="modules/ee9-jaspi-default-auth-config-factory.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-jaspi-demo.mod" />
+              <option name="path" value="modules/ee9-jaspi-demo.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-jaspi.mod" />
+              <option name="path" value="modules/ee9-jaspi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-jndi.mod" />
+              <option name="path" value="modules/ee9-jndi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-jsp.mod" />
+              <option name="path" value="modules/ee9-jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-jstl.mod" />
+              <option name="path" value="modules/ee9-jstl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-openid.mod" />
+              <option name="path" value="modules/ee9-openid.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-plus.mod" />
+              <option name="path" value="modules/ee9-plus.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-proxy.mod" />
+              <option name="path" value="modules/ee9-proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-quickstart.mod" />
+              <option name="path" value="modules/ee9-quickstart.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-security.mod" />
+              <option name="path" value="modules/ee9-security.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-servlet.mod" />
+              <option name="path" value="modules/ee9-servlet.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-servlets.mod" />
+              <option name="path" value="modules/ee9-servlets.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-webapp.mod" />
+              <option name="path" value="modules/ee9-webapp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-websocket-jakarta.mod" />
+              <option name="path" value="modules/ee9-websocket-jakarta.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-websocket-jetty-client-webapp.mod" />
+              <option name="path" value="modules/ee9-websocket-jetty-client-webapp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-websocket-jetty.mod" />
+              <option name="path" value="modules/ee9-websocket-jetty.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ext.mod" />
+              <option name="path" value="modules/ext.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\fcgi-proxy.mod" />
+              <option name="path" value="modules/fcgi-proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\fcgi.mod" />
+              <option name="path" value="modules/fcgi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\flight-recorder.mod" />
+              <option name="path" value="modules/flight-recorder.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\gcloud-datastore.mod" />
+              <option name="path" value="modules/gcloud-datastore.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\gcloud.mod" />
+              <option name="path" value="modules/gcloud.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\graceful.mod" />
+              <option name="path" value="modules/graceful.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\gzip.mod" />
+              <option name="path" value="modules/gzip.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\home-base-warning.mod" />
+              <option name="path" value="modules/home-base-warning.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\http-forwarded.mod" />
+              <option name="path" value="modules/http-forwarded.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\http2-client-transport.mod" />
+              <option name="path" value="modules/http2-client-transport.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\http2-client.mod" />
+              <option name="path" value="modules/http2-client.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\http2.mod" />
+              <option name="path" value="modules/http2.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\http2c.mod" />
+              <option name="path" value="modules/http2c.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\http3.mod" />
+              <option name="path" value="modules/http3.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\https.mod" />
+              <option name="path" value="modules/https.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\inetaccess.mod" />
+              <option name="path" value="modules/inetaccess.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\infinispan-embedded-query.mod" />
+              <option name="path" value="modules/infinispan-embedded-query.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\infinispan-embedded.mod" />
+              <option name="path" value="modules/infinispan-embedded.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\infinispan-remote-query.mod" />
+              <option name="path" value="modules/infinispan-remote-query.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\infinispan-remote.mod" />
+              <option name="path" value="modules/infinispan-remote.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\jaas.mod" />
+              <option name="path" value="modules/jaas.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\jdbc.mod" />
+              <option name="path" value="modules/jdbc.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\jmx-remote-auth.mod" />
+              <option name="path" value="modules/jmx-remote-auth.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\jmx-remote-ssl.mod" />
+              <option name="path" value="modules/jmx-remote-ssl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\jmx-remote.mod" />
+              <option name="path" value="modules/jmx-remote.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\jna.mod" />
+              <option name="path" value="modules/jna.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\jndi.mod" />
+              <option name="path" value="modules/jndi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\jvm.mod" />
+              <option name="path" value="modules/jvm.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\logging-jcl-capture.mod" />
+              <option name="path" value="modules/logging-jcl-capture.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\logging-jetty.mod" />
+              <option name="path" value="modules/logging-jetty.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\logging-jul-capture.mod" />
+              <option name="path" value="modules/logging-jul-capture.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\logging-jul.mod" />
+              <option name="path" value="modules/logging-jul.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\logging-log4j1-capture.mod" />
+              <option name="path" value="modules/logging-log4j1-capture.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\logging-log4j1.mod" />
+              <option name="path" value="modules/logging-log4j1.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\logging-log4j2.mod" />
+              <option name="path" value="modules/logging-log4j2.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\logging-logback.mod" />
+              <option name="path" value="modules/logging-logback.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\logging-noop.mod" />
+              <option name="path" value="modules/logging-noop.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\lowresources.mod" />
+              <option name="path" value="modules/lowresources.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\openid.mod" />
+              <option name="path" value="modules/openid.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\pid.mod" />
+              <option name="path" value="modules/pid.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\plus.mod" />
+              <option name="path" value="modules/plus.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\proxy-protocol-ssl.mod" />
+              <option name="path" value="modules/proxy-protocol-ssl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\proxy-protocol.mod" />
+              <option name="path" value="modules/proxy-protocol.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\proxy.mod" />
+              <option name="path" value="modules/proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\qos.mod" />
+              <option name="path" value="modules/qos.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\quiche.mod" />
+              <option name="path" value="modules/quiche.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\requestlog.mod" />
+              <option name="path" value="modules/requestlog.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\resources.mod" />
+              <option name="path" value="modules/resources.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\rewrite-compactpath.mod" />
+              <option name="path" value="modules/rewrite-compactpath.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\rewrite-customizer.mod" />
+              <option name="path" value="modules/rewrite-customizer.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\rewrite.mod" />
+              <option name="path" value="modules/rewrite.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\secure-redirect.mod" />
+              <option name="path" value="modules/secure-redirect.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\security.mod" />
+              <option name="path" value="modules/security.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\server.mod" />
+              <option name="path" value="modules/server.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-cache-hash.mod" />
+              <option name="path" value="modules/session-cache-hash.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-cache-null.mod" />
+              <option name="path" value="modules/session-cache-null.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-store-cache.mod" />
+              <option name="path" value="modules/session-store-cache.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-store-file.mod" />
+              <option name="path" value="modules/session-store-file.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-store-gcloud.mod" />
+              <option name="path" value="modules/session-store-gcloud.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-store-hazelcast-embedded.mod" />
+              <option name="path" value="modules/session-store-hazelcast-embedded.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-store-hazelcast-remote.mod" />
+              <option name="path" value="modules/session-store-hazelcast-remote.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-store-infinispan-embedded.mod" />
+              <option name="path" value="modules/session-store-infinispan-embedded.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-store-infinispan-remote.mod" />
+              <option name="path" value="modules/session-store-infinispan-remote.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-store-jdbc.mod" />
+              <option name="path" value="modules/session-store-jdbc.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-store-mongo.mod" />
+              <option name="path" value="modules/session-store-mongo.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\sessions.mod" />
+              <option name="path" value="modules/sessions.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\setuid.mod" />
+              <option name="path" value="modules/setuid.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\size-limit.mod" />
+              <option name="path" value="modules/size-limit.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ssl-reload.mod" />
+              <option name="path" value="modules/ssl-reload.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ssl.mod" />
+              <option name="path" value="modules/ssl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\state-tracking.mod" />
+              <option name="path" value="modules/state-tracking.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\state.mod" />
+              <option name="path" value="modules/state.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\statistics.mod" />
+              <option name="path" value="modules/statistics.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\stop.mod" />
+              <option name="path" value="modules/stop.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\test-keystore.mod" />
+              <option name="path" value="modules/test-keystore.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\thread-limit.mod" />
+              <option name="path" value="modules/thread-limit.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\threadlimit.mod" />
+              <option name="path" value="modules/threadlimit.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\threadpool-all-virtual.mod" />
+              <option name="path" value="modules/threadpool-all-virtual.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\threadpool-virtual-preview.mod" />
+              <option name="path" value="modules/threadpool-virtual-preview.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\threadpool-virtual.mod" />
+              <option name="path" value="modules/threadpool-virtual.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\threadpool.mod" />
+              <option name="path" value="modules/threadpool.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\unixdomain-http.mod" />
+              <option name="path" value="modules/unixdomain-http.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\websocket-jetty-client.mod" />
+              <option name="path" value="modules/websocket-jetty-client.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\websocket-jetty.mod" />
+              <option name="path" value="modules/websocket-jetty.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\well-known.mod" />
+              <option name="path" value="modules/well-known.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\work.mod" />
+              <option name="path" value="modules/work.mod" />
             </JettyConfigFile>
           </list>
         </option>
@@ -667,653 +667,653 @@
         <option name="myConfigFiles">
           <list>
             <JettyConfigFile>
-              <option name="path" value="modules\deploy.mod" />
+              <option name="path" value="modules/deploy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="active" value="true" />
-              <option name="path" value="modules\http.mod" />
+              <option name="path" value="modules/http.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="active" value="true" />
-              <option name="path" value="modules\jmx.mod" />
+              <option name="path" value="modules/jmx.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\acceptratelimit.mod" />
+              <option name="path" value="modules/acceptratelimit.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\alpn-java.mod" />
+              <option name="path" value="modules/alpn-java.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\alpn.mod" />
+              <option name="path" value="modules/alpn.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\bytebufferpool-quadratic.mod" />
+              <option name="path" value="modules/bytebufferpool-quadratic.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\bytebufferpool.mod" />
+              <option name="path" value="modules/bytebufferpool.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\client.mod" />
+              <option name="path" value="modules/client.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\connectionlimit.mod" />
+              <option name="path" value="modules/connectionlimit.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\conscrypt.mod" />
+              <option name="path" value="modules/conscrypt.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\console-capture.mod" />
+              <option name="path" value="modules/console-capture.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\core-demos.mod" />
+              <option name="path" value="modules/core-demos.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\core-deploy.mod" />
+              <option name="path" value="modules/core-deploy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\cross-origin.mod" />
+              <option name="path" value="modules/cross-origin.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\customrequestlog.mod" />
+              <option name="path" value="modules/customrequestlog.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\debuglog.mod" />
+              <option name="path" value="modules/debuglog.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\delay-until-content.mod" />
+              <option name="path" value="modules/delay-until-content.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\demo-handler.mod" />
+              <option name="path" value="modules/demo-handler.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\demo-jaas.mod" />
+              <option name="path" value="modules/demo-jaas.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\demo-moved-context.mod" />
+              <option name="path" value="modules/demo-moved-context.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\demo-realm.mod" />
+              <option name="path" value="modules/demo-realm.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\demo-root.mod" />
+              <option name="path" value="modules/demo-root.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\demos.mod" />
+              <option name="path" value="modules/demos.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\disable-urlcache.mod" />
+              <option name="path" value="modules/disable-urlcache.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee-webapp.mod" />
+              <option name="path" value="modules/ee-webapp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-annotations.mod" />
+              <option name="path" value="modules/ee10-annotations.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-apache-jsp.mod" />
+              <option name="path" value="modules/ee10-apache-jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-cdi-decorate.mod" />
+              <option name="path" value="modules/ee10-cdi-decorate.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-cdi-spi.mod" />
+              <option name="path" value="modules/ee10-cdi-spi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-cdi.mod" />
+              <option name="path" value="modules/ee10-cdi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-async-rest.mod" />
+              <option name="path" value="modules/ee10-demo-async-rest.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-jaas.mod" />
+              <option name="path" value="modules/ee10-demo-jaas.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-jetty.mod" />
+              <option name="path" value="modules/ee10-demo-jetty.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-jndi.mod" />
+              <option name="path" value="modules/ee10-demo-jndi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-jsp.mod" />
+              <option name="path" value="modules/ee10-demo-jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-mock-resources.mod" />
+              <option name="path" value="modules/ee10-demo-mock-resources.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-proxy.mod" />
+              <option name="path" value="modules/ee10-demo-proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-rewrite.mod" />
+              <option name="path" value="modules/ee10-demo-rewrite.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-simple.mod" />
+              <option name="path" value="modules/ee10-demo-simple.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demo-spec.mod" />
+              <option name="path" value="modules/ee10-demo-spec.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-demos.mod" />
+              <option name="path" value="modules/ee10-demos.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-deploy.mod" />
+              <option name="path" value="modules/ee10-deploy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-fcgi-proxy.mod" />
+              <option name="path" value="modules/ee10-fcgi-proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-glassfish-jstl.mod" />
+              <option name="path" value="modules/ee10-glassfish-jstl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-jaspi-default-auth-config-factory.mod" />
+              <option name="path" value="modules/ee10-jaspi-default-auth-config-factory.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-jaspi-demo.mod" />
+              <option name="path" value="modules/ee10-jaspi-demo.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-jaspi.mod" />
+              <option name="path" value="modules/ee10-jaspi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-jndi.mod" />
+              <option name="path" value="modules/ee10-jndi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-jsp.mod" />
+              <option name="path" value="modules/ee10-jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-jstl.mod" />
+              <option name="path" value="modules/ee10-jstl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-plus.mod" />
+              <option name="path" value="modules/ee10-plus.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-proxy.mod" />
+              <option name="path" value="modules/ee10-proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-quickstart.mod" />
+              <option name="path" value="modules/ee10-quickstart.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-security.mod" />
+              <option name="path" value="modules/ee10-security.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-servlet.mod" />
+              <option name="path" value="modules/ee10-servlet.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-servlets.mod" />
+              <option name="path" value="modules/ee10-servlets.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-webapp.mod" />
+              <option name="path" value="modules/ee10-webapp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-websocket-jakarta.mod" />
+              <option name="path" value="modules/ee10-websocket-jakarta.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-websocket-jetty-client-webapp.mod" />
+              <option name="path" value="modules/ee10-websocket-jetty-client-webapp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee10-websocket-jetty.mod" />
+              <option name="path" value="modules/ee10-websocket-jetty.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-annotations.mod" />
+              <option name="path" value="modules/ee8-annotations.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-apache-jsp.mod" />
+              <option name="path" value="modules/ee8-apache-jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-async-rest.mod" />
+              <option name="path" value="modules/ee8-demo-async-rest.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-jaas.mod" />
+              <option name="path" value="modules/ee8-demo-jaas.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-jetty.mod" />
+              <option name="path" value="modules/ee8-demo-jetty.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-jndi.mod" />
+              <option name="path" value="modules/ee8-demo-jndi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-jsp.mod" />
+              <option name="path" value="modules/ee8-demo-jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-mock-resources.mod" />
+              <option name="path" value="modules/ee8-demo-mock-resources.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-moved-context.mod" />
+              <option name="path" value="modules/ee8-demo-moved-context.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-proxy.mod" />
+              <option name="path" value="modules/ee8-demo-proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-rewrite.mod" />
+              <option name="path" value="modules/ee8-demo-rewrite.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-simple.mod" />
+              <option name="path" value="modules/ee8-demo-simple.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demo-spec.mod" />
+              <option name="path" value="modules/ee8-demo-spec.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-demos.mod" />
+              <option name="path" value="modules/ee8-demos.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="active" value="true" />
-              <option name="path" value="modules\ee8-deploy.mod" />
+              <option name="path" value="modules/ee8-deploy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-glassfish-jstl.mod" />
+              <option name="path" value="modules/ee8-glassfish-jstl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-jndi.mod" />
+              <option name="path" value="modules/ee8-jndi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-jsp.mod" />
+              <option name="path" value="modules/ee8-jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-jstl.mod" />
+              <option name="path" value="modules/ee8-jstl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-openid.mod" />
+              <option name="path" value="modules/ee8-openid.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-plus.mod" />
+              <option name="path" value="modules/ee8-plus.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-proxy.mod" />
+              <option name="path" value="modules/ee8-proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-quickstart.mod" />
+              <option name="path" value="modules/ee8-quickstart.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-security.mod" />
+              <option name="path" value="modules/ee8-security.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-servlet.mod" />
+              <option name="path" value="modules/ee8-servlet.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-servlets.mod" />
+              <option name="path" value="modules/ee8-servlets.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-webapp.mod" />
+              <option name="path" value="modules/ee8-webapp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
               <option name="active" value="true" />
-              <option name="path" value="modules\ee8-websocket-javax.mod" />
+              <option name="path" value="modules/ee8-websocket-javax.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-websocket-jetty-client-webapp.mod" />
+              <option name="path" value="modules/ee8-websocket-jetty-client-webapp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-websocket-jetty-client.mod" />
+              <option name="path" value="modules/ee8-websocket-jetty-client.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee8-websocket-jetty.mod" />
+              <option name="path" value="modules/ee8-websocket-jetty.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-annotations.mod" />
+              <option name="path" value="modules/ee9-annotations.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-apache-jsp.mod" />
+              <option name="path" value="modules/ee9-apache-jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-cdi-decorate.mod" />
+              <option name="path" value="modules/ee9-cdi-decorate.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-cdi-spi.mod" />
+              <option name="path" value="modules/ee9-cdi-spi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-cdi.mod" />
+              <option name="path" value="modules/ee9-cdi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-async-rest.mod" />
+              <option name="path" value="modules/ee9-demo-async-rest.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-jaas.mod" />
+              <option name="path" value="modules/ee9-demo-jaas.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-jetty.mod" />
+              <option name="path" value="modules/ee9-demo-jetty.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-jndi.mod" />
+              <option name="path" value="modules/ee9-demo-jndi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-jsp.mod" />
+              <option name="path" value="modules/ee9-demo-jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-mock-resources.mod" />
+              <option name="path" value="modules/ee9-demo-mock-resources.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-proxy.mod" />
+              <option name="path" value="modules/ee9-demo-proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-rewrite.mod" />
+              <option name="path" value="modules/ee9-demo-rewrite.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-simple.mod" />
+              <option name="path" value="modules/ee9-demo-simple.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demo-spec.mod" />
+              <option name="path" value="modules/ee9-demo-spec.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-demos.mod" />
+              <option name="path" value="modules/ee9-demos.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-deploy.mod" />
+              <option name="path" value="modules/ee9-deploy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-fcgi-proxy.mod" />
+              <option name="path" value="modules/ee9-fcgi-proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-glassfish-jstl.mod" />
+              <option name="path" value="modules/ee9-glassfish-jstl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-jaspi-default-auth-config-factory.mod" />
+              <option name="path" value="modules/ee9-jaspi-default-auth-config-factory.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-jaspi-demo.mod" />
+              <option name="path" value="modules/ee9-jaspi-demo.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-jaspi.mod" />
+              <option name="path" value="modules/ee9-jaspi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-jndi.mod" />
+              <option name="path" value="modules/ee9-jndi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-jsp.mod" />
+              <option name="path" value="modules/ee9-jsp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-jstl.mod" />
+              <option name="path" value="modules/ee9-jstl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-openid.mod" />
+              <option name="path" value="modules/ee9-openid.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-plus.mod" />
+              <option name="path" value="modules/ee9-plus.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-proxy.mod" />
+              <option name="path" value="modules/ee9-proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-quickstart.mod" />
+              <option name="path" value="modules/ee9-quickstart.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-security.mod" />
+              <option name="path" value="modules/ee9-security.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-servlet.mod" />
+              <option name="path" value="modules/ee9-servlet.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-servlets.mod" />
+              <option name="path" value="modules/ee9-servlets.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-webapp.mod" />
+              <option name="path" value="modules/ee9-webapp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-websocket-jakarta.mod" />
+              <option name="path" value="modules/ee9-websocket-jakarta.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-websocket-jetty-client-webapp.mod" />
+              <option name="path" value="modules/ee9-websocket-jetty-client-webapp.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ee9-websocket-jetty.mod" />
+              <option name="path" value="modules/ee9-websocket-jetty.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ext.mod" />
+              <option name="path" value="modules/ext.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\fcgi-proxy.mod" />
+              <option name="path" value="modules/fcgi-proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\fcgi.mod" />
+              <option name="path" value="modules/fcgi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\flight-recorder.mod" />
+              <option name="path" value="modules/flight-recorder.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\gcloud-datastore.mod" />
+              <option name="path" value="modules/gcloud-datastore.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\gcloud.mod" />
+              <option name="path" value="modules/gcloud.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\graceful.mod" />
+              <option name="path" value="modules/graceful.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\gzip.mod" />
+              <option name="path" value="modules/gzip.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\home-base-warning.mod" />
+              <option name="path" value="modules/home-base-warning.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\http-forwarded.mod" />
+              <option name="path" value="modules/http-forwarded.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\http2-client-transport.mod" />
+              <option name="path" value="modules/http2-client-transport.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\http2-client.mod" />
+              <option name="path" value="modules/http2-client.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\http2.mod" />
+              <option name="path" value="modules/http2.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\http2c.mod" />
+              <option name="path" value="modules/http2c.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\http3.mod" />
+              <option name="path" value="modules/http3.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\https.mod" />
+              <option name="path" value="modules/https.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\inetaccess.mod" />
+              <option name="path" value="modules/inetaccess.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\infinispan-embedded-query.mod" />
+              <option name="path" value="modules/infinispan-embedded-query.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\infinispan-embedded.mod" />
+              <option name="path" value="modules/infinispan-embedded.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\infinispan-remote-query.mod" />
+              <option name="path" value="modules/infinispan-remote-query.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\infinispan-remote.mod" />
+              <option name="path" value="modules/infinispan-remote.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\jaas.mod" />
+              <option name="path" value="modules/jaas.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\jdbc.mod" />
+              <option name="path" value="modules/jdbc.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\jmx-remote-auth.mod" />
+              <option name="path" value="modules/jmx-remote-auth.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\jmx-remote-ssl.mod" />
+              <option name="path" value="modules/jmx-remote-ssl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\jmx-remote.mod" />
+              <option name="path" value="modules/jmx-remote.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\jna.mod" />
+              <option name="path" value="modules/jna.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\jndi.mod" />
+              <option name="path" value="modules/jndi.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\jvm.mod" />
+              <option name="path" value="modules/jvm.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\logging-jcl-capture.mod" />
+              <option name="path" value="modules/logging-jcl-capture.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\logging-jetty.mod" />
+              <option name="path" value="modules/logging-jetty.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\logging-jul-capture.mod" />
+              <option name="path" value="modules/logging-jul-capture.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\logging-jul.mod" />
+              <option name="path" value="modules/logging-jul.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\logging-log4j1-capture.mod" />
+              <option name="path" value="modules/logging-log4j1-capture.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\logging-log4j1.mod" />
+              <option name="path" value="modules/logging-log4j1.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\logging-log4j2.mod" />
+              <option name="path" value="modules/logging-log4j2.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\logging-logback.mod" />
+              <option name="path" value="modules/logging-logback.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\logging-noop.mod" />
+              <option name="path" value="modules/logging-noop.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\lowresources.mod" />
+              <option name="path" value="modules/lowresources.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\openid.mod" />
+              <option name="path" value="modules/openid.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\pid.mod" />
+              <option name="path" value="modules/pid.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\plus.mod" />
+              <option name="path" value="modules/plus.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\proxy-protocol-ssl.mod" />
+              <option name="path" value="modules/proxy-protocol-ssl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\proxy-protocol.mod" />
+              <option name="path" value="modules/proxy-protocol.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\proxy.mod" />
+              <option name="path" value="modules/proxy.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\qos.mod" />
+              <option name="path" value="modules/qos.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\quiche.mod" />
+              <option name="path" value="modules/quiche.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\requestlog.mod" />
+              <option name="path" value="modules/requestlog.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\resources.mod" />
+              <option name="path" value="modules/resources.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\rewrite-compactpath.mod" />
+              <option name="path" value="modules/rewrite-compactpath.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\rewrite-customizer.mod" />
+              <option name="path" value="modules/rewrite-customizer.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\rewrite.mod" />
+              <option name="path" value="modules/rewrite.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\secure-redirect.mod" />
+              <option name="path" value="modules/secure-redirect.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\security.mod" />
+              <option name="path" value="modules/security.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\server.mod" />
+              <option name="path" value="modules/server.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-cache-hash.mod" />
+              <option name="path" value="modules/session-cache-hash.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-cache-null.mod" />
+              <option name="path" value="modules/session-cache-null.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-store-cache.mod" />
+              <option name="path" value="modules/session-store-cache.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-store-file.mod" />
+              <option name="path" value="modules/session-store-file.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-store-gcloud.mod" />
+              <option name="path" value="modules/session-store-gcloud.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-store-hazelcast-embedded.mod" />
+              <option name="path" value="modules/session-store-hazelcast-embedded.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-store-hazelcast-remote.mod" />
+              <option name="path" value="modules/session-store-hazelcast-remote.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-store-infinispan-embedded.mod" />
+              <option name="path" value="modules/session-store-infinispan-embedded.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-store-infinispan-remote.mod" />
+              <option name="path" value="modules/session-store-infinispan-remote.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-store-jdbc.mod" />
+              <option name="path" value="modules/session-store-jdbc.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\session-store-mongo.mod" />
+              <option name="path" value="modules/session-store-mongo.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\sessions.mod" />
+              <option name="path" value="modules/sessions.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\setuid.mod" />
+              <option name="path" value="modules/setuid.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\size-limit.mod" />
+              <option name="path" value="modules/size-limit.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ssl-reload.mod" />
+              <option name="path" value="modules/ssl-reload.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\ssl.mod" />
+              <option name="path" value="modules/ssl.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\state-tracking.mod" />
+              <option name="path" value="modules/state-tracking.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\state.mod" />
+              <option name="path" value="modules/state.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\statistics.mod" />
+              <option name="path" value="modules/statistics.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\stop.mod" />
+              <option name="path" value="modules/stop.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\test-keystore.mod" />
+              <option name="path" value="modules/test-keystore.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\thread-limit.mod" />
+              <option name="path" value="modules/thread-limit.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\threadlimit.mod" />
+              <option name="path" value="modules/threadlimit.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\threadpool-all-virtual.mod" />
+              <option name="path" value="modules/threadpool-all-virtual.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\threadpool-virtual-preview.mod" />
+              <option name="path" value="modules/threadpool-virtual-preview.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\threadpool-virtual.mod" />
+              <option name="path" value="modules/threadpool-virtual.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\threadpool.mod" />
+              <option name="path" value="modules/threadpool.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\unixdomain-http.mod" />
+              <option name="path" value="modules/unixdomain-http.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\websocket-jetty-client.mod" />
+              <option name="path" value="modules/websocket-jetty-client.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\websocket-jetty.mod" />
+              <option name="path" value="modules/websocket-jetty.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\well-known.mod" />
+              <option name="path" value="modules/well-known.mod" />
             </JettyConfigFile>
             <JettyConfigFile>
-              <option name="path" value="modules\work.mod" />
+              <option name="path" value="modules/work.mod" />
             </JettyConfigFile>
           </list>
         </option>
