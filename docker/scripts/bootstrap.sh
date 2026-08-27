@@ -238,7 +238,9 @@ then
   chown git:git ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-favicon.ico ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-logo-blue-on-white-pill-50a.svg
   ADMIN_TOKEN=$(pwgen -snc 20 1)
   # the OAuth application credentials are written to a file rather than stdout, as stdout ends up in the log file above
+  # gitlab-rails runs as the 'git' user, so it has to own the file to be able to write it (we can still read it back as root)
   OAUTH_CREDS_PATH=$(mktemp)
+  chown git:git "$OAUTH_CREDS_PATH"
   # https://docs.gitlab.com/administration/operations/rails_console/#using-the-rails-runner
   gitlab-rails runner /opt/catma/scripts/gitlab_config.rb --app_url "$CATMA_URL" --admin_token "$ADMIN_TOKEN" --pat_prefix "$PAT_PREFIX" \
     --oauth_creds_path "$OAUTH_CREDS_PATH" --du_username "$DU_USERNAME" --du_password "$DU_PASSWORD" &>> "$GITLAB_CONFIG_LOG_PATH"
