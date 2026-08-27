@@ -9,11 +9,14 @@ import com.vaadin.ui.*;
 import com.vaadin.ui.Notification.Type;
 
 import de.catma.oauth.OauthConstants;
+import de.catma.ui.Parameter;
+import de.catma.ui.ParameterProvider;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.user.UserData;
+import de.catma.user.signup.SignupTokenManager.TokenAction;
 
 import java.io.IOException;
 import java.util.stream.Collectors;
@@ -136,8 +139,11 @@ public class CreateUserDialog extends AuthenticationDialog {
 						userData.getUsername());
 
 				// send the user through the OAuth flow to sign in with the credentials they just chose
-				// we must not forward the action and token request parameters, as the signup token has already been consumed at this point
-				redirectToOauthProvider(OauthConstants.OauthProvider.GITLAB, false);
+				// an account signup token has been consumed by the time we get here, so forwarding it would just fail to validate on the way back - but a
+				// group/project invitation token is deliberately kept alive so that the invitation can be accepted once the account exists (see
+				// RequestTokenHandler), and dropping it would leave the user signed in but not a member
+				TokenAction tokenAction = TokenAction.findAction(((ParameterProvider) UI.getCurrent()).getParameter(Parameter.ACTION));
+				redirectToOauthProvider(OauthConstants.OauthProvider.GITLAB, tokenAction != TokenAction.verify);
 				return;
 			} catch (IOException e) {
 				((ErrorHandler) UI.getCurrent()).showAndLogError("Couldn't create user in backend", e);
