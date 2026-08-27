@@ -171,6 +171,8 @@ Put an explanation next to the thing it explains, at the narrowest scope that fi
 - **How a subsystem fits together** → this file, at a level that stays true as the code changes. Don't restate what a class comment already says.
 - **Operator-facing setup** → `doc/`, `docker/README.md` and the `catma.properties` template.
 - **Why a change was made** → the commit message.
+- **Work you've identified but aren't doing** → `TODO.md`, unless a plan already covers it. Don't leave it in operator-facing documentation or as a
+  speculative comment in the code.
 
 ### Commit messages
 
