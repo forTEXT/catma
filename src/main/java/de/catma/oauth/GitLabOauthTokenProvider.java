@@ -19,6 +19,8 @@ import java.util.logging.Logger;
 public class GitLabOauthTokenProvider {
 	// refresh a little before the token actually expires, so that we don't hand out a token that expires while it is in flight
 	private static final long REFRESH_LEEWAY_SECONDS = 60;
+	// how long to wait before trying again after a failed refresh (see getAccessToken)
+	private static final long RETRY_AFTER_FAILURE_SECONDS = 30;
 
 	private final Logger logger = Logger.getLogger(GitLabOauthTokenProvider.class.getName());
 
@@ -26,6 +28,7 @@ public class GitLabOauthTokenProvider {
 	private final Supplier<CloseableHttpClient> httpClientSupplier;
 
 	private GitLabOauthTokens tokens;
+	private Instant nextRefreshAttempt = Instant.MIN;
 
 	/**
 	 * @param tokens the tokens as obtained from {@link GitLabOauthHandler#handleCallbackAndGetTokens}
@@ -46,15 +49,23 @@ public class GitLabOauthTokenProvider {
 	 * <p>
 	 * This is used as the auth token supplier for gitlab4j-api and as the password for Git over HTTPS, neither of which can handle a checked exception, so a
 	 * failed refresh is logged and the existing (probably expired) token is returned - the resulting API or Git failure is handled by the caller.
+	 * <p>
+	 * A failure doesn't move the expiry, so without a back-off every subsequent call would attempt another refresh: that is one synchronous request to GitLab
+	 * per API call and per Git credentials lookup, all serialized on this instance, and all followed by the failure the caller was going to get anyway. Note
+	 * that a refresh failure is frequently permanent, because GitLab invalidates the old refresh token as soon as it issues a new pair, so a response we don't
+	 * receive leaves us holding a token that will never work again.
 	 *
 	 * @return the access token
 	 */
 	public synchronized String getAccessToken() {
-		if (Instant.now().plusSeconds(REFRESH_LEEWAY_SECONDS).isAfter(tokens.expiresAt())) {
+		Instant now = Instant.now();
+
+		if (now.plusSeconds(REFRESH_LEEWAY_SECONDS).isAfter(tokens.expiresAt()) && now.isAfter(nextRefreshAttempt)) {
 			try {
 				refresh();
 			}
 			catch (IOException e) {
+				nextRefreshAttempt = now.plusSeconds(RETRY_AFTER_FAILURE_SECONDS);
 				logger.log(Level.WARNING, "Failed to refresh the GitLab OAuth access token, returning the existing one", e);
 			}
 		}
@@ -72,6 +83,8 @@ public class GitLabOauthTokenProvider {
 	}
 
 	private void refresh() throws IOException {
+		nextRefreshAttempt = Instant.MIN;
+
 		if (tokens.refreshToken() == null) {
 			throw new IOException("Can't refresh the GitLab OAuth access token, no refresh token is available");
 		}
