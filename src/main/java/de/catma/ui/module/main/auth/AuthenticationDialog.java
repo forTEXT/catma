@@ -68,7 +68,7 @@ public abstract class AuthenticationDialog extends Window {
                         optionalStateParams
                 );
 
+        // NB: no need to close this dialog, the client navigates away from the page entirely
         UI.getCurrent().getPage().setLocation(oauthAuthorizationRequestUri);
-        close();
     }
 }

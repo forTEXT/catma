@@ -229,7 +229,7 @@ public class CatmaApplication extends UI
 
 			eventBus.post(new RouteToDashboardEvent());
 
-			// handle our own action and token parameters if present (for invitations - also see AuthenticationDialog.oauthLinkClickListener)
+			// handle our own action and token parameters if present (for invitations - also see AuthenticationDialog.redirectToOauthProvider)
 			if (additionalStateParams != null && additionalStateParams.containsKey(Parameter.ACTION.getKey())
 					&& additionalStateParams.containsKey(Parameter.TOKEN.getKey())
 			) {

@@ -22,7 +22,7 @@ public class GitLabOauthTokenProvider {
 	// how long to wait before trying again after a failed refresh (see getAccessToken)
 	private static final long RETRY_AFTER_FAILURE_SECONDS = 30;
 
-	private final Logger logger = Logger.getLogger(GitLabOauthTokenProvider.class.getName());
+	private static final Logger logger = Logger.getLogger(GitLabOauthTokenProvider.class.getName());
 
 	private final String redirectUrl;
 	private final Supplier<CloseableHttpClient> httpClientSupplier;

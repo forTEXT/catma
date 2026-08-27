@@ -144,11 +144,11 @@ public class CreateUserDialog extends AuthenticationDialog {
 				// RequestTokenHandler), and dropping it would leave the user signed in but not a member
 				TokenAction tokenAction = TokenAction.findAction(((ParameterProvider) UI.getCurrent()).getParameter(Parameter.ACTION));
 				redirectToOauthProvider(OauthConstants.OauthProvider.GITLAB, tokenAction != TokenAction.verify);
-				return;
 			} catch (IOException e) {
+				// close this dialog before showing the error, otherwise we end up with two stacked modal windows
+				this.close();
 				((ErrorHandler) UI.getCurrent()).showAndLogError("Couldn't create user in backend", e);
 			}
-			this.close();
 		});
 		setContent(content);
 	}
