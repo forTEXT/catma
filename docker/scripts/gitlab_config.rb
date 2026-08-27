@@ -53,7 +53,7 @@ rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
 end
 
 ApplicationSetting.current.update!(
-  # these are absolutely necessary for CATMA to work:
+  # these are absolutely necessary for CATMA to work (as is the OAuth application that is created further down):
   password_authentication_enabled_for_web: true, # users sign in on GitLab's own login page as part of the OAuth flow
   auto_devops_enabled: false,
   default_branch_name: 'master',

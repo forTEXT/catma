@@ -6,7 +6,7 @@ These are instructions for setting up a development environment to work on the C
 
 - JDK 21
 - Maven
-- A self-managed GitLab server <v19, with full administrator access and that is dedicated to CATMA (for example, using GitLab's Docker image – refer to the
+- A self-managed GitLab server, with full administrator access and that is dedicated to CATMA (for example, using GitLab's Docker image – refer to the
   [self-hosting instructions](SELF-HOSTING.md))
 
 ## Installation & Setup

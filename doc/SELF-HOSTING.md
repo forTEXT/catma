@@ -14,10 +14,8 @@ We choose to use [Eclipse Jetty](https://jetty.org/), but a modern alternative l
 
 You will need to install the GitLab server using the [cloud native or Linux package installation methods](https://about.gitlab.com/install/#cloud-native) (full
 administrator access is required). Also note that:
-- CATMA no longer depends on the resource owner password credentials (ROPC) grant that GitLab removed in version 19.0 (see [Create the OAuth
-  Application](#create-the-oauth-application) below), but GitLab 19+ has not been fully verified yet
 - There are some configuration changes that you need to make within GitLab before CATMA will work properly. The necessary changes are listed in the [GitLab
-  configuration Ruby script](../docker/scripts/gitlab_config.rb#L54-L66). This script can also be run independently on the GitLab server using
+  configuration Ruby script](../docker/scripts/gitlab_config.rb#L56-L68). This script can also be run independently on the GitLab server using
   `gitlab-rails runner` (usage hint [here](../docker/scripts/gitlab_config.rb#L29)). Alternatively, you can manually make the changes via the GitLab Admin UI:
     - Turn **ON**: Settings → General → Sign-in restrictions → Allow password and passkey authentication for the web interface
     - Turn **OFF**: Settings → CI/CD → Continuous Integration and Deployment → Default to Auto DevOps pipeline for all projects
@@ -27,6 +25,8 @@ administrator access is required). Also note that:
         - Allowed to merge → **Maintainers**
         - Turn **OFF**: Allowed to force push
         - Turn **OFF**: Allow developers to push to the initial commit
+    - Register the OAuth application that users sign in through, as described under
+      [Create the OAuth Application](#create-the-oauth-application) below
 
 ### Create a Personal Access Token for the Admin Account
 
@@ -59,16 +59,13 @@ Navigate to *Admin → Applications → New application* and set:
 Copy the resulting *Application ID* and *Secret* into the `GITLAB_OAUTH_CLIENT_ID` and `GITLAB_OAUTH_CLIENT_SECRET` properties. Note that GitLab stores
 application secrets hashed, so the secret is only available immediately after creating the application - if you lose it you have to renew it.
 
-The [GitLab configuration Ruby script](../docker/scripts/gitlab_config.rb) creates this application automatically, so you can also use that as a reference.
+You only need to do this if you didn't run the [GitLab configuration Ruby script](../docker/scripts/gitlab_config.rb) mentioned above, which creates the
+application for you and prints its credentials.
 
 ### A Note on Google Sign-In
 
 The "Sign in with Google" option is handled by CATMA itself (OpenID Connect against Google, followed by the creation of a GitLab impersonation token via the
 admin token above) and is not affected by the OAuth application described here. It is configured via the separate `GOOGLE_OAUTH_*` properties.
-
-A possible future simplification would be to configure Google as a GitLab OmniAuth provider instead, leaving CATMA with a single sign-in flow. That migration
-would require linking the existing GitLab users that were created for Google logins (their usernames have the form `<google-sub>google_com`) to a
-`google_oauth2` identity with the Google `sub` as the `extern_uid`, as they currently have no linked identity.
 
 ## Application Deployment
 
