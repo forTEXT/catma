@@ -16,6 +16,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.http.impl.client.CloseableHttpClient;
+
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
@@ -190,15 +192,18 @@ public class AuthService {
 			// strips any query params (prevents redirectUrl mismatch)
 			String redirectUrl = uriInfo.getRequestUriBuilder().replaceQuery("").build().toString();
 
-			Pair<GitLabOauthTokens, Map<String, String>> resultPair = GitLabOauthHandler.handleCallbackAndGetTokens(
-					authorizationCode,
-					state,
-					error,
-					redirectUrl,
-					httpClientFactory.create(),
-					sessionStorageHandler::getAttribute,
-					sessionStorageHandler::setAttribute
-			);
+			Pair<GitLabOauthTokens, Map<String, String>> resultPair;
+			try (CloseableHttpClient httpClient = httpClientFactory.create()) {
+				resultPair = GitLabOauthHandler.handleCallbackAndGetTokens(
+						authorizationCode,
+						state,
+						error,
+						redirectUrl,
+						httpClient,
+						sessionStorageHandler::getAttribute,
+						sessionStorageHandler::setAttribute
+				);
+			}
 
 			return Response.ok(authenticateWithOauthTokens(resultPair.getFirst(), redirectUrl)).build();
 		}
@@ -290,15 +295,18 @@ public class AuthService {
 	private String authenticateWithThirdPartyToken(
 			String oauthAuthorizationCode, String oauthState, String oauthError
 	) throws OauthException, IOException, JOSEException {
-			Pair<OauthIdentity, Map<String, String>> resultPair = GoogleOauthHandler.handleCallbackAndGetIdentity(
-					oauthAuthorizationCode,
-					oauthState,
-					oauthError,
-					uriInfo.getRequestUriBuilder().replaceQuery("").build().toString(), // strips any query params (prevents redirectUrl mismatch)
-					httpClientFactory.create(),
-					sessionStorageHandler::getAttribute,
-					sessionStorageHandler::setAttribute
-			);
+			Pair<OauthIdentity, Map<String, String>> resultPair;
+			try (CloseableHttpClient httpClient = httpClientFactory.create()) {
+				resultPair = GoogleOauthHandler.handleCallbackAndGetIdentity(
+						oauthAuthorizationCode,
+						oauthState,
+						oauthError,
+						uriInfo.getRequestUriBuilder().replaceQuery("").build().toString(), // strips any query params (prevents redirectUrl mismatch)
+						httpClient,
+						sessionStorageHandler::getAttribute,
+						sessionStorageHandler::setAttribute
+				);
+			}
 
 			OauthIdentity oauthIdentity = resultPair.getFirst();
 			Map<String, String> additionalStateParams = resultPair.getSecond(); // should be null, see googleOauth function

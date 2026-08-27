@@ -35,6 +35,7 @@ import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.util.Version;
 import de.catma.user.signup.SignupTokenManager;
 import de.catma.util.Pair;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
 import java.io.Closeable;
@@ -178,15 +179,18 @@ public class CatmaApplication extends UI
 
 			try {
 				if (OauthConstants.OauthProvider.GITLAB.name().equals(oauthProvider)) {
-					Pair<GitLabOauthTokens, Map<String, String>> resultPair = GitLabOauthHandler.handleCallbackAndGetTokens(
-							request.getParameter("code"),
-							request.getParameter("state"),
-							request.getParameter("error"),
-							CATMAPropertyKey.BASE_URL.getValue(),
-							HttpClients.createDefault(),
-							VaadinSession.getCurrent()::getAttribute,
-							VaadinSession.getCurrent()::setAttribute
-					);
+					Pair<GitLabOauthTokens, Map<String, String>> resultPair;
+					try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+						resultPair = GitLabOauthHandler.handleCallbackAndGetTokens(
+								request.getParameter("code"),
+								request.getParameter("state"),
+								request.getParameter("error"),
+								CATMAPropertyKey.BASE_URL.getValue(),
+								httpClient,
+								VaadinSession.getCurrent()::getAttribute,
+								VaadinSession.getCurrent()::setAttribute
+						);
+					}
 
 					additionalStateParams = resultPair.getSecond();
 
@@ -196,15 +200,18 @@ public class CatmaApplication extends UI
 					);
 				}
 				else {
-					Pair<OauthIdentity, Map<String, String>> resultPair = GoogleOauthHandler.handleCallbackAndGetIdentity(
-							request.getParameter("code"),
-							request.getParameter("state"),
-							request.getParameter("error"),
-							CATMAPropertyKey.BASE_URL.getValue(),
-							HttpClients.createDefault(),
-							VaadinSession.getCurrent()::getAttribute,
-							VaadinSession.getCurrent()::setAttribute
-					);
+					Pair<OauthIdentity, Map<String, String>> resultPair;
+					try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+						resultPair = GoogleOauthHandler.handleCallbackAndGetIdentity(
+								request.getParameter("code"),
+								request.getParameter("state"),
+								request.getParameter("error"),
+								CATMAPropertyKey.BASE_URL.getValue(),
+								httpClient,
+								VaadinSession.getCurrent()::getAttribute,
+								VaadinSession.getCurrent()::setAttribute
+						);
+					}
 
 					OauthIdentity oauthIdentity = resultPair.getFirst();
 					additionalStateParams = resultPair.getSecond();
