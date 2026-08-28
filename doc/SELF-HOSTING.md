@@ -13,35 +13,46 @@ We choose to use [Eclipse Jetty](https://jetty.org/), but a modern alternative l
 ## GitLab Server
 
 You will need to install the GitLab server using the [cloud native or Linux package installation methods](https://about.gitlab.com/install/#cloud-native) (full
-administrator access is required). Also note that:
-- There are some configuration changes that you need to make within GitLab before CATMA will work properly. The necessary changes are listed in the [GitLab
-  configuration Ruby script](../docker/scripts/gitlab_config.rb#L56-L68). This script can also be run independently on the GitLab server using
-  `gitlab-rails runner` (usage hint [here](../docker/scripts/gitlab_config.rb#L29)). Alternatively, you can manually make the changes via the GitLab Admin UI:
-    - Turn **ON**: Settings → General → Sign-in restrictions → Allow password and passkey authentication for the web interface
-    - Turn **OFF**: Settings → CI/CD → Continuous Integration and Deployment → Default to Auto DevOps pipeline for all projects
-    - Set the default branch name to "**master**": Settings → Repository → Default branch → Initial default branch name
-    - Change the branch protection defaults: Settings → Repository → Default branch → Initial default branch protection → **Protected**:
-        - Allowed to push → **Developers + Maintainers**
-        - Allowed to merge → **Maintainers**
-        - Turn **OFF**: Allowed to force push
-        - Turn **OFF**: Allow developers to push to the initial commit
-    - Register the OAuth application that users sign in through, as described under
-      [Create the OAuth Application](#create-the-oauth-application) below
+administrator access is required).
+
+Also note that there are some configuration changes that you need to make within GitLab before CATMA will work properly. The necessary changes are listed in the
+[GitLab configuration Ruby script](../docker/scripts/gitlab_config.rb#L56-L68) for the Docker image. This script can also be run independently on the GitLab
+server using `gitlab-rails runner` (usage hint [here](../docker/scripts/gitlab_config.rb#L29)). You should delete the OAuth application credentials file (see
+the `oauth_creds_path` parameter) that the script creates, once you have retrieved the credentials and placed them in your `catma.properties` file as described
+under [Application Deployment](#application-deployment) below.
+
+Alternatively, you can manually make the changes via the GitLab Admin UI:
+- Turn **ON**: Settings → General → Sign-in restrictions → Allow password and passkey authentication for the web interface
+- Turn **OFF**: Settings → CI/CD → Continuous Integration and Deployment → Default to Auto DevOps pipeline for all projects
+- Set the default branch name to "**master**": Settings → Repository → Default branch → Initial default branch name
+- Change the branch protection defaults: Settings → Repository → Default branch → Initial default branch protection → **Protected**:
+    - Allowed to push → **Developers + Maintainers**
+    - Allowed to merge → **Maintainers**
+    - Turn **OFF**: Allowed to force push
+    - Turn **OFF**: Allow developers to push to the initial commit
+- Set up the required admin token, as described under
+  [Create a Personal Access Token for the Admin Account](#create-a-personal-access-token-for-the-admin-account) below
+- Register the OAuth application that users sign in through, as described under [Create the OAuth Application](#create-the-oauth-application) below
 
 ### Create a Personal Access Token for the Admin Account
 
 The CATMA application communicates with the GitLab backend via GitLab's API. As certain operations occur outside the context of a particular CATMA user and/or
-require administrative access, CATMA needs to be configured with a personal access token for the admin account. To create this token, navigate to the user
-preferences for the admin user, select *Access → Personal access tokens* from the menu on the left and create a new token with the **api** scope.
+require administrative access, CATMA needs to be configured with a personal access token for the admin account.
+
+Create the token using the Ruby script mentioned above, or manually by navigating to the user preferences for the admin user, selecting *Access → Personal
+access tokens* from the menu on the left and creating a new token with the **api** scope. Copy the token into the `GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN` property
+in your `catma.properties` file (see [Application Deployment](#application-deployment) below).
 
 Note that tokens have an expiration date by default. It is considered good security practice to regularly rotate tokens; however, there is an option that will
-allow you to create tokens without expiration (Settings → General → Account and limit → Access token expiration).
+allow you to create tokens without expiration (*Settings → General → Account and limit → Access token expiration*).
 
 ### Create the OAuth Application
 
 Users sign in to CATMA via an OAuth authorization code flow against your GitLab server, entering their credentials on GitLab's own login page. (This replaces
 the resource owner password credentials (ROPC) grant that CATMA used previously, which GitLab removed in version 19.0.) You therefore have to register an
 instance-wide OAuth application before anyone can log in.
+
+Do this using the Ruby script mentioned above, or manually as follows:
 
 Navigate to *Admin → Applications → New application* and set:
 - **Name**: CATMA
@@ -58,9 +69,6 @@ Navigate to *Admin → Applications → New application* and set:
 
 Copy the resulting *Application ID* and *Secret* into the `GITLAB_OAUTH_CLIENT_ID` and `GITLAB_OAUTH_CLIENT_SECRET` properties. Note that GitLab stores
 application secrets hashed, so the secret is only available immediately after creating the application - if you lose it you have to renew it.
-
-You only need to do this if you didn't run the [GitLab configuration Ruby script](../docker/scripts/gitlab_config.rb) mentioned above, which creates the
-application for you and prints its credentials.
 
 ### A Note on Google Sign-In
 

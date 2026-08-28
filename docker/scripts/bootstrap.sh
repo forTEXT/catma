@@ -226,7 +226,8 @@ PAT_PREFIX=catma-glpat-
 DU_USERNAME=standalone
 DU_PASSWORD=St4nd@lone
 
-# 7. if this is the first start of the GitLab server, complete the initial GitLab setup (set default settings, create an admin PAT, create the default user)
+# 7. if this is the first start of the GitLab server, complete the initial GitLab setup (set default settings, create an admin PAT and OAuth application, create
+#    the default user)
 #    also generate a CATMA API secret
 if [[ $FIRST_START = 'true' ]]
 then

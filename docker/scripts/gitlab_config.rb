@@ -26,7 +26,7 @@ options = {
   du_password: 'St4nd@lone',
 }
 parser = OptionParser.new do |opts|
-  opts.banner = "Usage: [sudo] gitlab-rails runner #{$0} -- --app_url <value> --admin_token <value>"
+  opts.banner = "Usage: [sudo] gitlab-rails runner #{$0} -- --app_url <value> --admin_token <value> --oauth_creds_path <value>"
 
   # required:
   opts.on("--app_url <value>", "Required: CATMA application URL") { |v| options[:app_url] = v }
@@ -53,7 +53,7 @@ rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
 end
 
 ApplicationSetting.current.update!(
-  # these are absolutely necessary for CATMA to work (as is the OAuth application that is created further down):
+  # these are absolutely necessary for CATMA to work (as are the admin PAT and OAuth application that are created further down):
   password_authentication_enabled_for_web: true, # users sign in on GitLab's own login page as part of the OAuth flow
   auto_devops_enabled: false,
   default_branch_name: 'master',
