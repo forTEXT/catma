@@ -1,9 +1,14 @@
-# TODO
+# TODO (AI-generated)
 
-Work that has been identified but not done, and that no plan currently covers. Add to this file rather than leaving the note in a source comment or in
-documentation aimed at operators.
+Work that was identified while working with an AI coding assistant but not done, and that no plan currently covers. Add to this file rather than
+leaving the note in a source comment or in documentation aimed at operators.
 
-## Terminate the session when an OAuth token refresh fails permanently
+Entries are grouped by the branch or task they came out of, so that they can be judged in the context that produced them. Add a new section when
+working on a branch that has none yet, and drop a section once its items are done or no longer apply.
+
+## `gitlab19-auth-compatibility` — GitLab 19 compatibility and the OAuth sign-in flow
+
+### Terminate the session when an OAuth token refresh fails permanently
 
 `GitLabOauthTokenProvider` backs off after a failed refresh, but it can't recover from one: GitLab invalidates the old refresh token as soon as it issues a
 new pair, so a response we never receive leaves the session holding a refresh token that will never work again. Every subsequent API call and Git operation
@@ -13,7 +18,7 @@ The session should instead be invalidated and the user prompted to sign in again
 `invalid_grant`) from a transient one, and a path from the provider — which is called from background threads as well as the UI thread — to something that
 can end the Vaadin session.
 
-## Don't discard invitation parameters when account creation is abandoned
+### Don't discard invitation parameters when account creation is abandoned
 
 `CreateUserDialog.close()` calls `Page.replaceState(BASE_URL)` unconditionally, which is right after an account signup token has been consumed. When the
 dialog was opened from a group or project invitation, however, `RequestTokenHandler` deliberately keeps that token alive so the invitation can still be

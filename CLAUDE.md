@@ -172,7 +172,8 @@ Put an explanation next to the thing it explains, at the narrowest scope that fi
 - **Operator-facing setup** → `doc/`, `docker/README.md` and the `catma.properties` template.
 - **Why a change was made** → the commit message.
 - **Work you've identified but aren't doing** → `TODO.md`, unless a plan already covers it. Don't leave it in operator-facing documentation or as a
-  speculative comment in the code.
+  speculative comment in the code. That file collects AI-identified follow-up work only, grouped by the branch or task the note came out of — add the
+  entry under the section for the branch you're on, creating it if there is none yet.
 
 ### Commit messages
 
