@@ -47,9 +47,8 @@ import java.util.stream.Collectors;
  * {@link de.catma.repository.git.managers.GitlabManagerRestricted}).
  */
 public class GitLabOauthHandler {
-    // 'api' grants access to the REST API, 'write_repository' grants access to Git over HTTPS
     // (see https://docs.gitlab.com/integration/oauth_provider/#view-all-authorized-applications for the full list of scopes)
-    private static final String SCOPES = "api write_repository";
+    private static final String SCOPES = "api";
 
     private static final Logger logger = Logger.getLogger(GitLabOauthHandler.class.getName());
 

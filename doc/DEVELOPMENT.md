@@ -108,7 +108,7 @@ In GitLab, go to *Admin → Applications → New application* and set:
   These must match `BASE_URL` exactly (including the trailing slash), plus the same value with `api/v1/auth/gitlab/callback` appended for the REST API.
 - **Confidential**: checked
 - **Trusted**: checked - this skips the authorization (consent) screen, which is appropriate because CATMA is a first-party application
-- **Scopes**: `api` and `write_repository`
+- **Scopes**: `api`
 
 Copy the resulting *Application ID* and *Secret* into `GITLAB_OAUTH_CLIENT_ID` and `GITLAB_OAUTH_CLIENT_SECRET`. The secret is stored hashed by GitLab and is
 only shown immediately after creation.

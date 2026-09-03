@@ -156,7 +156,7 @@ admin_pat.save!
 oauth_app = Doorkeeper::Application.create!(
   name: 'CATMA',
   redirect_uri: ["#{options[:app_url]}/", "#{options[:app_url]}/api/v1/auth/gitlab/callback"].join("\n"),
-  scopes: 'api write_repository',
+  scopes: 'api',
   confidential: true,
   trusted: true
 )

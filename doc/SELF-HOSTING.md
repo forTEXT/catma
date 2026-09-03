@@ -65,7 +65,7 @@ Navigate to *Admin → Applications → New application* and set:
 - **Confidential**: checked
 - **Trusted**: checked - this skips the authorization (consent) screen for all users, which is appropriate because CATMA is a first-party application. The
   *Trusted* option is only available for instance-wide applications created in the Admin area.
-- **Scopes**: `api` (for the GitLab API) and `write_repository` (for Git over HTTPS, which CATMA uses to synchronize projects)
+- **Scopes**: `api`
 
 Copy the resulting *Application ID* and *Secret* into the `GITLAB_OAUTH_CLIENT_ID` and `GITLAB_OAUTH_CLIENT_SECRET` properties. Note that GitLab stores
 application secrets hashed, so the secret is only available immediately after creating the application - if you lose it you have to renew it.
