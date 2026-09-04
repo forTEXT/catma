@@ -30,6 +30,16 @@ the leeway from the lifetime, e.g. `min(60, expiresIn / 2)`, would be enough.
 NB: Doorkeeper carries `expires_in` over to the token it mints on refresh instead of re-reading the configured default, so a lifetime that was low when a
 session started stays low for that session no matter what the setting is changed to afterwards.
 
+### Report why a synchronization couldn't complete its merge
+
+`GitProjectHandler.synchronizeWithRemote` returns `false` from two places that mean different things to the user: the merge request can't be merged because
+of conflicts they have to resolve in GitLab, and the merge request didn't end up merged although it could have been, which includes GitLab-side states like
+`checking` that are worth simply retrying. `GraphWorktreeProject` passes the boolean through to `openProjectListener.ready(null)`, so both produce the same
+notification, which hedges across the two.
+
+Carrying a small result type instead of the boolean — merged, needs manual resolution, not completed — would let the notification say which of the two
+happened and what to do about it. Genuine failures already take a separate route via the `ExecutionListener`'s error method.
+
 ### Don't discard invitation parameters when account creation is abandoned
 
 `CreateUserDialog.close()` calls `Page.replaceState(BASE_URL)` unconditionally, which is right after an account signup token has been consumed. When the
