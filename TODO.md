@@ -40,6 +40,35 @@ notification, which hedges across the two.
 Carrying a small result type instead of the boolean — merged, needs manual resolution, not completed — would let the notification say which of the two
 happened and what to do about it. Genuine failures already take a separate route via the `ExecutionListener`'s error method.
 
+### Stop logging the same background failure twice, and always log who it happened to
+
+Any failure in a `BackgroundService` callable is logged twice: once by `UIBackgroundService` (a bare `"Error"` plus the stack trace) and again by
+`CatmaApplication.showAndLogError`, when the `ExecutionListener` reports it. That applies to 7 of the 19 `error` implementations, across roughly 15 `submit`
+call sites in analysis, annotation, the project view and the document wizard.
+
+Neither of the two is redundant as things stand. `showAndLogError` is the only one carrying the username and the message the user was shown, and the
+`UIBackgroundService` entry is the only record when the UI has detached, because `listener.error` is skipped in that case.
+
+Two things would also make the log easier to follow:
+
+- `UIBackgroundService` logs a bare `"Error"`, so there is nothing tying it to the entry that `showAndLogError` writes for the same incident. Including the
+  callable's class would be enough.
+- The username should be logged wherever it can be determined, not only by `showAndLogError`. Operators otherwise can't tell which user an entry belongs to
+  on an instance with several people working at once.
+
+Worth knowing when changing any of this: `ErrorDialog` renders the message passed to `showAndLogError` followed by `exception.getMessage()` - the outermost
+message only. Whatever an exception is wrapped in on its way up is therefore the only exception text the user ever sees, and a null message renders as
+nothing at all.
+
+### Attach the project context to synchronization failures without a third log entry
+
+`GraphWorktreeProject$19.call` logs the project name, ID and user before rethrowing, purely to record which project a failed synchronization belongs to.
+That makes three entries for one incident rather than the two described above.
+
+Wrapping the exception with that context instead is the obvious replacement and is the wrong one here: the context is of no use to a user who knows which
+project they are in, and by the note above it would displace `"GitLab's token endpoint did not return an access token..."`, or whatever else went wrong,
+from the dialog - which is the part they are asked to include in a bug report.
+
 ### Don't discard invitation parameters when account creation is abandoned
 
 `CreateUserDialog.close()` calls `Page.replaceState(BASE_URL)` unconditionally, which is right after an account signup token has been consumed. When the
