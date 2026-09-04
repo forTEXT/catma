@@ -1796,6 +1796,9 @@ public class GraphWorktreeProject implements IndexedProject {
 							return success;
 						}
 						catch (IOException e) {
+							// a false result means that there is a merge request that couldn't be merged, which the user has to resolve in GitLab - anything
+							// else is a genuine failure and has to stay distinguishable from that, so we log it with the context we have here and then let
+							// the BackgroundService pass it to our ExecutionListener's error method, which reports it to the openProjectListener
 							logger.log(
 									Level.SEVERE,
 									String.format(
@@ -1806,7 +1809,7 @@ public class GraphWorktreeProject implements IndexedProject {
 									),
 									e
 							);
-							return false;
+							throw e;
 						}
 					}
 				},
