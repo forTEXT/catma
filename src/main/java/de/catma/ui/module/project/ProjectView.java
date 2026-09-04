@@ -2309,7 +2309,7 @@ public class ProjectView extends HugeCard implements CanReloadAll {
 			setProgressBarVisible(false);
 			setEnabled(true);
 
-			errorHandler.showAndLogError("Failed to synchronize project. Please contact support.", e);
+			errorHandler.showAndLogError("Failed to start project synchronization. Please contact support.", e);
 		}
 	}
 
