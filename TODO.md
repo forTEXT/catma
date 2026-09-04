@@ -18,6 +18,18 @@ The session should instead be invalidated and the user prompted to sign in again
 `invalid_grant`) from a transient one, and a path from the provider — which is called from background threads as well as the UI thread — to something that
 can end the Vaadin session.
 
+### Scale the OAuth token refresh leeway to the token's lifetime
+
+`GitLabOauthTokenProvider` refreshes when the access token is within a fixed `REFRESH_LEEWAY_SECONDS` (60) of expiring. If an instance is ever configured
+with an OAuth token lifetime at or below that, the condition is true from the moment the token is issued, so every gitlab4j request and every JGit
+credentials lookup mints a new token. Successful refreshes don't arm the failure back-off, so nothing damps it.
+
+No realistic instance runs a lifetime that short — GitLab's default is 2 hours — so this is about degrading sensibly rather than a bug we've hit. Deriving
+the leeway from the lifetime, e.g. `min(60, expiresIn / 2)`, would be enough.
+
+NB: Doorkeeper carries `expires_in` over to the token it mints on refresh instead of re-reading the configured default, so a lifetime that was low when a
+session started stays low for that session no matter what the setting is changed to afterwards.
+
 ### Don't discard invitation parameters when account creation is abandoned
 
 `CreateUserDialog.close()` calls `Page.replaceState(BASE_URL)` unconditionally, which is right after an account signup token has been consumed. When the
