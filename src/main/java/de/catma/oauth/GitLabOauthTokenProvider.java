@@ -75,6 +75,10 @@ public class GitLabOauthTokenProvider {
 
 	/**
 	 * Refreshes the access token irrespective of whether it has expired.
+	 * <p>
+	 * Unlike {@link #getAccessToken()} this propagates a failure rather than logging it and backing off, because its callers can handle one - it is called
+	 * from {@link de.catma.repository.git.managers.JGitCredentialsManager#refreshTransientCredentials}, i.e. when a Git operation has been rejected and is
+	 * about to be retried. Callers are expected to surface the failure; nothing is logged here.
 	 *
 	 * @throws IOException if the tokens couldn't be refreshed
 	 */
