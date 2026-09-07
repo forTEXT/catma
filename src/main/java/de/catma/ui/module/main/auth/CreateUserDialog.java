@@ -8,7 +8,6 @@ import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
 import com.vaadin.ui.Notification.Type;
 
-import de.catma.oauth.OauthConstants;
 import de.catma.ui.Parameter;
 import de.catma.ui.ParameterProvider;
 import de.catma.properties.CATMAPropertyKey;
@@ -143,7 +142,7 @@ public class CreateUserDialog extends AuthenticationDialog {
 				// group/project invitation token is deliberately kept alive so that the invitation can be accepted once the account exists (see
 				// RequestTokenHandler), and dropping it would leave the user signed in but not a member
 				TokenAction tokenAction = TokenAction.findAction(((ParameterProvider) UI.getCurrent()).getParameter(Parameter.ACTION));
-				redirectToOauthProvider(OauthConstants.OauthProvider.GITLAB, tokenAction != TokenAction.verify);
+				redirectToGitLabOauth(tokenAction != TokenAction.verify);
 			} catch (IOException e) {
 				// close this dialog before showing the error, otherwise we end up with two stacked modal windows
 				this.close();

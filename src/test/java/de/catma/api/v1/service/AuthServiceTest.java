@@ -40,7 +40,6 @@ import com.nimbusds.jwt.SignedJWT;
 
 import de.catma.api.v1.AuthConstants;
 import de.catma.api.v1.ApiApplication;
-import de.catma.api.v1.backend.interfaces.RemoteGitManagerPrivilegedFactory;
 import de.catma.api.v1.backend.interfaces.RemoteGitManagerRestrictedFactory;
 import de.catma.api.v1.fixture.AuthFixtures;
 import de.catma.api.v1.oauth.HashMapSessionStorageHandler;
@@ -56,8 +55,7 @@ class AuthServiceTest extends JerseyTest {
 	private static final String DUMMY_PERSONAL_ACCESS_TOKEN = "dummy_personal_access_token";
 
 	private RemoteGitManagerRestrictedFactory remoteGitManagerRestrictedFactoryMock = Mockito.mock(RemoteGitManagerRestrictedFactory.class);
-	private RemoteGitManagerPrivilegedFactory remoteGitManagerPrivilegedFactoryMock = Mockito.mock(RemoteGitManagerPrivilegedFactory.class);
-	
+
 	private HttpClientFactory httpClientFactoryMock = Mockito.mock(HttpClientFactory.class); 
 
 	// if HttpServletRequest is injected into the service under test with the @Context annotation, then it will be null because the tests don't run in a servlet
@@ -74,7 +72,6 @@ class AuthServiceTest extends JerseyTest {
 			@Override
 			protected void configure() {
 				bind(remoteGitManagerRestrictedFactoryMock).to(RemoteGitManagerRestrictedFactory.class).ranked(2);
-				bind(remoteGitManagerPrivilegedFactoryMock).to(RemoteGitManagerPrivilegedFactory.class).ranked(2);
 				bind(httpClientFactoryMock).to(HttpClientFactory.class).ranked(2);
 				bind(HashMapSessionStorageHandler.class).to(SessionStorageHandler.class).ranked(2);
 			}
@@ -93,10 +90,6 @@ class AuthServiceTest extends JerseyTest {
 		Properties properties = new Properties();
 		properties.setProperty(CATMAPropertyKey.API_HMAC_SECRET.name(), "dummy_hmac_secret".repeat(2));
 		properties.setProperty(CATMAPropertyKey.API_GIT_REPOSITORY_BASE_PATH.name(), System.getProperty("java.io.tmpdir"));
-		properties.setProperty(CATMAPropertyKey.GOOGLE_OAUTH_AUTHORIZATION_CODE_REQUEST_URL.name(), "http://oauthprovider.local/auth");
-		properties.setProperty(CATMAPropertyKey.GOOGLE_OAUTH_ACCESS_TOKEN_REQUEST_URL.name(), "http://oauthprovider.local/token");
-		properties.setProperty(CATMAPropertyKey.GOOGLE_OAUTH_CLIENT_ID.name(), "dummy_client_id");
-		properties.setProperty(CATMAPropertyKey.GOOGLE_OAUTH_CLIENT_SECRET.name(), "dummy_client_secret");
 		properties.setProperty(CATMAPropertyKey.GITLAB_SERVER_URL.name(), "http://gitlab.local");
 		properties.setProperty(CATMAPropertyKey.GITLAB_OAUTH_CLIENT_ID.name(), "dummy_gitlab_client_id");
 		properties.setProperty(CATMAPropertyKey.GITLAB_OAUTH_CLIENT_SECRET.name(), "dummy_gitlab_client_secret");
@@ -249,142 +242,6 @@ class AuthServiceTest extends JerseyTest {
 		// any failure produces a 500 response, and GitLabOauthHandler purposefully doesn't provide the caller with the exact reason
 		// the following exceptions should be logged:
 		// 1. SEVERE: GitLab OAuth: Internal error: CSRF token verification failed
-		// 2. SEVERE: Failed to process OAuth callback
-		//    de.catma.oauth.OauthException: Authentication failed, inspect logs
-	}
-	
-	@Test
-	void successfulGoogleOauthAuthentificationShouldReturnJwtWithIdentPayload() throws Exception {
-		Response authRedirectResponse = target(AUTH_TARGET + "/google").request().get();
-		assertEquals(Status.TEMPORARY_REDIRECT.getStatusCode(), authRedirectResponse.getStatus());
-		assertTrue(authRedirectResponse.getLocation().toString().startsWith(CATMAPropertyKey.GOOGLE_OAUTH_AUTHORIZATION_CODE_REQUEST_URL.getValue()));
-
-		String query = authRedirectResponse.getLocation().getQuery();
-		List<NameValuePair> queryParams = URLEncodedUtils.parse(URLDecoder.decode(query, StandardCharsets.UTF_8), StandardCharsets.UTF_8);
-		Map<String, String> queryParamsMap = queryParams.stream().collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue));
-		String state = queryParamsMap.get("state");
-		String nonce = queryParamsMap.get("nonce");
-
-		AuthFixtures.setUpValidThirdPartyOauth(
-				DUMMY_USER_IDENTIFIER,
-				nonce,
-				remoteGitManagerPrivilegedFactoryMock,
-				remoteGitManagerRestrictedFactoryMock,
-				httpClientFactoryMock
-		);
-
-		Response authResponse = target(AUTH_TARGET + "/google/callback")
-				.queryParam("code", "dummy_code")
-				.queryParam("state", state)
-				.request().get();
-		assertEquals(Status.OK.getStatusCode(), authResponse.getStatus());
-		
-		String token = IOUtils.toString((InputStream)authResponse.getEntity(), StandardCharsets.UTF_8);
-		
-		SignedJWT signedJWT = SignedJWT.parse(token);
-		JWSVerifier verifier = new MACVerifier(CATMAPropertyKey.API_HMAC_SECRET.getValue());
-		
-		assertTrue(signedJWT.verify(verifier));
-		
-		String userIdentifier = signedJWT.getJWTClaimsSet().getSubject();
-		
-		assertEquals(DUMMY_USER_IDENTIFIER, userIdentifier);
-	}
-
-	@Test
-	void googleOauthCallbackWithoutRequiredParamsShouldReturn400BadRequest() {
-		Response authResponse = target(AUTH_TARGET + "/google/callback").request().get(); // no 'code' or 'state' params
-		assertEquals(Status.BAD_REQUEST.getStatusCode(), authResponse.getStatus());
-	}
-
-	@Test
-	void googleOauthCallbackWithErrorFromGoogleShouldReturn500InternalServerError() {
-		// unfortunately doesn't seem to work, or somehow incompatible with our logging setup
-//		enable(TestProperties.RECORD_LOG_LEVEL); // not sure if needed
-//		set(TestProperties.RECORD_LOG_LEVEL, Level.SEVERE.intValue());
-
-		// need to do this so that the error is not due to missing session attributes (CSRF token and nonce)
-		Response authRedirectResponse = target(AUTH_TARGET + "/google").request().get();
-
-		Response response = target(AUTH_TARGET + "/google/callback")
-				.queryParam("code", "dummy_code")
-				.queryParam("state", "dummy_state")
-				.queryParam("error", "Dummy error from Google")
-				.request().get();
-		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
-
-		// would like to assert log output here...
-//		List<LogRecord> logRecords = getLoggedRecords();
-		// ...
-
-		// any failure produces a 500 response, and GoogleOauthHandler purposefully doesn't provide the caller with the exact reason (2nd exception below)
-		// the following exceptions should be logged:
-		// 1. SEVERE: Google OAuth: External error: An error from Google
-		// 2. SEVERE: Failed to process OAuth callback
-		//    de.catma.oauth.OauthException: Authentication failed, inspect logs
-	}
-
-	@Test
-	void googleOauthCallbackWithInvalidStateShouldReturn500InternalServerError() throws Exception {
-		// need to do this so that the error is not due to missing session attributes (CSRF token and nonce)
-		Response authRedirectResponse = target(AUTH_TARGET + "/google").request().get();
-
-		String query = authRedirectResponse.getLocation().getQuery();
-		List<NameValuePair> queryParams = URLEncodedUtils.parse(URLDecoder.decode(query, StandardCharsets.UTF_8), StandardCharsets.UTF_8);
-		Map<String, String> queryParamsMap = queryParams.stream().collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue));
-		String nonce = queryParamsMap.get("nonce");
-
-		AuthFixtures.setUpValidThirdPartyOauth(
-				DUMMY_USER_IDENTIFIER,
-				nonce,
-				remoteGitManagerPrivilegedFactoryMock,
-				remoteGitManagerRestrictedFactoryMock,
-				httpClientFactoryMock
-		);
-
-		String invalidState = String.format("%s=%s", OauthConstants.CSRF_TOKEN_STATE_PARAMETER_NAME, "invalid_state");
-
-		Response authResponse = target(AUTH_TARGET + "/google/callback")
-				.queryParam("code", "dummy_code")
-				.queryParam("state", invalidState)
-				.request().get();
-		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), authResponse.getStatus());
-
-		// any failure produces a 500 response, and GoogleOauthHandler purposefully doesn't provide the caller with the exact reason (2nd exception below)
-		// the following exceptions should be logged:
-		// 1. SEVERE: Google OAuth: Internal error: CSRF token verification failed
-		// 2. SEVERE: Failed to process OAuth callback
-		//    de.catma.oauth.OauthException: Authentication failed, inspect logs
-	}
-
-	@Test
-	void googleOauthCallbackWithInvalidNonceShouldReturn500InternalServerError() throws Exception {
-		// need to do this so that the error is not due to missing session attributes (CSRF token and nonce)
-		Response authRedirectResponse = target(AUTH_TARGET + "/google").request().get();
-
-		String query = authRedirectResponse.getLocation().getQuery();
-		List<NameValuePair> queryParams = URLEncodedUtils.parse(URLDecoder.decode(query, StandardCharsets.UTF_8), StandardCharsets.UTF_8);
-		Map<String, String> queryParamsMap = queryParams.stream().collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue));
-		String state = queryParamsMap.get("state");
-
-		String invalidNonce = "invalid_nonce";
-		AuthFixtures.setUpValidThirdPartyOauth(
-				DUMMY_USER_IDENTIFIER,
-				invalidNonce,
-				remoteGitManagerPrivilegedFactoryMock,
-				remoteGitManagerRestrictedFactoryMock,
-				httpClientFactoryMock
-		);
-
-		Response authResponse = target(AUTH_TARGET + "/google/callback")
-				.queryParam("code", "dummy_code")
-				.queryParam("state", state)
-				.request().get();
-		assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), authResponse.getStatus());
-
-		// any failure produces a 500 response, and GoogleOauthHandler purposefully doesn't provide the caller with the exact reason (2nd exception below)
-		// the following exceptions should be logged:
-		// 1. SEVERE: Google OAuth: Internal error: Nonce verification failed
 		// 2. SEVERE: Failed to process OAuth callback
 		//    de.catma.oauth.OauthException: Authentication failed, inspect logs
 	}

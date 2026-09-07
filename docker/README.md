@@ -208,13 +208,10 @@ interface requires GitLab to be configured to be able to send emails, because em
 settings at: *Settings → General → New user account restrictions*. User accounts can also be created directly using the
 [GitLab API](https://docs.gitlab.com/api/users/#create-a-user).
 
-To enable **Google account logins**, edit `catma.properties` and set the `GOOGLE_OAUTH_*` properties. You will also need to configure the GitLab OmniAuth
-settings in `gitlab.rb` as follows:
+To enable **Google account logins**, configure the GitLab OmniAuth settings in `gitlab.rb` as follows:
 
 ```
-gitlab_rails['omniauth_allow_single_sign_on'] = ['google_oauth2']
-gitlab_rails['omniauth_sync_profile_from_provider'] = ['google_oauth2']
-gitlab_rails['omniauth_sync_profile_attributes'] = ['email']
+gitlab_rails['omniauth_enabled'] = true
 gitlab_rails['omniauth_auto_link_user'] = ['google_oauth2']
 gitlab_rails['omniauth_providers'] = [
   {
@@ -225,6 +222,16 @@ gitlab_rails['omniauth_providers'] = [
   }
 ]
 ```
+
+Nothing is needed on the CATMA side - users always sign in on GitLab's login page, where Google then appears as an additional button. This is a way of signing
+in to an account that already exists, **not** a registration route: accounts are created through CATMA, and an existing account is linked by email address the
+first time its owner signs in with Google.
+
+Note that `omniauth_allow_single_sign_on`, `omniauth_sync_profile_from_provider` and `omniauth_sync_profile_attributes` are deliberately absent, and should be
+left unset - the first would let any Google account create itself a CATMA account (the `signup_enabled` setting does *not* cover OmniAuth), and the other two
+would take control of the user's email address away from them. See the
+[self-hosting documentation](https://github.com/forTEXT/catma/blob/master/doc/SELF-HOSTING.md) for the details and for what happens to accounts created by
+CATMA's former Google sign-in flow (nothing - they need no migration).
 
 ### Updates & Security
 

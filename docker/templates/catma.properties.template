@@ -16,7 +16,6 @@ SQLITE_DB_BASE_PATH=/data/catma
 
 DEV_MAIL_LOG_ONLY=true
 
-RESET_PASSWORD_URL=<placeholder>
 LOGOUT_URL=<placeholder>
 
 API_GIT_REPOSITORY_BASE_PATH=/data/catma/localgit_api

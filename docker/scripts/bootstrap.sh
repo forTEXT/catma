@@ -110,7 +110,6 @@ sed -i "s|^\(BASE_URL=\).*$|\1${CATMA_URL}/|" "$CATMA_PROPERTIES_PATH" # note tr
 # 127.0.0.1 within the container
 sed -i "s|^\(GITLAB_SERVER_URL=\).*$|\1${GITLAB_URL}|" "$CATMA_PROPERTIES_PATH"
 sed -i "s|^\(LOGOUT_URL=\).*$|\1${CATMA_URL}|" "$CATMA_PROPERTIES_PATH"
-sed -i "s|^\(RESET_PASSWORD_URL=\).*$|\1${GITLAB_URL}/users/password/new|" "$CATMA_PROPERTIES_PATH"
 
 # 3. if /etc/gitlab/gitlab.rb doesn't exist then we're starting for the first time - set a flag for later use, copy the template file and set some initial
 #    config options

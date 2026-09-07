@@ -2,11 +2,8 @@ package de.catma.repository.git.managers;
 
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.GitLabUtils;
-import de.catma.repository.git.GitUser;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
-import de.catma.util.Pair;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.gitlab4j.api.Constants.ImpersonationState;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.NotificationSettingsApi;
@@ -18,9 +15,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -33,8 +28,6 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 		terms_of_use_consent_given,
 	}
 
-	public static final String GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME = "catma-default-ipt";
-
 	private final Logger logger = Logger.getLogger(GitlabManagerPrivileged.class.getName());
 
 	private final GitLabApi privilegedGitLabApi;
@@ -44,44 +37,6 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 				CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), CATMAPropertyKey.GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN.getValue()
 		);
 		this.privilegedGitLabApi.getUserApi().enableCustomAttributes();
-	}
-
-	@Override
-	public Pair<GitUser, String> acquireImpersonationToken(String identifier, String provider, String email, String name) throws IOException {
-		User user = acquireUser(identifier, provider, email, name);
-		UserApi userApi = privilegedGitLabApi.getUserApi();
-
-		try {
-			List<ImpersonationToken> impersonationTokens = userApi.getImpersonationTokens(
-				user.getId(), ImpersonationState.ACTIVE
-			);
-
-			// revoke the default token if it exists already
-			// we do this because the actual token string is only returned on creation and we don't store it
-			for (ImpersonationToken token : impersonationTokens) {
-				if (token.getName().equals(GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME)) {
-					userApi.revokeImpersonationToken(user.getId(), token.getId());
-					break;
-				}
-			}
-		}
-		catch (GitLabApiException e) {
-			throw new IOException("Failed to revoke existing impersonation token", e);
-		}
-
-		String impersonationToken = createImpersonationToken(user.getId(), GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME);
-
-		if (impersonationToken == null) {
-			throw new IOException(
-					String.format(
-							"Failed to acquire impersonation token for user \"%s\". No active impersonation token called \"%s\" can be found.",
-							user.getUsername(),
-							GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME
-					)
-			);
-		}
-
-		return new Pair<>(new GitUser(user), impersonationToken);
 	}
 
 	@Override
@@ -107,10 +62,17 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 
 	@Override
 	public long createUser(String email, String username, String password, String publicname) throws IOException {
-		User user = this.createUser(email, username, password, publicname, null);
-		String token = this.createImpersonationToken(user.getId(), GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME);
+		User user = createGitLabUser(email, username, password, publicname);
 
-		try (GitLabApi gitlabApi = new GitLabApi(CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), token)) {
+		// the notification settings endpoints only ever act on the calling user, so the admin has to act as the new user to disable their notifications
+		// NB: sudo is set on a short-lived client rather than on privilegedGitLabApi, because setSudoAsId mutates the underlying ApiClient and would
+		//     therefore leak the Sudo header onto every other caller of the shared instance
+		// NB: this requires the admin token to have the 'sudo' scope in addition to 'api'
+		try (GitLabApi gitlabApi = new GitLabApi(
+				CATMAPropertyKey.GITLAB_SERVER_URL.getValue(), CATMAPropertyKey.GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN.getValue()
+		)) {
+			gitlabApi.setSudoAsId(user.getId());
+
 			NotificationSettingsApi userNotificationSettingsApi = gitlabApi.getNotificationSettingsApi();
 			NotificationSettings globalNotificationSettings = userNotificationSettingsApi.getGlobalNotificationSettings();
 			globalNotificationSettings.setLevel(NotificationSettings.Level.DISABLED);
@@ -124,73 +86,6 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 		}
 
 		return user.getId();
-	}
-
-	/**
-	 * Acquires (gets or creates) a GitLab user for third-party logins.
-	 * <p>
-	 * This action is performed as a GitLab admin.
-	 *
-	 * @param identifier the third-party unique identifier for the user (combined with <code>provider</code> to form the username)
-	 * @param provider the third-party provider name (combined with <code>identifier</code> to form the username)
-	 * @param email the user's email address
-	 * @param publicName the user's public name
-	 * @return a {@link User}
-	 * @throws IOException if an error occurs when acquiring the GitLab user
-	 */
-	private User acquireUser(String identifier, String provider, String email, String publicName) throws IOException {
-		UserApi userApi = privilegedGitLabApi.getUserApi();
-
-		String username = identifier + provider;
-
-		try {
-			User user = userApi.getUser(username); // TODO: user's email could have changed
-
-			if (user == null) {
-				user = createUser(
-						email,
-						username,
-						null, // password will be generated
-						publicName,
-						provider
-				);
-			}
-
-			return user;
-		}
-		catch (GitLabApiException e) {
-			throw new IOException("Failed to acquire GitLab user", e);
-		}
-	}
-
-	/**
-	 * Creates a new impersonation token for the GitLab user identified by <code>userId</code>.
-	 * <p>
-	 * This action is performed as a GitLab admin.
-	 *
-	 * @param userId the ID of the user for which to create the impersonation token
-	 * @param tokenName the name of the impersonation token to create
-	 * @return the new token
-	 * @throws IOException if something went wrong while creating the
-	 *         impersonation token
-	 */
-	private String createImpersonationToken(long userId, String tokenName) throws IOException {
-		UserApi userApi = privilegedGitLabApi.getUserApi();
-
-		try {
-			ImpersonationToken impersonationToken = userApi.createImpersonationToken(
-					userId,
-					tokenName,
-					// GitLab ignores anything but the date component and interprets it as UTC
-					// sessions are unlikely to last more than a couple of days (also see session config in web.xml)
-					Date.from(ZonedDateTime.now(ZoneId.of("UTC")).plusDays(2).toInstant()),
-					new Scope[] {Scope.API}
-			);
-			return impersonationToken.getToken();
-		}
-		catch (GitLabApiException e) {
-			throw new IOException("Failed to create impersonation token", e);
-		}
 	}
 
 	@Override
@@ -222,8 +117,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 	}
 
 	// it's more convenient to work with the User class internally, which is why this method exists
-	private User createUser(String email, String username, String password, String publicname, String provider
-			) throws IOException {
+	private User createGitLabUser(String email, String username, String password, String publicname) throws IOException {
 		UserApi userApi = privilegedGitLabApi.getUserApi();
 		if (password == null) {
 			// generate a random password
@@ -240,16 +134,6 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 		user.setIsAdmin(false);
 		user.setSkipConfirmation(true);
 
-		// TODO: remove, this doesn't actually do anything (gitlab4j-api doesn't do anything with the information)
-		//       test whether user.setExternUid and user.setProvider have any effect, and if so, whether that results in a valid identity
-		if (provider != null) {
-			Identity identity = new Identity();
-			identity.setExternUid(username);
-			identity.setProvider(provider);
-			
-			user.setIdentities(Collections.singletonList(identity));
-		}
-		
 		try {
 			user = userApi.createUser(user, password, false);//do not send a pwd reset link
 			return user;

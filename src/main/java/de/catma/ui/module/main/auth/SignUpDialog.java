@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.mail.EmailException;
 
-import com.github.appreciated.material.MaterialTheme;
 import com.google.common.base.Joiner;
 import com.vaadin.data.Binder;
 import com.vaadin.data.ValidationException;
@@ -14,7 +13,6 @@ import com.vaadin.data.validator.EmailValidator;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.Page;
-import com.vaadin.server.ThemeResource;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -35,8 +33,8 @@ import de.catma.user.UserData;
 import de.catma.user.signup.SignupTokenManager;
 
 /**
- * SignUpDialog allows users to sign up either by entering an email address (the password is set later), or via Google (OpenID Connect).
- * The email address option is protected against bots using Google reCAPTCHA.
+ * SignUpDialog allows users to sign up by entering an email address (the username and password are chosen later, once the address has been verified).
+ * It is protected against bots using Google reCAPTCHA.
  */
 public class SignUpDialog extends AuthenticationDialog {
 	private final Logger logger = Logger.getLogger(SignUpDialog.class.getName());
@@ -55,8 +53,6 @@ public class SignUpDialog extends AuthenticationDialog {
 	private TextField tfEmail;
 	private Button btnSignup;
 	private TextField hiddenVerification;
-
-	private Button googleSignUpLink;
 
 	public SignUpDialog(String caption) {
 		super(caption);
@@ -91,7 +87,7 @@ public class SignUpDialog extends AuthenticationDialog {
 				Notification.show(
 						"Error",
 						"reCAPTCHA verification failed\n" +
-								"If you want to use sign up option 1, please reload the page to try again.",
+								"If you want to sign up, please reload the page to try again.",
 						Notification.Type.ERROR_MESSAGE
 				);
 				btnSignup.setDescription("reCAPTCHA verification failed - reload to try again");
@@ -143,8 +139,6 @@ public class SignUpDialog extends AuthenticationDialog {
 
 			this.close();
 		});
-
-		googleSignUpLink.addClickListener(this::googleLinkClickListener);
 	}
 
 	private void initComponents() {
@@ -155,10 +149,7 @@ public class SignUpDialog extends AuthenticationDialog {
 		content.setWidthFull();
 		content.setStyleName("signup-dialog");
 
-		Label lblChoice = new Label("Please choose one of the options below:");
-		lblChoice.setWidth("100%");
-
-		Panel pnlEmail = new Panel("Option 1: Email Address and Password");
+		Panel pnlEmail = new Panel("Email Address and Password");
 		pnlEmail.setStyleName("email-panel");
 		VerticalLayout pnlEmailContent = new VerticalLayout();
 
@@ -200,18 +191,6 @@ public class SignUpDialog extends AuthenticationDialog {
 		pnlEmailContent.addComponent(hiddenVerification);
 		pnlEmail.setContent(pnlEmailContent);
 
-		Panel pnlGoogle = new Panel("Option 2: Google Account");
-		pnlGoogle.setStyleName("google-panel");
-		VerticalLayout pnlGoogleContent = new VerticalLayout();
-
-		googleSignUpLink = new Button();
-		googleSignUpLink.setIcon(new ThemeResource("img/google_buttons/btn_google_light_normal_sign_up.svg"));
-		googleSignUpLink.setStyleName(MaterialTheme.BUTTON_LINK);
-		googleSignUpLink.addStyleName("authdialog-google-login-link");
-
-		pnlGoogleContent.addComponent(googleSignUpLink);
-		pnlGoogle.setContent(pnlGoogleContent);
-
 		HorizontalLayout hlLinks = new HorizontalLayout();
 		hlLinks.setWidth("100%");
 		hlLinks.setStyleName("links");
@@ -241,9 +220,7 @@ public class SignUpDialog extends AuthenticationDialog {
 		hlLinks.setComponentAlignment(privacyPolicyLink, Alignment.BOTTOM_LEFT);
 		hlLinks.setExpandRatio(privacyPolicyLink, 1f);
 
-		content.addComponent(lblChoice);
 		content.addComponent(pnlEmail);
-		content.addComponent(pnlGoogle);
 		content.addComponent(hlLinks);
 
 		setContent(content);

@@ -5,8 +5,6 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 import de.catma.oauth.GitLabOauthHandler;
-import de.catma.oauth.GoogleOauthHandler;
-import de.catma.oauth.OauthConstants;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.ui.Parameter;
 import de.catma.ui.ParameterProvider;
@@ -22,25 +20,19 @@ public abstract class AuthenticationDialog extends Window {
     }
 
     protected void gitLabLinkClickListener(Button.ClickEvent event) {
-        redirectToOauthProvider(OauthConstants.OauthProvider.GITLAB, true);
-    }
-
-    protected void googleLinkClickListener(Button.ClickEvent event) {
-        redirectToOauthProvider(OauthConstants.OauthProvider.GOOGLE, true);
+        redirectToGitLabOauth(true);
     }
 
     /**
-     * Redirects the client to the authorization endpoint of the given OAuth provider.
+     * Redirects the client to the authorization endpoint of the GitLab backend.
      * <p>
-     * Both providers redirect back to <code>BASE_URL</code>, where {@link de.catma.ui.CatmaApplication#init} picks the callback up and dispatches it based on
-     * the provider that was recorded in the session by the corresponding handler.
+     * GitLab redirects back to <code>BASE_URL</code>, where {@link de.catma.ui.CatmaApplication#init} picks the callback up.
      *
-     * @param provider the OAuth provider to redirect to
      * @param forwardRequestTokenParams whether to carry our own action and token request parameters through the flow, so that the context can be recovered
      *                                  when the user returns. Callers that have already consumed those parameters must pass <code>false</code>, otherwise
      *                                  they are handled a second time when the user returns (see {@link de.catma.ui.RequestTokenHandler}).
      */
-    protected void redirectToOauthProvider(OauthConstants.OauthProvider provider, boolean forwardRequestTokenParams) {
+    protected void redirectToGitLabOauth(boolean forwardRequestTokenParams) {
         Map<String, String> optionalStateParams = null;
 
         // there could be action and token parameters (ours - used for signups and invitations, although only the latter are relevant here)
@@ -56,17 +48,11 @@ public abstract class AuthenticationDialog extends Window {
             }
         }
 
-        URI oauthAuthorizationRequestUri = provider == OauthConstants.OauthProvider.GITLAB
-                ? GitLabOauthHandler.getOauthAuthorizationRequestUri(
-                        CATMAPropertyKey.BASE_URL.getValue(),
-                        VaadinSession.getCurrent()::setAttribute,
-                        optionalStateParams
-                )
-                : GoogleOauthHandler.getOauthAuthorizationRequestUri(
-                        CATMAPropertyKey.BASE_URL.getValue(),
-                        VaadinSession.getCurrent()::setAttribute,
-                        optionalStateParams
-                );
+        URI oauthAuthorizationRequestUri = GitLabOauthHandler.getOauthAuthorizationRequestUri(
+                CATMAPropertyKey.BASE_URL.getValue(),
+                VaadinSession.getCurrent()::setAttribute,
+                optionalStateParams
+        );
 
         // NB: no need to close this dialog, the client navigates away from the page entirely
         UI.getCurrent().getPage().setLocation(oauthAuthorizationRequestUri);

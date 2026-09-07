@@ -42,9 +42,8 @@ import java.util.stream.Collectors;
  *    These should be supplied to <code>handleCallbackAndGetTokens</code> to produce a {@link GitLabOauthTokens} record, which is then usually wrapped in a
  *    {@link GitLabOauthTokenProvider} so that the access token can be refreshed for the lifetime of the session.
  * <p>
- * Unlike {@link GoogleOauthHandler} we don't request the "openid" scope and therefore don't receive an ID token, so there is no nonce to verify - the identity
- * of the user is established by calling GitLab's /user endpoint with the access token (see
- * {@link de.catma.repository.git.managers.GitlabManagerRestricted}).
+ * We don't request the "openid" scope and therefore don't receive an ID token, so there is no nonce to verify - the identity of the user is established by
+ * calling GitLab's /user endpoint with the access token (see {@link de.catma.repository.git.managers.GitlabManagerRestricted}).
  */
 public class GitLabOauthHandler {
     // (see https://docs.gitlab.com/integration/oauth_provider/#view-all-authorized-applications for the full list of scopes)
@@ -70,9 +69,8 @@ public class GitLabOauthHandler {
         String csrfToken = new BigInteger(130, new SecureRandom()).toString(32);
 
         // add the csrfToken to the session - it is verified later in the flow (handleCallbackAndGetTokens)
-        // the provider allows the callback to be dispatched to this handler rather than GoogleOauthHandler
+        // its presence is also what tells the callback handler that an OAuth flow is in progress
         sessionSetAttributeFn.accept(OauthConstants.OAUTH_CSRF_TOKEN_SESSION_ATTRIBUTE_NAME, csrfToken);
-        sessionSetAttributeFn.accept(OauthConstants.OAUTH_PROVIDER_SESSION_ATTRIBUTE_NAME, OauthConstants.OauthProvider.GITLAB.name());
 
         String state = String.format("%s=%s", OauthConstants.CSRF_TOKEN_STATE_PARAMETER_NAME, csrfToken);
 
@@ -151,9 +149,8 @@ public class GitLabOauthHandler {
             throw new OauthException("Authentication failed, inspect logs");
         }
         finally {
-            // clear the session attributes (prevents replay attacks)
+            // clear the session attribute (prevents replay attacks)
             sessionSetAttributeFn.accept(OauthConstants.OAUTH_CSRF_TOKEN_SESSION_ATTRIBUTE_NAME, null);
-            sessionSetAttributeFn.accept(OauthConstants.OAUTH_PROVIDER_SESSION_ATTRIBUTE_NAME, null);
         }
     }
 

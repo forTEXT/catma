@@ -40,8 +40,12 @@ The CATMA application communicates with the GitLab backend via GitLab's API. As 
 require administrative access, CATMA needs to be configured with a personal access token for the admin account.
 
 Create the token using the Ruby script mentioned above, or manually by navigating to the user preferences for the admin user, selecting *Access → Personal
-access tokens* from the menu on the left and creating a new token with the **api** scope. Copy the token into the `GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN` property
-in your `catma.properties` file (see [Application Deployment](#application-deployment) below).
+access tokens* from the menu on the left and creating a new token with the **api** and **sudo** scopes. Copy the token into the
+`GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN` property in your `catma.properties` file (see [Application Deployment](#application-deployment) below).
+
+> **Upgrading an existing installation:** the `sudo` scope is a new requirement. CATMA acts as the new user to disable their notifications during account
+> creation, which used to be done with an impersonation token and is now done with `sudo`. Scopes can't be added to an existing token, so you have to create a
+> replacement token and update the property - otherwise account creation will fail at the notification-settings step.
 
 Note that tokens have an expiration date by default. It is considered good security practice to regularly rotate tokens; however, there is an option that will
 allow you to create tokens without expiration (*Settings → General → Account and limit → Access token expiration*).
@@ -70,10 +74,54 @@ Navigate to *Admin → Applications → New application* and set:
 Copy the resulting *Application ID* and *Secret* into the `GITLAB_OAUTH_CLIENT_ID` and `GITLAB_OAUTH_CLIENT_SECRET` properties. Note that GitLab stores
 application secrets hashed, so the secret is only available immediately after creating the application - if you lose it you have to renew it.
 
-### A Note on Google Sign-In
+### Google Sign-In (Optional)
 
-The "Sign in with Google" option is handled by CATMA itself (OpenID Connect against Google, followed by the creation of a GitLab impersonation token via the
-admin token above) and is not affected by the OAuth application described here. It is configured via the separate `GOOGLE_OAUTH_*` properties.
+CATMA has a single sign-in flow, the one described above. Google is offered by GitLab as an OmniAuth provider, so users see it as a button on GitLab's login
+page. It is a way of signing in to an account that already exists - account creation stays with CATMA.
+
+Add the following to `gitlab.rb` and reconfigure:
+
+```ruby
+gitlab_rails['omniauth_enabled'] = true
+gitlab_rails['omniauth_auto_link_user'] = ['google_oauth2']   # link to the existing account by email address
+gitlab_rails['omniauth_providers'] = [
+  { "name" => "google_oauth2", "app_id" => "<client-id>", "app_secret" => "<client-secret>",
+    "args" => { "access_type" => "offline", "approval_prompt" => "" } }
+]
+```
+
+The credentials are those of a Google Cloud OAuth client (see
+[Google's documentation](https://developers.google.com/identity/openid-connect/openid-connect#appsetup)). Add `<GITLAB_SERVER_URL>/users/auth/google_oauth2/callback`
+to its authorised redirect URIs.
+
+Two settings are deliberately absent:
+
+- **`omniauth_allow_single_sign_on`** must be left unset (its default). It, and *not* the instance-wide `signup_enabled` application setting, is what governs
+  account creation through OmniAuth - GitLab's docs are explicit that `signup_enabled` "doesn't apply to LDAP or OmniAuth users". Leaving it unset is the only
+  thing keeping the decision about who gets a CATMA account with us; with it set, any Google account on the internet can provision itself one. Existing
+  accounts are still found and linked, because `Gitlab::Auth::OAuth::User#find_user` resolves the lookup before it consults the setting. A Google account with
+  no matching GitLab account is refused with *"Signing in using your Google account without a pre-existing GitLab account is not allowed"*.
+  `omniauth_block_auto_created_users` (also unset, defaulting to `true`) is a second line of defence: it would park any auto-created user in a
+  pending-approval state rather than letting them in.
+- **`omniauth_sync_profile_from_provider` / `omniauth_sync_profile_attributes`** must both be left unset. `sync_profile_attributes` defaults to `['email']`, so
+  the pair has to be dropped together. With email syncing enabled, GitLab rewrites the user's primary email from Google on every sign-in and marks it synced,
+  which makes the field read-only in GitLab's profile UI. Because password sign-in matches the username or the *primary* email only, a Google-side address
+  change would then silently invalidate the user's old email as a login identifier, with no way for them to undo it. If you have previously enabled these,
+  removing the provider from `sync_profile_from_provider` restores control immediately, including for already-linked users.
+
+#### Existing Accounts and Linking
+
+- Accounts created by CATMA's former Google sign-in flow (username `<google-sub>google_com`) need **no migration**. Auto-link matches them by email address on
+  the first Google sign-in and attaches a `google_oauth2` identity. The username - and with it the local working-copy path and all project memberships - is
+  untouched.
+- Email matching is a **first-link-only** mechanism. `find_user` tries `find_by_uid_and_provider` before `find_by_email`, so once the identity exists GitLab
+  matches on Google's stable `sub` and either side's address can change without breaking sign-in.
+- A user whose CATMA account email address differs from their Google address has to link the two themselves, in GitLab's own account settings - auto-link
+  matches the primary email only and CATMA has no UI for it.
+- Tell users that their **username** is the identifier that never moves (`gitlab_username_changing_enabled = false`). Changing the primary email address keeps
+  the previous one as a secondary address, but only the primary one works as a login identifier.
+- Linking doesn't affect password sign-in: the identity and the password are independent credentials, and CATMA-created accounts always have a password (one is
+  generated if the user doesn't supply one).
 
 ## Application Deployment
 

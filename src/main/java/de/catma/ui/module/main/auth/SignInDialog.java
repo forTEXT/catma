@@ -1,11 +1,9 @@
 package de.catma.ui.module.main.auth;
 
-import com.github.appreciated.material.MaterialTheme;
 import com.google.common.eventbus.EventBus;
 import com.vaadin.event.Action;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.server.ExternalResource;
-import com.vaadin.server.ThemeResource;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
 import de.catma.hazelcast.HazelCastService;
@@ -19,9 +17,8 @@ import de.catma.ui.login.LoginService;
 import java.io.IOException;
 
 /**
- * SignInDialog allows users to sign in using one of three options:
+ * SignInDialog allows users to sign in using one of two options:
  *  - a CATMA account (OAuth authorization code flow against the GitLab backend, where the user enters their credentials)
- *  - Google (OpenID Connect)
  *  - personal access token (hidden - accessed via keyboard shortcut Alt+P)
  *
  */
@@ -37,7 +34,6 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 
 	private VerticalLayout regularSignInLayout;
 	private Button btnRegularSignIn;
-	private Button googleSignInLink;
 
 	private VerticalLayout patSignInLayout;
 	private PasswordField pfPersonalAccessToken;
@@ -105,8 +101,6 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 		// (see CatmaApplication.handleRequestOauth), so there is nothing else to do here
 		btnRegularSignIn.addClickListener(this::gitLabLinkClickListener);
 
-		googleSignInLink.addClickListener(this::googleLinkClickListener);
-
 		btnPatSignIn.addClickListener(event -> {
 			try {
 				loginservice.login(pfPersonalAccessToken.getValue());
@@ -130,55 +124,26 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 		regularSignInLayout = new VerticalLayout();
 		regularSignInLayout.setMargin(false);
 
-		Label lblChoice = new Label("Please choose one of the options below:");
-		lblChoice.setWidth("100%");
-
-		Panel pnlEmail = new Panel("Option 1: CATMA Account");
+		Panel pnlEmail = new Panel("CATMA Account");
 		pnlEmail.setStyleName("email-panel");
 		VerticalLayout pnlEmailContent = new VerticalLayout();
 
 		Label lblRegularSignIn = new Label(
-				"You will be redirected to CATMA's GitLab backend, where you can sign in with your username or email address and your password.",
+				"You will be redirected to CATMA's GitLab backend, where you can sign in with your username or email address and your password, or with a "
+						+ "Google account registered to the same email address.",
 				ContentMode.HTML
 		);
 		lblRegularSignIn.setWidth("100%");
 
-		HorizontalLayout hlForgotPasswordAndButton = new HorizontalLayout();
-		hlForgotPasswordAndButton.setWidth("100%");
-
-		Link forgotPasswordLink = new Link(
-				"Forgot your password?",
-				new ExternalResource(CATMAPropertyKey.RESET_PASSWORD_URL.getValue())
-		);
-		forgotPasswordLink.setStyleName("authdialog-forgot-password-link");
-
 		btnRegularSignIn = new Button("Sign In");
 		btnRegularSignIn.setClickShortcut(ShortcutAction.KeyCode.ENTER);
 
-		hlForgotPasswordAndButton.addComponent(forgotPasswordLink);
-		hlForgotPasswordAndButton.addComponent(btnRegularSignIn);
-		hlForgotPasswordAndButton.setComponentAlignment(btnRegularSignIn, Alignment.BOTTOM_RIGHT);
-		hlForgotPasswordAndButton.setExpandRatio(forgotPasswordLink, 1f);
-
 		pnlEmailContent.addComponent(lblRegularSignIn);
-		pnlEmailContent.addComponent(hlForgotPasswordAndButton);
+		pnlEmailContent.addComponent(btnRegularSignIn);
+		pnlEmailContent.setComponentAlignment(btnRegularSignIn, Alignment.BOTTOM_RIGHT);
 		pnlEmail.setContent(pnlEmailContent);
 
-		Panel pnlGoogle = new Panel("Option 2: Google Account");
-		pnlGoogle.setStyleName("google-panel");
-		VerticalLayout pnlGoogleContent = new VerticalLayout();
-
-		googleSignInLink = new Button();
-		googleSignInLink.setIcon(new ThemeResource("img/google_buttons/btn_google_light_normal_sign_in.svg"));
-		googleSignInLink.setStyleName(MaterialTheme.BUTTON_LINK);
-		googleSignInLink.addStyleName("authdialog-google-login-link");
-
-		pnlGoogleContent.addComponent(googleSignInLink);
-		pnlGoogle.setContent(pnlGoogleContent);
-
-		regularSignInLayout.addComponent(lblChoice);
 		regularSignInLayout.addComponent(pnlEmail);
-		regularSignInLayout.addComponent(pnlGoogle);
 
 		patSignInLayout = new VerticalLayout();
 		patSignInLayout.setMargin(false);

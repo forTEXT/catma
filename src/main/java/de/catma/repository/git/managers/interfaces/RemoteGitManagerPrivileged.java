@@ -3,9 +3,6 @@ package de.catma.repository.git.managers.interfaces;
 import java.io.IOException;
 import java.time.LocalDate;
 
-import de.catma.repository.git.GitUser;
-import de.catma.util.Pair;
-
 /**
  * Privileged operations for user management.
  * <p>
@@ -15,23 +12,6 @@ import de.catma.util.Pair;
  * @see RemoteGitManagerCommon
  */
 public interface RemoteGitManagerPrivileged extends RemoteGitManagerCommon {
-
-	
-	/**
-	 * Acquires (gets or creates) a GitLab impersonation token for the supplied
-	 * <code>catmaUser</code>.
-	 * <p>
-	 * This action is performed as a GitLab admin.
-	 *
-	 * @param identifier unique identifier
-	 * @param email email address
-	 * @param name name
-	 * @return a {@link Pair} object with the first value being a {@link GitUser} object and the second
-	 *         value being the raw impersonation token string
-	 * @throws IOException if something went wrong while acquiring the GitLab
-	 *         impersonation token
-	 */
-	Pair<GitUser, String> acquireImpersonationToken(String identifier, String provider, String email, String name) throws IOException;
 
 	/**
 	 * Creates a new personal access token for the GitLab user identified by <code>userId</code>, with a default scope

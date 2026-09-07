@@ -86,7 +86,6 @@ GITLAB_OAUTH_CLIENT_ID=your-oauth-application-id
 GITLAB_OAUTH_CLIENT_SECRET=your-oauth-application-secret
 GIT_REPOSITORY_BASE_PATH=/your/path/to/catma/repo/git
 SQLITE_DB_BASE_PATH=/your/path/to/catma/db
-RESET_PASSWORD_URL=http://localhost:8088/users/password/new
 LOGOUT_URL=http://localhost:8080/
 API_GIT_REPOSITORY_BASE_PATH=/your/path/to/catma/repo/git_api
 API_HMAC_SECRET=your-long-and-random-secret
@@ -125,8 +124,9 @@ interface requires GitLab to be configured to be able to send emails, because em
 settings at: *Settings → General → New user account restrictions*. User accounts can also be created directly using the
 [GitLab API](https://docs.gitlab.com/api/users/#create-a-user).
 
-To enable **Google account logins**, you will also need to set the `GOOGLE_OAUTH_*` properties and configure the GitLab OmniAuth settings in GitLab's
-`gitlab.rb` configuration file, as shown [here](../docker/README.md#multi-user).
+To enable **Google account logins**, configure the GitLab OmniAuth settings in GitLab's `gitlab.rb` configuration file, as shown
+[here](../docker/README.md#multi-user). Nothing is needed on the CATMA side - Google appears as a button on GitLab's login page, which is where users sign in
+either way.
 
 An internet connection is not strictly necessary if you are running everything locally, however external mail or Google reCAPTCHA / OAuth will obviously not
 work without one.
