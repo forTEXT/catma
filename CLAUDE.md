@@ -62,12 +62,19 @@ template is `src/main/resources/catma.properties`.
 
 ### Entry points (`src/main/webapp/WEB-INF/web.xml`)
 
-1. `PropertiesInitializerServlet` — loads config, `load-on-startup 1`.
-2. `de.catma.ui.CatmaApplicationServlet` → `de.catma.ui.CatmaApplication` (the Vaadin `UI`, mapped at `/*`) — the interactive application, with Vaadin
-   Push over WebSocket/XHR.
-3. A Jersey `ServletContainer` at `/api/v1/*` → `de.catma.api.v1.ApiApplication` — the read/export REST API, documented via Swagger annotations.
+Every servlet is declared in `web.xml` rather than with `@WebServlet`, so that the startup order is visible in one place. It matters: each of the first
+three depends on the ones before it. In `load-on-startup` order:
 
-`HazelCastInitializerServlet` + `de.catma.hazelcast` provide cross-session messaging and caching (signup tokens, project invitation codes).
+1. `PropertiesInitializerServlet` — loads config.
+2. `GitLabCapabilitiesCheckServlet` — verifies that the admin token has the scopes CATMA needs and belongs to an administrator. A definite
+   misconfiguration aborts deployment; being unable to reach GitLab at all only logs.
+3. `HazelCastInitializerServlet` — with `de.catma.hazelcast`, provides cross-session messaging and caching (signup tokens, project invitation codes).
+4. `de.catma.ui.CatmaApplicationServlet` → `de.catma.ui.CatmaApplication` (the Vaadin `UI`, mapped at `/*`) — the interactive application, with Vaadin
+   Push over WebSocket/XHR.
+5. A Jersey `ServletContainer` at `/api/v1/*` → `de.catma.api.v1.ApiApplication` — the read/export REST API, documented via Swagger annotations.
+
+The init servlets (1–3) log through `GenericServlet.log()` rather than `java.util.logging` — a deliberate exception to the convention below, because
+their output is container-startup diagnostics and belongs in the container's log.
 
 ### Persistence model — the important part
 
@@ -157,7 +164,7 @@ language detection).
 ## Conventions
 
 - Logging in application code is `java.util.logging` throughout (`slf4j-simple` is present only as a provider for third-party libraries). Don't
-  introduce SLF4J calls in `de.catma`.
+  introduce SLF4J calls in `de.catma`. The one exception is the init servlets — see "Entry points" above.
 - Existing Java sources are indented with **tabs**; lines run long (the `.editorconfig` — a large IDEA export — sets `max_line_length = 160` but
   declares spaces at the root level, which the codebase does not follow). Match the surrounding file.
 - `.aiignore` marks files that should not be fed to AI tooling (all `*.properties`, `doc/`, `.run/`, `testdocs/`, build output).

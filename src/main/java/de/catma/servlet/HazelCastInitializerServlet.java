@@ -5,7 +5,6 @@ import java.io.IOException;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 
 import com.hazelcast.config.Config;
@@ -18,7 +17,6 @@ import de.catma.user.signup.SignupTokenManager;
 /**
  * Initializes a Hazelcast node and caches to store account/group/project-signup and project invitation tokens.
  */
-@WebServlet(name = "HazelCast", urlPatterns = "/hazelcast", loadOnStartup = 2)
 public class HazelCastInitializerServlet extends HttpServlet{
 	private volatile HazelcastInstance hazelcastNode;
 

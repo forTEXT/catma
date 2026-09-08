@@ -69,6 +69,22 @@ Wrapping the exception with that context instead is the obvious replacement and 
 project they are in, and by the note above it would displace `"GitLab's token endpoint did not return an access token..."`, or whatever else went wrong,
 from the dialog - which is the part they are asked to include in a bug report.
 
+### Extend the startup capabilities check to the OAuth application and other properties
+
+`GitLabCapabilitiesCheckServlet` currently only checks the admin token. `GITLAB_OAUTH_CLIENT_ID` and `GITLAB_OAUTH_CLIENT_SECRET` are just as fatal when
+wrong — nobody can sign in at all — and are just as checkable at startup, but the two halves need different means:
+
+- The **client ID** and its redirect URIs come back from the admin `GET /applications` endpoint (`ApplicationsApi.getApplications()` →
+  `getApplicationId()`, `getCallbackUrl()`). That also catches a callback URL that doesn't cover `BASE_URL`, probably the most common misconfiguration of
+  the lot, and one that otherwise only shows up as a failed login.
+- The **secret** can't be read back — GitLab stores it hashed. Proving it needs a `POST /oauth/token` with a deliberately invalid authorization code:
+  `invalid_client` (401) means the ID/secret pair is wrong, `invalid_grant` (400) means the credentials are good and only the code was bad. No side
+  effects, since an invalid code grants nothing.
+
+Other properties could be validated the same way — that `SQLITE_DB_BASE_PATH` holds a database, that `GIT_REPOSITORY_BASE_PATH` and
+`API_GIT_REPOSITORY_BASE_PATH` are writable and distinct, that `MAIL_*` will actually send once `DEV_MAIL_LOG_ONLY` is off — so it is worth deciding how
+far the servlet should go before adding to it piecemeal, and keeping the "definite misconfiguration is fatal, can't tell is not" split as it grows.
+
 ### Don't discard invitation parameters when account creation is abandoned
 
 `CreateUserDialog.close()` calls `Page.replaceState(BASE_URL)` unconditionally, which is right after an account signup token has been consumed. When the

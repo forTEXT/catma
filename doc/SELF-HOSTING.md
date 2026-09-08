@@ -45,7 +45,11 @@ access tokens* from the menu on the left and creating a new token with the **api
 
 > **Upgrading an existing installation:** the `sudo` scope is a new requirement. CATMA acts as the new user to disable their notifications during account
 > creation, which used to be done with an impersonation token and is now done with `sudo`. Scopes can't be added to an existing token, so you have to create a
-> replacement token and update the property - otherwise account creation will fail at the notification-settings step.
+> replacement token and update the property - otherwise nobody will be able to sign up.
+>
+> CATMA checks the token's scopes at startup and **refuses to start** if they are insufficient, naming what is missing in the servlet container log, so this
+> is not something you can deploy and only discover later. (If the GitLab server can't be reached at all, CATMA logs that and starts anyway - it will pick
+> the connection up on its own.)
 
 Note that tokens have an expiration date by default. It is considered good security practice to regularly rotate tokens; however, there is an option that will
 allow you to create tokens without expiration (*Settings → General → Account and limit → Access token expiration*).
