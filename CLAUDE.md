@@ -163,11 +163,23 @@ language detection).
 
 ## Conventions
 
+- **Consistency is valued highly.** When there is an established way of doing something here, follow it rather than introducing a second one. If you
+  find the codebase already doing the same thing two different ways, don't quietly pick a side and don't add a third: say so, and propose how to make
+  it uniform, with the trade-offs of each option. Where the inconsistency is deliberate, record why, next to the exception.
 - Logging in application code is `java.util.logging` throughout (`slf4j-simple` is present only as a provider for third-party libraries). Don't
   introduce SLF4J calls in `de.catma`. The one exception is the init servlets — see "Entry points" above.
 - Existing Java sources are indented with **tabs**; lines run long (the `.editorconfig` — a large IDEA export — sets `max_line_length = 160` but
   declares spaces at the root level, which the codebase does not follow). Match the surrounding file.
 - `.aiignore` marks files that should not be fed to AI tooling (all `*.properties`, `doc/`, `.run/`, `testdocs/`, build output).
+
+### Working with the user
+
+Unless you have been sent off to work unattended, agree the design before you build it:
+
+- Put design decisions to the user before implementing — which approach, what the trade-offs are, anything you had to assume. Answer any questions
+  they've asked and confirm the details they've asked you to confirm, then wait for a go-ahead rather than starting.
+- Don't commit on your own initiative while questions are open, or while it's likely you'll be asked to change what you've just done. In an active
+  session, finish the work, report it, and let the user ask for the commit.
 
 ### Where documentation belongs
 
@@ -184,10 +196,16 @@ Put an explanation next to the thing it explains, at the narrowest scope that fi
 
 ### Commit messages
 
-Subject in the imperative, then a blank line, then prose explaining **why**. Keep it short — a reader wanting the detail has the diff, the code comments
-and this file.
+Subject in the imperative, then a blank line, then prose explaining **why**. Keep it short — two or three short paragraphs is usually plenty, and a
+reader who wants more has the diff, the code comments and this file. Err on the side of leaving things out.
 
+- Explain the motivation and any non-obvious consequence. Don't list what changed file by file — the diff already says that.
+- **Don't explain how the new code works.** That belongs in the code, or a comment beside it, where someone changing it will see it. A commit message
+  describing the mechanism is both a duplicate and the copy that goes stale.
+- **Say no more about the old behaviour than it takes to see why the change was made.** Naming the machinery that went away is noise.
+- **Nothing here is written for an operator.** Anything someone has to *do* — a setting to add, a token to replace, a migration step — goes in `doc/`,
+  `docker/README.md` or the `catma.properties` template, because that is where they will look. A breaking API change is worth a line, as it tells a
+  reader how far the commit reaches.
 - State conclusions directly. Don't narrate the investigation that produced them ("diffing X against Y shows…", "after checking…") and don't cite
   evidence for your own claims.
-- Explain the motivation and any non-obvious consequence. Don't list what changed file by file — the diff already says that.
 - If a detail is needed to work on the code rather than to understand the change, it belongs in a comment, not here.
