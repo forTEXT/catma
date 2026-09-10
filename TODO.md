@@ -85,6 +85,23 @@ Other properties could be validated the same way — that `SQLITE_DB_BASE_PATH` 
 `API_GIT_REPOSITORY_BASE_PATH` are writable and distinct, that `MAIL_*` will actually send once `DEV_MAIL_LOG_ONLY` is off — so it is worth deciding how
 far the servlet should go before adding to it piecemeal, and keeping the "definite misconfiguration is fatal, can't tell is not" split as it grows.
 
+### Surface OAuth error responses in the web app
+
+`CatmaApplication.handleRequestOauth` guards on `code != null`, but an OAuth error response carries no code, so an error redirect from GitLab falls
+straight through the guard: `handleRequestToken` runs instead and the user lands back on the not-logged-in entry page with nothing shown and nothing
+logged. That covers everything GitLab can return - `access_denied`, `invalid_scope`, `server_error`, `temporarily_unavailable` - so from the user's side
+signing in simply appears to do nothing.
+
+`GitLabOauthHandler.handleCallbackAndGetTokens` already rejects an error response with `OauthException("External error: ...")`, which
+`CatmaApplication` would route through `showAndLogError`, but it is only ever called when there is a code, so that path is dead for the case it was
+written for. Widening the guard to `code != null || error != null` is enough to reach it.
+
+The REST API handles the same thing separately and differently: `AuthService.gitLabOauthCallback` singles out `access_denied` and answers 200 with a
+plain-text URL to restart from, leaving every other error to become a 500. Worth knowing when changing it that this defends a path our own configuration
+closes - the OAuth application is registered as trusted, so there is no consent screen and hence no Deny button, and the comment there ("the user
+cancelled the auth process with GitLab") describes something that can only happen where an operator registered the application by hand without ticking
+Trusted. What an error response means belongs in the handler that both callers share, which would let the API's special case move there or go.
+
 ### Don't discard invitation parameters when account creation is abandoned
 
 `CreateUserDialog.close()` calls `Page.replaceState(BASE_URL)` unconditionally, which is right after an account signup token has been consumed. When the
