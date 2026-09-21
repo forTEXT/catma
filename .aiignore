@@ -27,21 +27,18 @@ tmp
 # Mac
 .DS_Store
 
+# Ignore all .properties files except the template (as they may contain secrets)
+*.properties
+!src/main/resources/catma.properties
+
 # Group/project signup-token transaction log
 group_project_signup_token*.*
-
-
-## Altered from .gitignore:
-
-# ALL properties files ("real" ones that may contain secrets, as well as the template, which won't be useful to AI)
-*.properties
 
 
 ## Additionally:
 
 .github
 .run
-doc
 testdocs
 
 # Empty SQLite DB

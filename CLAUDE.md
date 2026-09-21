@@ -170,7 +170,7 @@ language detection).
   introduce SLF4J calls in `de.catma`. The one exception is the init servlets — see "Entry points" above.
 - Existing Java sources are indented with **tabs**; lines run long (the `.editorconfig` — a large IDEA export — sets `max_line_length = 160` but
   declares spaces at the root level, which the codebase does not follow). Match the surrounding file.
-- `.aiignore` marks files that should not be fed to AI tooling (all `*.properties`, `doc/`, `.run/`, `testdocs/`, build output).
+- `.aiignore` marks files that should not be fed to AI tooling (all `*.properties` except the template, `.run/`, `testdocs/`, build output).
 
 ### Working with the user
 
