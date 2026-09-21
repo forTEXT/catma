@@ -55,8 +55,15 @@ Note that `gitlab4j-api` used to be forked as well, but we now use the stock rel
 These are the generic steps to build CATMA and to run it via Maven on a Linux system. Your GitLab server should be running and configured already (see
 [prerequisites](#prerequisites)). The JDK and Maven installations are included below.
 
-Note that we are skipping the automated tests here – this is because a number of them test interactions with the GitLab server (setting up data, performing the
-test, and cleaning up again) and are quite slow as a result.
+The automated tests run as part of the build below. They can be skipped by adding `-DskipTests=true`, which is worth doing if you are only interested in
+producing a deployable artifact.
+
+A number of tests exercise interactions with the GitLab server (setting up data, performing the test, and cleaning up again). These are tagged `gitlab` and are
+**excluded by default**, because they are slow and need a properties file pointing at a GitLab server that you can freely create and delete data on. To include
+them, activate the `gitlab-tests` profile and name your properties file:
+```
+mvn test -Pgitlab-tests -Dprop=catma_local-dev.properties
+```
 
 ```
 apt update && apt install openjdk-21-jdk maven git curl
@@ -68,7 +75,7 @@ mvn install:install-file -Dfile=elements-0.2.3-CATMA.jar -DpomFile=elements-0.2.
 
 git clone https://github.com/forTEXT/catma
 cd catma
-mvn clean compile package -DskipTests=true
+mvn clean compile package
 
 mkdir -p temp db repo/git repo/git_api
 cp src/main/resources/catma.db db/

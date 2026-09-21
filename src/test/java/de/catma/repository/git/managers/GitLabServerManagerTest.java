@@ -17,11 +17,13 @@ import org.gitlab4j.api.models.ImpersonationToken;
 import org.gitlab4j.api.models.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import de.catma.properties.CATMAProperties;
 import de.catma.repository.git.GitLabTestHelper;
 
+@Tag("gitlab")
 public class GitLabServerManagerTest {
 	private GitlabManagerPrivileged gitlabManagerPrivileged;
 	private GitlabManagerRestricted gitlabManagerRestricted;

@@ -22,6 +22,7 @@ import org.apache.commons.io.IOUtils;
 import org.gitlab4j.api.UserApi;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 //import org.junit.Rule;
 //import org.junit.rules.ExpectedException;
@@ -50,6 +51,7 @@ import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.util.IDGenerator;
 //import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
 
+@Tag("gitlab")
 public class GitSourceDocumentHandlerTest {
 	private GitlabManagerPrivileged gitlabManagerPrivileged;
 	private GitlabManagerRestricted gitlabManagerRestricted;

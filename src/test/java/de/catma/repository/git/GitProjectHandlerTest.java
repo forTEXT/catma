@@ -23,6 +23,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.gitlab4j.api.UserApi;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.Lists;
@@ -48,6 +49,7 @@ import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
+@Tag("gitlab")
 public class GitProjectHandlerTest {
 	private GitlabManagerPrivileged gitlabManagerPrivileged;
 	private GitlabManagerRestricted gitlabManagerRestricted;

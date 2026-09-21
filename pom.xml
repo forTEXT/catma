@@ -30,6 +30,9 @@
 		<jetty.plugin.version>12.0.16</jetty.plugin.version>
 		
 		<jersey.version>2.47</jersey.version>
+
+		<!-- the JUnit 5 tag carried by the GitLab-backed integration tests, excluded by default; cleared by the 'gitlab-tests' profile -->
+		<surefire.excludedGroups>gitlab</surefire.excludedGroups>
 	</properties>
 
 	<repositories>
@@ -455,6 +458,18 @@
 				<version>3.8.0</version>
 			</plugin>
 			<plugin>
+				<!--
+					Must be pinned: Maven's own default is 2.17, which predates JUnit 5 and silently discovers no tests at all
+					("Tests run: 0") rather than failing, so every test in src/test/java goes unnoticed.
+				-->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.6.0</version>
+				<configuration>
+					<excludedGroups>${surefire.excludedGroups}</excludedGroups>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
 				<version>3.5.0</version>
@@ -573,6 +588,17 @@
 	</build>
 
 	<profiles>
+		<profile>
+			<!--
+				Also runs the GitLab-backed integration tests (those tagged "gitlab"), which create real data on a live GitLab
+				server and therefore need -Dprop=... pointing at one. See doc/DEVELOPMENT.md.
+			-->
+			<id>gitlab-tests</id>
+			<properties>
+				<surefire.excludedGroups></surefire.excludedGroups>
+			</properties>
+		</profile>
+
 		<profile>
 			<!-- Vaadin pre-release repositories -->
 			<id>vaadin-prerelease</id>

@@ -26,10 +26,10 @@ Full setup instructions: `doc/DEVELOPMENT.md`. Self-hosting: `doc/SELF-HOSTING.m
 
 ```bash
 # Full build (includes the GWT widgetset + theme compile — slow, several minutes)
-mvn clean compile package -DskipTests=true
+mvn clean compile package
 
 # Rebuild skipping the GWT widgetset compile (much faster; safe when no client-side code changed)
-mvn package -DskipTests=true -Dgwt.compiler.skip=true
+mvn package -Dgwt.compiler.skip=true
 
 # Run locally on Jetty (http://localhost:8080/)
 mvn jetty:run
@@ -37,10 +37,13 @@ mvn jetty:run
 # Run against an alternative properties file (see "Configuration" below)
 mvn -Dprop=catma_local-dev.properties package jetty:run
 
-# Tests
+# Tests — the self-contained ones only; the GitLab-backed ones are tagged "gitlab" and excluded by default
 mvn test
 mvn test -Dtest=TagsetDefinitionTest
 mvn test -Dtest=AuthServiceTest#methodName
+
+# Also run the GitLab-backed tests, against the dev GitLab the properties file points at
+mvn test -Pgitlab-tests -Dprop=catma_local-dev.properties
 ```
 
 `mvn dependency:tree` / `dependency:analyze` are used often here — the POM contains many deliberate version pins and exclusions (Jersey, Tika,
@@ -158,8 +161,12 @@ language detection).
   - **Self-contained**: `api/v1/service/*Test` (Jersey Test Framework + Grizzly + Mockito), `TagsetDefinitionTest`, `SortedReflectiveTypeAdapterFactoryTest`.
   - **GitLab-backed integration tests**: everything in `repository/git/` (`GitProjectsManagerTest`, `GitProjectHandlerTest`,
     `GitLabServerManagerTest`, …). These create real data on a live GitLab server, then clean up. They are slow and require a configured properties
-    file (`-Dprop=...`) pointing at your dev GitLab. The documented build skips them (`-DskipTests=true`).
-- JUnit 5 (Jupiter) is the API for `src/test/java`.
+    file (`-Dprop=...`) pointing at your dev GitLab.
+- The GitLab-backed classes carry `@Tag("gitlab")`, which `maven-surefire-plugin` excludes by default, so a plain `mvn test` needs neither a GitLab
+  server nor a properties file. The `gitlab-tests` profile clears the exclusion. **Tag any new test that touches GitLab**, or it will break `mvn test`
+  for everyone without a dev instance.
+- JUnit 5 (Jupiter) is the API for `src/test/java`. `maven-surefire-plugin` has to stay pinned in `pom.xml`: Maven's default is 2.17, which predates
+  JUnit 5 and reports "Tests run: 0" instead of failing, so nothing in `src/test/java` runs at all.
 
 ## Conventions
 

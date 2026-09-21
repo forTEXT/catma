@@ -10,6 +10,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.eventbus.EventBus;
@@ -23,6 +24,7 @@ import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.util.IDGenerator;
 import de.catma.util.Pair;
 
+@Tag("gitlab")
 class GitTagsetHandlerTest {
 
 	private static GitlabManagerRestricted gitlabManagerRestricted;
