@@ -106,7 +106,7 @@ In GitLab, go to *Admin → Applications → New application* and set:
   ```
   These must match `BASE_URL` exactly (including the trailing slash), plus the same value with `api/v1/auth/gitlab/callback` appended for the REST API.
 - **Confidential**: checked
-- **Trusted**: checked - this skips the authorization (consent) screen, which is appropriate because CATMA is a first-party application
+- **Trusted**: checked – this skips the authorization (consent) screen, which is appropriate because CATMA is a first-party application
 - **Scopes**: `api`
 
 Copy the resulting *Application ID* and *Secret* into `GITLAB_OAUTH_CLIENT_ID` and `GITLAB_OAUTH_CLIENT_SECRET`. The secret is stored hashed by GitLab and is
@@ -119,14 +119,14 @@ authentication for the web interface* must remain enabled.
 #### Additional Notes
 
 To enable **user registration**, you will also need to set the `MAIL_*`, `GOOGLE_RECAPTCHA_*` and `SIGNUP_TOKEN_KEY` properties. Alternatively, you can log in
-to CATMA with any regular email/password-based user account that exists on your GitLab server. By default, creating user accounts using the GitLab admin
-interface requires GitLab to be configured to be able to send emails, because email confirmation is a strict requirement. You can change the email confirmation
-settings at: *Settings → General → New user account restrictions*. User accounts can also be created directly using the
+to CATMA with any regular user account that exists on your GitLab server. Note that, by default, creating user accounts using the GitLab admin interface
+requires GitLab to be configured to be able to send emails, because email confirmation is a strict requirement. You can change the email confirmation settings
+at: *Settings → General → New user account restrictions*. User accounts can also be created directly using the
 [GitLab API](https://docs.gitlab.com/api/users/#create-a-user).
 
 To enable **Google account logins**, configure the GitLab OmniAuth settings in GitLab's `gitlab.rb` configuration file, as shown
-[here](../docker/README.md#multi-user). Nothing is needed on the CATMA side - Google appears as a button on GitLab's login page, which is where users sign in
+[here](../docker/README.md#multi-user). Nothing is needed on the CATMA side – Google appears as a button on GitLab's login page, which is where users sign in
 either way.
 
-An internet connection is not strictly necessary if you are running everything locally, however external mail or Google reCAPTCHA / OAuth will obviously not
-work without one.
+An internet connection is not strictly necessary if you are running everything locally, however external mail or Google reCAPTCHA will obviously not work
+without one.

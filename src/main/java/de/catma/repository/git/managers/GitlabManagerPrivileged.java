@@ -170,7 +170,6 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 		}
 	}
 
-	// it's more convenient to work with the User class internally, which is why this method exists
 	private User createGitLabUser(String email, String username, String password, String publicname) throws IOException {
 		UserApi userApi = privilegedGitLabApi.getUserApi();
 		if (password == null) {
@@ -233,7 +232,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 				CustomAttribute lastLogin = optionalLastLoginAtt.get();
 				logger.info(String.format("Last login of user \"%s\" was on %s", user.getUsername(), lastLogin.getValue()));
 				lastLogin.setValue(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
-				userApi.changeCustomAttribute(user.getId(), optionalLastLoginAtt.get());
+				userApi.changeCustomAttribute(user.getId(), optionalLastLoginAtt.get()); // TODO: why aren't we just passing lastLogin?
 			}
 			
 			if (user.getCustomAttributes() != null) {

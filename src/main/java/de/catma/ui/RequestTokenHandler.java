@@ -230,7 +230,7 @@ public class RequestTokenHandler {
 							signupTokenManager.put(projectSignupToken);
 							Component contentComponent = contentComponentSupplier.get();
 							if (contentComponent instanceof NotLoggedInMainView) {
-								// use the email from the group invitation for a possible account signup since it is already verified
+								// use the email from the project invitation for a possible account signup since it is already verified
 								((NotLoggedInMainView)contentComponent).setSignupEmail(projectSignupToken.email());
 							}
 

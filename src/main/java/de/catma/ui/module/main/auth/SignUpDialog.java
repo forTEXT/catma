@@ -86,8 +86,7 @@ public class SignUpDialog extends AuthenticationDialog {
 			if (!isRecaptchaVerified()) {
 				Notification.show(
 						"Error",
-						"reCAPTCHA verification failed\n" +
-								"If you want to sign up, please reload the page to try again.",
+						"reCAPTCHA verification failed - please reload the page to try again.",
 						Notification.Type.ERROR_MESSAGE
 				);
 				btnSignup.setDescription("reCAPTCHA verification failed - reload to try again");

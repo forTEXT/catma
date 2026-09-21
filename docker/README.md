@@ -203,9 +203,9 @@ properties (see the reference file [here](https://github.com/forTEXT/catma/blob/
 - `SIGNUP_TOKEN_KEY`
 - `GOOGLE_RECAPTCHA_*`
 
-Alternatively, regular email/password-based user accounts can be created directly within GitLab. By default, creating user accounts using the GitLab admin
-interface requires GitLab to be configured to be able to send emails, because email confirmation is a strict requirement. You can change the email confirmation
-settings at: *Settings → General → New user account restrictions*. User accounts can also be created directly using the
+Alternatively, user accounts can be created directly within GitLab. Note that, by default, creating user accounts using the GitLab admin interface requires
+GitLab to be configured to be able to send emails, because email confirmation is a strict requirement. You can change the email confirmation settings at:
+*Settings → General → New user account restrictions*. User accounts can also be created directly using the
 [GitLab API](https://docs.gitlab.com/api/users/#create-a-user).
 
 To enable **Google account logins**, configure the GitLab OmniAuth settings in `gitlab.rb` as follows:
@@ -223,15 +223,15 @@ gitlab_rails['omniauth_providers'] = [
 ]
 ```
 
-Nothing is needed on the CATMA side - users always sign in on GitLab's login page, where Google then appears as an additional button. This is a way of signing
+Nothing is needed on the CATMA side – users always sign in on GitLab's login page, where Google then appears as an additional button. This is a way of signing
 in to an account that already exists, **not** a registration route: accounts are created through CATMA, and an existing account is linked by email address the
 first time its owner signs in with Google.
 
 Note that `omniauth_allow_single_sign_on`, `omniauth_sync_profile_from_provider` and `omniauth_sync_profile_attributes` are deliberately absent, and should be
-left unset - the first would let any Google account create itself a CATMA account (the `signup_enabled` setting does *not* cover OmniAuth), and the other two
+left unset – the first would let any Google account create itself an account directly in GitLab (even with signup disabled in GitLab), and the other two
 would take control of the user's email address away from them. See the
 [self-hosting documentation](https://github.com/forTEXT/catma/blob/master/doc/SELF-HOSTING.md) for the details and for what happens to accounts created by
-CATMA's former Google sign-in flow (nothing - they need no migration).
+CATMA's former Google sign-in flow (nothing – they need no migration).
 
 ### Updates & Security
 

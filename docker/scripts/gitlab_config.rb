@@ -75,8 +75,8 @@ ApplicationSetting.current.update!(
   user_oauth_applications: false,
   user_show_add_ssh_key_message: false,
   diff_max_patch_bytes: 512000,
-  # NB: this does *not* cover OmniAuth providers - account creation through those is governed by the separate
-  # gitlab_rails['omniauth_allow_single_sign_on'] setting in gitlab.rb, which must be left unset (see docker/README.md)
+  # NB: this does *not* cover OmniAuth providers - account creation through those is governed by the separate gitlab_rails['omniauth_allow_single_sign_on']
+  # setting in gitlab.rb, which should be left unset (see docker/README.md)
   signup_enabled: false,
   require_admin_approval_after_user_signup: false,
   email_confirmation_setting: :hard,

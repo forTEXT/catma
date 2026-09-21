@@ -41,9 +41,6 @@ import java.util.stream.Collectors;
  * 2. We receive a callback request from GitLab at the <code>redirectUrl</code> with parameters "code", "state" and "error".
  *    These should be supplied to <code>handleCallbackAndGetTokens</code> to produce a {@link GitLabOauthTokens} record, which is then usually wrapped in a
  *    {@link GitLabOauthTokenProvider} so that the access token can be refreshed for the lifetime of the session.
- * <p>
- * We don't request the "openid" scope and therefore don't receive an ID token, so there is no nonce to verify - the identity of the user is established by
- * calling GitLab's /user endpoint with the access token (see {@link de.catma.repository.git.managers.GitlabManagerRestricted}).
  */
 public class GitLabOauthHandler {
     // (see https://docs.gitlab.com/integration/oauth_provider/#view-all-authorized-applications for the full list of scopes)
@@ -69,7 +66,8 @@ public class GitLabOauthHandler {
         String csrfToken = new BigInteger(130, new SecureRandom()).toString(32);
 
         // add the csrfToken to the session - it is verified later in the flow (handleCallbackAndGetTokens)
-        // its presence is also what tells the callback handler that an OAuth flow is in progress
+        // its presence is also one component of what tells the Vaadin application's callback handler that an OAuth flow is in progress (see
+        // CatmaApplication.handleRequestOauth)
         sessionSetAttributeFn.accept(OauthConstants.OAUTH_CSRF_TOKEN_SESSION_ATTRIBUTE_NAME, csrfToken);
 
         String state = String.format("%s=%s", OauthConstants.CSRF_TOKEN_STATE_PARAMETER_NAME, csrfToken);

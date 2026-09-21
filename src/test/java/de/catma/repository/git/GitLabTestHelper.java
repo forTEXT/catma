@@ -51,7 +51,6 @@ public class GitLabTestHelper {
 
 		long userId = gitlabManagerPrivileged.createUser(email, username, null, name);
 
-		// the admin API is the same route that deleteUserAndLocalFiles uses for teardown
 		try {
 			ImpersonationToken impersonationToken = gitlabManagerPrivileged.getGitLabApi().getUserApi().createImpersonationToken(
 					userId,
