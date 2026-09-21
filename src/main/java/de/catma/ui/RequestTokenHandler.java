@@ -73,7 +73,7 @@ public class RequestTokenHandler {
 		
 		switch (tokenAction) {
 			case verify: {				
-				// validate token to either display the reason for invalidity or show the create account creation dialog
+				// validate token and show CreateUserDialog, or display the reason for invalidity
 				signupTokenManager.validateAccountSignupToken(token, new TokenValidityHandler<AccountSignupToken>() {
 					
 					@Override
@@ -93,7 +93,7 @@ public class RequestTokenHandler {
 				break;
 			}
 			case joingroup: {
-				// validate token to either display the reason for invalidity or to join the group
+				// validate token and prompt user to join the group, or display the reason for invalidity
 				signupTokenManager.validateGroupSignupToken(token, new TokenValidityHandler<GroupSignupToken>() {
 					
 					@Override
@@ -177,7 +177,7 @@ public class RequestTokenHandler {
 				break;
 			}
 			case joinproject: {
-				// validate token to either display the reason for invalidity or to join the project
+				// validate token and prompt user to join the project, or display the reason for invalidity
 				signupTokenManager.validateProjectSignupToken(token, new TokenValidityHandler<ProjectSignupToken>() {
 					
 					@Override
