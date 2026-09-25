@@ -328,7 +328,11 @@ public class SignupTokenManager {
 
 		// send verification link that contains the generated token
 		// this verification link brings the user back to CATMA and it brings up the user account creation dialog if the token can be verified, see handleVerify above and CatmaApplication#handleRequestToken 
-		MailSender.sendMail(userData.getEmail(), "CATMA Email Verification", "Please visit the following link in order to verify your email address and complete your sign up:\n" + verificationUrl);
+		MailSender.sendMail(
+				userData.getEmail(),
+				"Confirm your email address for CATMA",
+				"Welcome to CATMA! Click the link below to confirm your email address and continue setting up your CATMA account.\n\n" + verificationUrl
+		);
 		logger.info(
 				String.format("Generated a new signup token for %s, the full verification URL is: %s", userData.getEmail(), verificationUrl)
 		);

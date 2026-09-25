@@ -17998,21 +17998,27 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	font-size: larger;
 }
 
-.catma .signup-dialog .v-panel-caption, .catma .signin-dialog .v-panel-caption {
+.catma .signup-dialog .notice-panel, .catma .signin-dialog .notice-panel {
+	margin-bottom: 10px;
+}
+
+.catma .signup-dialog .notice-panel .v-panel-caption, .catma .signin-dialog .notice-panel .v-panel-caption {
 	font-size: 16px;
-	background-color: #E0E0E0;
-	padding: 5px 0 5px 10px;
+	font-weight: 400;
+	background-color: #FFF3D2;
+	padding: 5px 10px;
 }
 
-.catma .signup-dialog .email-panel, .catma .signin-dialog .email-panel {
-	margin-top: 10px;
+.catma .signup-dialog .notice-panel .content, .catma .signin-dialog .notice-panel .content {
+	font-size: 14px;
+	padding: 5px 10px;
 }
 
-.catma .signup-dialog .email-panel .description, .catma .signin-dialog .email-panel .description {
-	font-size: 12px;
+.catma .signup-dialog .description-with-button, .catma .signin-dialog .description-with-button {
+	padding-right: 20px;
 }
 
-.catma .signup-dialog .email-panel .g-recaptcha-response, .catma .signin-dialog .email-panel .g-recaptcha-response {
+.catma .signup-dialog .g-recaptcha-response, .catma .signin-dialog .g-recaptcha-response {
 	display: none !important;
 }
 
@@ -18020,8 +18026,14 @@ body:not(.v-touch) .card-hoverable:hover, body.v-touch .card-hoverable:active {
 	margin-top: 20px;
 }
 
-.catma .signup-dialog .links .authdialog-tou-link, .catma .signup-dialog .links .authdialog-pp-link, .catma .signin-dialog .links .authdialog-tou-link, .catma .signin-dialog .links .authdialog-pp-link {
+.catma .signup-dialog .links a, .catma .signin-dialog .links a {
 	font-size: 14px;
+}
+
+.catma .create-user-dialog .password-requirements {
+	margin-top: 20px;
+	font-size: 14px;
+	color: #898989;
 }
 
 .catma .main-view {

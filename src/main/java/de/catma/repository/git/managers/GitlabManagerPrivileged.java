@@ -192,7 +192,7 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 			return user;
 		}
 		catch (GitLabApiException e) {
-			throw new IOException("Failed to create user", e);
+			throw new IOException(e.getMessage(), e); // explicitly using the message from GitLabApiException as it can contain details about validation errors
 		}
 	}
 

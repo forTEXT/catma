@@ -519,30 +519,44 @@ $contribution-color: blue;
 
   /* Signup & Signin */
   .signup-dialog, .signin-dialog {
-    .v-panel-caption {
-      font-size: 16px;
-      background-color: #E0E0E0;
-      padding: 5px 0 5px 10px;
+    .notice-panel {
+      margin-bottom: 10px;
+
+      .v-panel-caption {
+        font-size: 16px;
+        font-weight: 400;
+        background-color: #FFF3D2;
+        padding: 5px 10px;
+      }
+
+      .content {
+        font-size: 14px;
+        padding: 5px 10px;
+      }
     }
 
-    .email-panel {
-      margin-top: 10px;
+    .description-with-button {
+      padding-right: 20px;
+    }
 
-      .description {
-        font-size: 12px;
-      }
-
-      .g-recaptcha-response {
-        display: none !important;
-      }
+    .g-recaptcha-response {
+      display: none !important;
     }
 
     .links {
       margin-top: 20px;
 
-      .authdialog-tou-link, .authdialog-pp-link {
+      a {
         font-size: 14px;
       }
+    }
+  }
+
+  .create-user-dialog {
+    .password-requirements {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #898989
     }
   }
 

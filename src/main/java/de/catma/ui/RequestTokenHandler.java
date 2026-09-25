@@ -69,7 +69,7 @@ public class RequestTokenHandler {
 					
 					@Override
 					public void tokenValid(AccountSignupToken signupToken) {
-						CreateUserDialog createUserDialog = new CreateUserDialog("Create User", signupToken.email());
+						CreateUserDialog createUserDialog = new CreateUserDialog(signupToken.email());
 						createUserDialog.show();
 					}
 					

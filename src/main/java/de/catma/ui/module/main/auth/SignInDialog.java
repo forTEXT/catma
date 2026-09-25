@@ -4,7 +4,6 @@ import com.google.common.eventbus.EventBus;
 import com.vaadin.event.Action;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.server.ExternalResource;
-import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
 import de.catma.hazelcast.HazelCastService;
 import de.catma.properties.CATMAPropertyKey;
@@ -114,36 +113,50 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 	}
 
 	private void initComponents() {
-		setWidth("60%");
+		setWidth("50%");
 		setModal(true);
 
 		VerticalLayout content = new VerticalLayout();
-		content.setWidthFull();
 		content.setStyleName("signin-dialog");
 
 		regularSignInLayout = new VerticalLayout();
 		regularSignInLayout.setMargin(false);
 
-		Panel pnlEmail = new Panel("CATMA Account");
-		pnlEmail.setStyleName("email-panel");
-		VerticalLayout pnlEmailContent = new VerticalLayout();
+		Panel pnlNotice = new Panel("Heads up: sign-in has changed!");
+		pnlNotice.setStyleName("notice-panel");
 
-		Label lblRegularSignIn = new Label(
-				"You will be redirected to CATMA's GitLab backend, where you can sign in with your username or email address and your password, or with a "
-						+ "Google account registered to the same email address.",
-				ContentMode.HTML
+		VerticalLayout pnlNoticeContent = new VerticalLayout();
+		pnlNoticeContent.setStyleName("content");
+
+		Label lblNoticeBody = new Label(
+				"You now sign in on GitLab, with your usual CATMA credentials."
 		);
-		lblRegularSignIn.setWidth("100%");
+		lblNoticeBody.setWidth("100%");
+
+		pnlNoticeContent.addComponent(lblNoticeBody);
+
+		pnlNotice.setContent(pnlNoticeContent);
+
+		HorizontalLayout hlSignInProcessDescriptionAndButton = new HorizontalLayout();
+		hlSignInProcessDescriptionAndButton.setWidth("100%");
+
+		Label lblSignInProcessDescription = new Label(
+				"CATMA is built on GitLab, which we use to manage your account and data. Click \"Sign In\" and you'll be redirected to GitLab to log in, "
+						+ "then brought straight back to CATMA."
+		);
+		lblSignInProcessDescription.setWidth("100%");
+		lblSignInProcessDescription.setStyleName("description-with-button");
 
 		btnRegularSignIn = new Button("Sign In");
 		btnRegularSignIn.setClickShortcut(ShortcutAction.KeyCode.ENTER);
 
-		pnlEmailContent.addComponent(lblRegularSignIn);
-		pnlEmailContent.addComponent(btnRegularSignIn);
-		pnlEmailContent.setComponentAlignment(btnRegularSignIn, Alignment.BOTTOM_RIGHT);
-		pnlEmail.setContent(pnlEmailContent);
+		hlSignInProcessDescriptionAndButton.addComponent(lblSignInProcessDescription);
+		hlSignInProcessDescriptionAndButton.addComponent(btnRegularSignIn);
+		hlSignInProcessDescriptionAndButton.setComponentAlignment(btnRegularSignIn, Alignment.BOTTOM_RIGHT);
+		hlSignInProcessDescriptionAndButton.setExpandRatio(lblSignInProcessDescription, 1f);
 
-		regularSignInLayout.addComponent(pnlEmail);
+		regularSignInLayout.addComponent(pnlNotice);
+		regularSignInLayout.addComponent(hlSignInProcessDescriptionAndButton);
 
 		patSignInLayout = new VerticalLayout();
 		patSignInLayout.setMargin(false);
@@ -167,7 +180,6 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 				new ExternalResource(CATMAPropertyKey.TERMS_OF_USE_URL.getValue())
 		);
 		termsOfUseLink.setTargetName("_blank");
-		termsOfUseLink.setStyleName("authdialog-tou-link");
 
 		Label lblPipe = new Label("|");
 
@@ -176,7 +188,6 @@ public class SignInDialog extends AuthenticationDialog implements Action.Handler
 				new ExternalResource(CATMAPropertyKey.PRIVACY_POLICY_URL.getValue())
 		);
 		privacyPolicyLink.setTargetName("_blank");
-		privacyPolicyLink.setStyleName("authdialog-pp-link");
 
 		hlLinks.addComponent(termsOfUseLink);
 		hlLinks.addComponent(lblPipe);

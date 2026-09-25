@@ -20,7 +20,6 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Link;
 import com.vaadin.ui.Notification;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -126,14 +125,14 @@ public class SignUpDialog extends AuthenticationDialog {
 				generateSignupTokenAndSendVerificationEmail();
 
 				Notification completeSignupNotification = new Notification(
-						"To complete your sign up, please click the link in the verification email!",
+						"To complete your sign-up, please click the link in the confirmation email!",
 						Notification.Type.WARNING_MESSAGE
 				);
 				completeSignupNotification.setDelayMsec(-1);
 				completeSignupNotification.show(Page.getCurrent());
 			}
 			catch (Exception e) {
-				((ErrorHandler) UI.getCurrent()).showAndLogError("Couldn't send verification email", e);
+				((ErrorHandler) UI.getCurrent()).showAndLogError("Couldn't send confirmation email", e);
 			}
 
 			this.close();
@@ -141,16 +140,18 @@ public class SignUpDialog extends AuthenticationDialog {
 	}
 
 	private void initComponents() {
-		setWidth("60%");
+		setWidth("50%");
 		setModal(true);
 
 		VerticalLayout content = new VerticalLayout();
-		content.setWidthFull();
 		content.setStyleName("signup-dialog");
 
-		Panel pnlEmail = new Panel("Email Address and Password");
-		pnlEmail.setStyleName("email-panel");
-		VerticalLayout pnlEmailContent = new VerticalLayout();
+		Label lblDescription = new Label(
+				"Create your CATMA account. Here's what happens: we'll email you a confirmation link, you set a username and password, then you sign in "
+						+ "via GitLab to start using CATMA. (CATMA is built on GitLab, which we use to manage your account and data.)<br /><br />",
+				ContentMode.HTML
+		);
+		lblDescription.setWidth("100%");
 
 		tfEmail = new TextField("Email Address");
 		tfEmail.setWidth("100%");
@@ -161,34 +162,13 @@ public class SignUpDialog extends AuthenticationDialog {
 				.withValidator(new EmailAlreadyRegisteredValidator(gitManagerPrivileged))
 				.bind(UserData::getEmail, UserData::setEmail);
 
-		HorizontalLayout hlEmailDescriptionAndButton = new HorizontalLayout();
-		hlEmailDescriptionAndButton.setWidth("100%");
-
-		Label lblDescription = new Label("description placeholder", ContentMode.HTML);
-		lblDescription.setWidth("100%");
-		lblDescription.setStyleName("description");
-		lblDescription.setValue(
-				"We'll send a verification email to the above address. Once your email address has been verified, you'll be able to " +
-				"complete your profile by choosing a username and a password."
-		);
-
-		btnSignup = new Button("Sign Up");
-		btnSignup.setEnabled(false);
-		btnSignup.setDescription("Please wait a moment while we verify that you're not a bot...");
-		btnSignup.setClickShortcut(ShortcutAction.KeyCode.ENTER);
-
-		hlEmailDescriptionAndButton.addComponent(lblDescription);
-		hlEmailDescriptionAndButton.addComponent(btnSignup);
-		hlEmailDescriptionAndButton.setComponentAlignment(btnSignup, Alignment.BOTTOM_RIGHT);
-		hlEmailDescriptionAndButton.setExpandRatio(lblDescription, 1f);
-
 		hiddenVerification = new TextField();
 		hiddenVerification.addStyleName(recaptchaVerificationStyleName);
 
-		pnlEmailContent.addComponent(tfEmail);
-		pnlEmailContent.addComponent(hlEmailDescriptionAndButton);
-		pnlEmailContent.addComponent(hiddenVerification);
-		pnlEmail.setContent(pnlEmailContent);
+		btnSignup = new Button("Continue");
+		btnSignup.setEnabled(false);
+		btnSignup.setDescription("Please wait a moment while we verify that you're not a bot...");
+		btnSignup.setClickShortcut(ShortcutAction.KeyCode.ENTER);
 
 		HorizontalLayout hlLinks = new HorizontalLayout();
 		hlLinks.setWidth("100%");
@@ -199,7 +179,6 @@ public class SignUpDialog extends AuthenticationDialog {
 				new ExternalResource(CATMAPropertyKey.TERMS_OF_USE_URL.getValue())
 		);
 		termsOfUseLink.setTargetName("_blank");
-		termsOfUseLink.setStyleName("authdialog-tou-link");
 
 		Label lblPipe = new Label("|");
 
@@ -208,7 +187,6 @@ public class SignUpDialog extends AuthenticationDialog {
 				new ExternalResource(CATMAPropertyKey.PRIVACY_POLICY_URL.getValue())
 		);
 		privacyPolicyLink.setTargetName("_blank");
-		privacyPolicyLink.setStyleName("authdialog-pp-link");
 
 		hlLinks.addComponent(termsOfUseLink);
 		hlLinks.addComponent(lblPipe);
@@ -219,7 +197,11 @@ public class SignUpDialog extends AuthenticationDialog {
 		hlLinks.setComponentAlignment(privacyPolicyLink, Alignment.BOTTOM_LEFT);
 		hlLinks.setExpandRatio(privacyPolicyLink, 1f);
 
-		content.addComponent(pnlEmail);
+		content.addComponent(lblDescription);
+		content.addComponent(tfEmail);
+		content.addComponent(hiddenVerification);
+		content.addComponent(btnSignup);
+		content.setComponentAlignment(btnSignup, Alignment.BOTTOM_RIGHT);
 		content.addComponent(hlLinks);
 
 		setContent(content);
