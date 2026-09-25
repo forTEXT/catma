@@ -106,9 +106,7 @@ public class CatmaApplication extends UI
 		eventBus.post(new RouteToDashboardEvent());
 
 		requestTokenHandler = new RequestTokenHandler(
-				signupTokenManager, eventBus,
-				loginService, initService, hazelCastService, sqliteService,
-				this, this, this::getContent, this
+				signupTokenManager, loginService, this, this::getContent, this, eventBus
 		);
 
 		if (!handleRequestOauth(request)) { // handle oauth

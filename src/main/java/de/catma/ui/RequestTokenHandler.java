@@ -16,16 +16,13 @@ import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
 
 import de.catma.backgroundservice.BackgroundServiceProvider;
-import de.catma.hazelcast.HazelCastService;
 import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
-import de.catma.sqlite.SqliteService;
 import de.catma.ui.events.GroupsChangedEvent;
 import de.catma.ui.events.ProjectsChangedEvent;
 import de.catma.ui.events.ShowGroupsEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
-import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.main.NotLoggedInMainView;
@@ -42,29 +39,23 @@ import de.catma.user.signup.SignupTokenManager.TokenValidityHandler;
 public class RequestTokenHandler {
 	
 	private final SignupTokenManager signupTokenManager;
-	private final EventBus eventBus;
 	private final LoginService loginService;
-	private final InitializationService initService;
-	private final HazelCastService hazelCastService;
-	private final SqliteService sqliteService;
 	private final ErrorHandler errorHandler;
 	private final Supplier<Component> contentComponentSupplier;
 	private final BackgroundServiceProvider backgroundServiceProvider;
-	
-	public RequestTokenHandler(SignupTokenManager signupTokenManager, EventBus eventBus, LoginService loginService,
-			InitializationService initService, HazelCastService hazelCastService, SqliteService sqliteService,
-			ErrorHandler errorHandler, ParameterProvider parameterProvider,
-			Supplier<Component> contentComponentSupplier, BackgroundServiceProvider backgroundServiceProvider) {
+	private final EventBus eventBus;
+
+	public RequestTokenHandler(SignupTokenManager signupTokenManager, LoginService loginService, ErrorHandler errorHandler,
+							   Supplier<Component> contentComponentSupplier, BackgroundServiceProvider backgroundServiceProvider, EventBus eventBus)
+	{
 		super();
+
 		this.signupTokenManager = signupTokenManager;
-		this.eventBus = eventBus;
 		this.loginService = loginService;
-		this.initService = initService;
-		this.hazelCastService = hazelCastService;
-		this.sqliteService = sqliteService;
 		this.errorHandler = errorHandler;
 		this.contentComponentSupplier = contentComponentSupplier;
 		this.backgroundServiceProvider = backgroundServiceProvider;
+		this.eventBus = eventBus;
 	}
 
 	public void handleRequestToken(String action, String token) {
