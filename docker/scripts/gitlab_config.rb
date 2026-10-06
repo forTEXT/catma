@@ -95,7 +95,6 @@ ApplicationSetting.current.update!(
   anonymous_searches_allowed: false,
   mirror_available: false,
   shared_runners_enabled: false,
-  suggest_pipeline_enabled: false,
   show_migrate_from_jenkins_banner: false,
   allow_runner_registration_token: false,
   # refs: https://gitlab.com/gitlab-org/gitlab/-/blob/v19.2.7-ee/app/models/application_setting.rb?ref_type=tags
