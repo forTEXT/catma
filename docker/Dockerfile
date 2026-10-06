@@ -15,19 +15,19 @@ LABEL maintainer="CATMA Team" \
 SHELL ["/bin/bash", "-c"]
 
 FROM base AS build-arm64
-ARG JDK_FILENAME=jdk-21_linux-aarch64_bin.tar.gz
+ARG JDK_FILENAME=openjdk-27_linux-aarch64_bin.tar.gz
 
 FROM base AS build-amd64
-ARG JDK_FILENAME=jdk-21_linux-x64_bin.tar.gz
+ARG JDK_FILENAME=openjdk-27_linux-x64_bin.tar.gz
 
 FROM build-${TARGETARCH} AS build
 
 # all of these can be overriden with '--build-arg <key>=<value>' at build time
-ARG JETTY_FILENAME=jetty-home-12.0.31.tar.gz
+ARG JETTY_FILENAME=jetty-home-12.0.39.tar.gz
 # some dirs owned by the jetty user are expected to be bind-mounted, therefore we default to a uid that is less likely to be in use on the host
 ARG JETTY_USER_UID=899
-ARG CATMA_WAR_FILENAME=catma-7.3-SNAPSHOT.war
-ARG CATMA_VERSION=7.3
+ARG CATMA_WAR_FILENAME=catma-7.4-SNAPSHOT.war
+ARG CATMA_VERSION=7.4
 ENV CATMA_VERSION=$CATMA_VERSION
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -54,11 +54,11 @@ ENV CATMA_URL="http://catma.localhost:${CATMA_PORT}"
 # the srv_assets directory should contain: JDK_FILENAME & JETTY_FILENAME
 RUN --mount=from=srv_assets,target=/tmp/srv_assets \
     # install Java
-    mkdir -p /opt/java/oracle \
-    && tar -xzf "/tmp/srv_assets/${JDK_FILENAME}" -C /opt/java/oracle \
-    && JDK_DIR=$(find /opt/java/oracle -maxdepth 1 -type d -name 'jdk*' -exec basename {} \; -quit) \
-    && update-alternatives --install /usr/bin/java java "/opt/java/oracle/${JDK_DIR}/bin/java" 10 \
-                           --slave /usr/bin/javac javac "/opt/java/oracle/${JDK_DIR}/bin/javac" \
+    mkdir -p /opt/java/openjdk \
+    && tar -xzf "/tmp/srv_assets/${JDK_FILENAME}" -C /opt/java/openjdk \
+    && JDK_DIR=$(find /opt/java/openjdk -maxdepth 1 -type d -name 'jdk*' -exec basename {} \; -quit) \
+    && update-alternatives --install /usr/bin/java java "/opt/java/openjdk/${JDK_DIR}/bin/java" 10 \
+                           --slave /usr/bin/javac javac "/opt/java/openjdk/${JDK_DIR}/bin/javac" \
     # install and configure Jetty
     && adduser --system --uid $JETTY_USER_UID --group --home /opt/jetty_usr_home --no-create-home jetty \
     && tar -xzf "/tmp/srv_assets/${JETTY_FILENAME}" -C /opt \

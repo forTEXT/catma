@@ -124,8 +124,7 @@ if [[ ! -e $GITLAB_OPTIONS_PATH ]]; then
   cat << EOF >> "$GITLAB_OPTIONS_PATH"
 
 
-external_url = '${GITLAB_URL}'
-nginx['listen_port'] = ${GITLAB_PORT}
+external_url '${GITLAB_URL}'
 gitlab_rails['gitlab_username_changing_enabled'] = false
 gitlab_rails['gitlab_default_projects_features_wiki'] = false
 gitlab_rails['gitlab_default_projects_features_snippets'] = false
@@ -234,8 +233,10 @@ then
   echo -e 'Configuring GitLab ...'
   echo -e "\n--- $(date)\n\n" >> "$GITLAB_CONFIG_LOG_PATH"
   GITLAB_UPLOADS_DIR='/var/opt/gitlab/gitlab-rails/uploads/'
-  cp /opt/catma/assets/catma-gitlab-combo-favicon.ico /opt/catma/assets/catma-gitlab-combo-logo-blue-on-white-pill-50a.svg "$GITLAB_UPLOADS_DIR"
-  chown git:git ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-favicon.ico ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-logo-blue-on-white-pill-50a.svg
+  cp /opt/catma/assets/catma-gitlab-combo-favicon.ico /opt/catma/assets/catma-gitlab-combo-logo-blue-on-white-pill-50a.svg \
+    /opt/catma/assets/catma-gitlab-combo-logo-blue-on-white-pill-50a_V3.svg "$GITLAB_UPLOADS_DIR"
+  chown git:git ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-favicon.ico ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-logo-blue-on-white-pill-50a.svg \
+    ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-logo-blue-on-white-pill-50a_V3.svg
   ADMIN_TOKEN=$(pwgen -snc 20 1)
   # the OAuth application credentials are written to a file rather than stdout, as stdout ends up in the log file above
   # gitlab-rails runs as the 'git' user, so it has to own the file to be able to write it (we can still read it back as root)

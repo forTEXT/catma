@@ -58,8 +58,8 @@ ApplicationSetting.current.update!(
   auto_devops_enabled: false,
   default_branch_name: 'master',
   # default_branch_protection: Gitlab::Access::PROTECTION_DEV_CAN_PUSH, # deprecated
-  # refs: https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.4-ee/app/models/application_setting.rb?ref_type=tags
-  #       https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.4-ee/app/validators/json_schemas/default_branch_protection_defaults.json?ref_type=tags
+  # refs: https://gitlab.com/gitlab-org/gitlab/-/blob/v19.2.7-ee/app/models/application_setting.rb?ref_type=tags
+  #       https://gitlab.com/gitlab-org/gitlab/-/blob/v19.2.7-ee/app/validators/json_schemas/default_branch_protection_defaults.json?ref_type=tags
   default_branch_protection_defaults: {
     "allowed_to_push" => [{"access_level" => Gitlab::Access::DEVELOPER}],
     "allow_force_push" => false,
@@ -84,21 +84,22 @@ ApplicationSetting.current.update!(
   silent_mode_enabled: true,
   diagramsnet_enabled: false,
   hide_third_party_offers: true,
-  # ref: https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.4-ee/app/validators/json_schemas/application_setting_search.json?ref_type=tags
-  search: {
-    "global_search_issues_enabled" => true,
-    "global_search_merge_requests_enabled" => true,
-    "global_search_snippet_titles_enabled" => false,
-    "global_search_users_enabled" => true,
-    "anonymous_searches_allowed" => false
-  },
+  vscode_extension_marketplace_single_origin_fallback_enabled: false,
+  # these are keys within the 'search' jsonb column; setting them individually rather than assigning the whole hash leaves the other keys at their defaults
+  # refs: https://gitlab.com/gitlab-org/gitlab/-/blob/v19.2.7-ee/app/validators/json_schemas/application_setting_search.json?ref_type=tags
+  #       https://gitlab.com/gitlab-org/gitlab/-/blob/v19.2.7-ee/ee/app/validators/json_schemas/application_setting_ee_search.json?ref_type=tags
+  global_search_work_items_enabled: true,
+  global_search_merge_requests_enabled: true,
+  global_search_snippet_titles_enabled: false,
+  global_search_users_enabled: true,
+  anonymous_searches_allowed: false,
   mirror_available: false,
   shared_runners_enabled: false,
   suggest_pipeline_enabled: false,
   show_migrate_from_jenkins_banner: false,
   allow_runner_registration_token: false,
-  # refs: https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.4-ee/app/models/application_setting.rb?ref_type=tags
-  #       https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.4-ee/app/models/application_setting_implementation.rb?ref_type=tags (VALID_RUNNER_REGISTRAR_TYPES)
+  # refs: https://gitlab.com/gitlab-org/gitlab/-/blob/v19.2.7-ee/app/models/application_setting.rb?ref_type=tags
+  #       https://gitlab.com/gitlab-org/gitlab/-/blob/v19.2.7-ee/app/models/application_setting_implementation.rb?ref_type=tags (VALID_RUNNER_REGISTRAR_TYPES)
   valid_runner_registrars: [],
   prometheus_metrics_enabled: false,
   # the following 3 usage/service ping settings can also be configured in gitlab.rb (https://docs.gitlab.com/administration/settings/usage_statistics/),
@@ -108,11 +109,10 @@ ApplicationSetting.current.update!(
   usage_ping_generation_enabled: false,
   include_optional_metrics_in_service_ping: false,
   usage_ping_features_enabled: false,
-  # ref: https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.4-ee/app/validators/json_schemas/application_setting_service_ping_settings.json?ref_type=tags
-  service_ping_settings: {
-    "gitlab_environment_toolkit_instance" => false,
-    "gitlab_product_usage_data_enabled" => false
-  },
+  # keys within the 'service_ping_settings' jsonb column
+  # ref: https://gitlab.com/gitlab-org/gitlab/-/blob/v19.2.7-ee/app/validators/json_schemas/application_setting_service_ping_settings.json?ref_type=tags
+  gitlab_environment_toolkit_instance: false,
+  gitlab_product_usage_data_enabled: false,
   snowplow_enabled: false,
   whats_new_variant: "disabled",
   help_page_hide_commercial_content: true,
@@ -125,20 +125,35 @@ ApplicationSetting.current.update!(
 # puts Appearance.current.title
 # puts Appearance.current.description
 # p Appearance.current
+app_host = options[:app_url].sub(%r{\Ahttps?://}i, '')
 appearance = Appearance.first_or_create!
 appearance.update!(
   favicon: File.open("/var/opt/gitlab/gitlab-rails/uploads/catma-gitlab-combo-favicon.ico"),
+  site_name: "CATMA",
   header_logo: File.open("/var/opt/gitlab/gitlab-rails/uploads/catma-gitlab-combo-logo-blue-on-white-pill-50a.svg"),
   title: "CATMA GitLab",
-  description: <<EOF
-This is CATMA's self-managed GitLab backend.
+  description: <<EOF,
+CATMA is built on GitLab, which we use to manage your account and data.
 
-**NB:** Before you can sign in here, you need to have created an account directly in the [CATMA application](#{options[:app_url]})!
+**Came from CATMA?** Sign in with your CATMA username and password, and you'll be redirected back to CATMA once you're signed in.
 
-Confused? Perhaps you are looking for:\
-→ The [CATMA application](#{options[:app_url]})\
-→ More information on CATMA's [Git Access](https://catma.de/documentation/git-access/)\
-→ The CATMA [website](https://catma.de/), including tutorials, FAQs and other documentation
+**Didn't come here from CATMA?** Then signing in on this page will take you to GitLab itself, not to CATMA. To use CATMA, go to
+[#{app_host}](#{options[:app_url]}), click "Sign In" and follow the steps.
+
+**Don't have a CATMA account yet?** Click "Sign Up" at [#{app_host}](#{options[:app_url]}) first. You can't create an account on this page.
+
+Signing in with Google only works if your CATMA account was created with the same email address.
+
+For tutorials, FAQs and other documentation, visit the [CATMA website](https://catma.de/).
+EOF
+  logo: File.open("/var/opt/gitlab/gitlab-rails/uploads/catma-gitlab-combo-logo-blue-on-white-pill-50a_V3.svg")
+)
+
+# Terms of service and privacy policy, shown at /-/users/terms and available via GitLab's Help menu
+# The text isn't an ApplicationSetting column: each version is an ApplicationSetting::Term record
+ApplicationSetting::Term.create!(terms: <<EOF
+CATMA's Terms of Use and Privacy Policy can be found at the following links: [Terms of Use](https://catma.de/documentation/terms-of-use/) |
+[Privacy Policy](https://catma.de/documentation/privacy-policy/)
 EOF
 )
 
@@ -155,12 +170,13 @@ admin_pat.save!
 # refs: https://docs.gitlab.com/integration/oauth_provider/#create-an-instance-wide-application
 #       https://docs.gitlab.com/api/oauth2/
 # NB: application secrets are stored hashed, so the plaintext secret is only available here, immediately after creation
-oauth_app = Doorkeeper::Application.create!(
+oauth_app = Authn::OauthApplication.create!(
   name: 'CATMA',
   redirect_uri: ["#{options[:app_url]}/", "#{options[:app_url]}/api/v1/auth/gitlab/callback"].join("\n"),
   scopes: 'api',
   confidential: true,
-  trusted: true
+  trusted: true,
+  organization: Organizations::Organization.default_organization
 )
 # these are read by bootstrap.sh and written to catma.properties
 # we write them to a file rather than stdout, because stdout is captured in a log file and the secret shouldn't end up there
