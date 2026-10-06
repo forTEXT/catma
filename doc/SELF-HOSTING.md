@@ -37,7 +37,7 @@ Alternatively, you can manually make the changes via the GitLab Admin UI:
 
 *Note that these manual steps only cover those settings that are absolutely necessary for CATMA to work. There are many others that will improve the user
 experience – refer to the [GitLab configuration Ruby script](../docker/scripts/gitlab_config.rb#L55) and the
-[bootstrap shell script](../docker/scripts/bootstrap.sh#L129-L138).*
+[bootstrap shell script](../docker/scripts/bootstrap.sh#L128-L137).*
 
 ### Create a Personal Access Token for the Admin Account
 
@@ -48,13 +48,8 @@ Create the token using the Ruby script mentioned above, or manually by navigatin
 access tokens* from the menu on the left and creating a new token with the **api** and **sudo** scopes. Copy the token into the
 `GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN` property in your `catma.properties` file (see [Application Deployment](#application-deployment) below).
 
-> **Upgrading an existing installation:** the `sudo` scope is a new requirement. CATMA acts as the new user to disable their notifications during account
-> creation, which used to be done with an impersonation token and is now done with `sudo`. Scopes can't be added to an existing token, so you have to create a
-> replacement token and update the property – otherwise nobody will be able to sign up.
->
-> CATMA checks the token's scopes at startup and **refuses to start** if they are insufficient, naming what is missing in the servlet container log, so this
-> is not something you can deploy and only discover later. (If the GitLab server can't be reached at all, CATMA logs that and starts anyway – it will pick
-> the connection up on its own.)
+CATMA checks the token's scopes at startup and **refuses to start** if they are insufficient, naming what is missing in the servlet container log. (If the
+GitLab server can't be reached at all, CATMA logs that and starts anyway – it will pick the connection up on its own.)
 
 Note that tokens have an expiration date by default. It is considered good security practice to regularly rotate tokens; however, there is an option that will
 allow you to create tokens without expiration (*Settings → General → Account and limit → Access token expiration*).
@@ -82,6 +77,9 @@ Navigate to *Admin → Applications → New application* and set:
 
 Copy the resulting *Application ID* and *Secret* into the `GITLAB_OAUTH_CLIENT_ID` and `GITLAB_OAUTH_CLIENT_SECRET` properties. Note that GitLab stores
 application secrets hashed, so the secret is only available immediately after creating the application – if you lose it you have to renew it.
+
+If you later change the URL that CATMA is served at (the `BASE_URL` property), update the redirect URIs to match, otherwise GitLab will refuse to send users
+back to CATMA after they sign in. You can edit them under *Admin → Applications*, without having to create a new application.
 
 ### Google Sign-In (Optional)
 
@@ -118,9 +116,8 @@ Two settings are deliberately absent:
 
 #### Existing Accounts and Linking
 
-- Accounts created by CATMA's former Google sign-in flow (username `<google-sub>google_com`) need **no migration**. Auto-link matches them by email address on
-  the first Google sign-in and attaches a `google_oauth2` identity. The username – and with it the local working-copy path and all project memberships – is
-  untouched.
+- An existing account is linked by email address on its owner's first Google sign-in, which attaches a `google_oauth2` identity to it. The username – and
+  with it the local working-copy path and all project memberships – is untouched.
 - Email matching is a **first-link-only** mechanism. Once the identity exists, GitLab matches on Google's stable `sub` and either side's address can change
   without breaking sign-in.
 - A user whose CATMA account email address differs from their Google address has to link the two themselves, in GitLab's own account settings – auto-link
@@ -140,3 +137,8 @@ You will also need to:
    development documentation linked to above contains further details about the settings that need to be changed. The properties file needs to be placed within
    the `.war` file (it's really just a ZIP archive) or in the same location that you extracted the `.war` file to, depending on your exact deployment scenario.
 2. Copy the [SQLite DB](../src/main/resources/catma.db) to the `SQLITE_DB_BASE_PATH` you set in your properties file, otherwise CATMA won't start.
+
+## Updating
+
+Before updating to a new version of CATMA, read the [changelog](../CHANGELOG.md). It lists the steps needed to update an existing installation, such as new
+properties, changed GitLab settings or a required GitLab update.

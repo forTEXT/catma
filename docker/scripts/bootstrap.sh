@@ -191,6 +191,18 @@ else
 fi
 
 # 5. start GitLab
+#    if this isn't the first start, the container may have been created from a newer image than the existing data - some versions require manual migration
+#    steps, which we can't detect, so we point to the changelog every time
+if [[ $FIRST_START != 'true' ]]
+then
+  cat << EOF
+
+
+$(color_yellow "NB: If you are updating from an earlier version of CATMA Standalone, check the changelog for any steps that you need to complete as part of
+the update: https://github.com/forTEXT/catma/blob/master/CHANGELOG.md")
+EOF
+fi
+
 GITLAB_INIT_LOG_PATH='/var/log/gitlab/gitlab_init.log'
 echo -e '\n\nStarting GitLab ... (this will take a while, especially on the first run)'
 echo -e "\n--- $(date)\n\n" >> "$GITLAB_INIT_LOG_PATH"

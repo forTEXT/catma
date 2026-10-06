@@ -181,11 +181,38 @@ configuration steps are required if you plan to make your instance accessible mo
 
 To expose CATMA and/or GitLab beyond the host machine, you could set up a reverse proxy and/or modify the `--publish` parameters to change the host ports and
 the interface they are published on (or use `--expose` instead if the reverse proxy is also a container on the same internal network). Also see the `*_PORT` and
-`*_URL` environment variables in [the Dockerfile](https://github.com/forTEXT/catma/blob/master/docker/Dockerfile#L44-L51) and how these are used.
+`*_URL` environment variables in [the Dockerfile](https://github.com/forTEXT/catma/blob/master/docker/Dockerfile#L44-L52) and how these are used.
 
 For exposure to the internet you should definitely set up a reverse proxy and terminate SSL connections at the proxy. In that case, set the `*_URL` environment
 variables to the real, external URLs, and treat the `*_PORT` environment variables as the internal ports only. Also see the
 [Updates & Security](#updates--security) section.
+
+Because GitLab's `external_url` is then an `https://` URL, GitLab would by default try to terminate SSL itself, listening on port 443 and requesting a
+certificate from Let's Encrypt. To have it serve plain HTTP on the internal port instead, and to have it log the real client IP addresses rather than that of
+the proxy, add the following to `$GITLAB_HOME/config/gitlab.rb` (or `/etc/gitlab/gitlab.rb` within the container) and restart the container:
+
+```
+gitlab_rails['nginx']['listen_port'] = 8088   # the value of GITLAB_PORT
+gitlab_rails['nginx']['listen_https'] = false
+gitlab_rails['nginx']['real_ip_trusted_addresses'] = ['<proxy-address>']   # the address(es) or subnet(s) that the proxy connects to the container from
+gitlab_rails['nginx']['real_ip_header'] = 'X-Forwarded-For'
+gitlab_rails['nginx']['real_ip_recursive'] = 'on'
+```
+
+Your proxy needs to set the `X-Forwarded-For` and `X-Forwarded-Proto` headers. The `real_ip_*` values above suit most setups – see GitLab's documentation on
+[SSL termination at a reverse proxy](https://docs.gitlab.com/omnibus/settings/ssl/#configure-a-reverse-proxy-or-load-balancer-ssl-termination) and
+[trusted proxies and the NGINX `real_ip` module](https://docs.gitlab.com/omnibus/settings/nginx/#configure-gitlab-trusted-proxies-and-nginx-real_ip-module)
+for details.
+
+Ideally, set the URLs when you start the container the first time. If you change them later:
+- `CATMA_URL`: update the redirect URIs of the OAuth application that users sign in through, as described under
+  [Create the OAuth Application](https://github.com/forTEXT/catma/blob/master/doc/SELF-HOSTING.md#create-the-oauth-application), otherwise GitLab will refuse
+  to send users back to CATMA after they sign in. You may also want to update the links in GitLab's sign-in page description (*Admin → Settings →
+  Appearance*).
+- `GITLAB_URL`: update the `external_url` setting in `$GITLAB_HOME/config/gitlab.rb` (or `/etc/gitlab/gitlab.rb` within the container), and the
+  `--add-host` parameter of the `docker run` command if the host name has changed.
+
+Both are only applied to GitLab's configuration on the first start, whereas CATMA picks up the new URLs on every start.
 
 #### Multi-User
 
@@ -230,8 +257,7 @@ first time its owner signs in with Google.
 Note that `omniauth_allow_single_sign_on`, `omniauth_sync_profile_from_provider` and `omniauth_sync_profile_attributes` are deliberately absent, and should be
 left unset – the first would let any Google account create itself an account directly in GitLab (even with signup disabled in GitLab), and the other two
 would take control of the user's email address away from them. See the
-[self-hosting documentation](https://github.com/forTEXT/catma/blob/master/doc/SELF-HOSTING.md) for the details and for what happens to accounts created by
-CATMA's former Google sign-in flow (nothing – they need no migration).
+[self-hosting documentation](https://github.com/forTEXT/catma/blob/master/doc/SELF-HOSTING.md#google-sign-in-optional) for the details.
 
 ### Updates & Security
 
@@ -252,6 +278,9 @@ If you have any questions or concerns related to the security of CATMA Standalon
 #### Update Process
 
 Generally speaking, the update process is quite safe and you shouldn't lose any data. However, we still recommend that you create a [backup](#backups) first!
+
+Before updating, read the [changelog](https://github.com/forTEXT/catma/blob/master/CHANGELOG.md). Some versions require additional steps, which are listed
+there for every version.
 
 To get the latest version of the image, simply re-run the `docker pull` command as shown in the [Setup & Usage](#setup--usage) section. The output of the
 command will tell you if anything new was fetched.

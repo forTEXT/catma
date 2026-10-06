@@ -45,6 +45,7 @@ ENV JETTY_JAVA_OPTIONS="-Xms1g -Xmx2g"
 # if you override a port *and* the corresponding URL, make sure to include the port in the URL and that it matches 
 # if you override GITLAB_URL, make sure that the corresponding '--add-host' param of the 'docker run' command matches as well
 # these ports/URLs end up in config (catma.properties, gitlab.rb) and are output by bootstrap.sh - see that file for further details
+# if you change a URL after the first start, GitLab's config needs updating by hand (OAuth application redirect URIs, external_url) - see README.md
 ENV GITLAB_PORT=8088
 ENV GITLAB_URL="http://gitlab.localhost:${GITLAB_PORT}"
 ENV CATMA_PORT=8089

@@ -196,6 +196,8 @@ Put an explanation next to the thing it explains, at the narrowest scope that fi
   field that must not be reordered, a guard that looks removable. Someone editing the file must be able to see the reason without consulting git.
 - **How a subsystem fits together** → this file, at a level that stays true as the code changes. Don't restate what a class comment already says.
 - **Operator-facing setup** → `doc/`, `docker/README.md` and the `catma.properties` template.
+- **Steps needed only when updating an existing installation** → `CHANGELOG.md`, under the version that requires them, in the section for each usage
+  scenario it affects. The setup documentation describes the current state only and points to the changelog for updates.
 - **Why a change was made** → the commit message.
 - **Work you've identified but aren't doing** → `TODO.md`, unless a plan already covers it. Don't leave it in operator-facing documentation or as a
   speculative comment in the code. That file collects AI-identified follow-up work only, grouped by the branch or task the note came out of — add the
@@ -211,8 +213,8 @@ reader who wants more has the diff, the code comments and this file. Err on the 
   describing the mechanism is both a duplicate and the copy that goes stale.
 - **Say no more about the old behaviour than it takes to see why the change was made.** Naming the machinery that went away is noise.
 - **Nothing here is written for an operator.** Anything someone has to *do* — a setting to add, a token to replace, a migration step — goes in `doc/`,
-  `docker/README.md` or the `catma.properties` template, because that is where they will look. A breaking API change is worth a line, as it tells a
-  reader how far the commit reaches.
+  `docker/README.md`, the `catma.properties` template or `CHANGELOG.md`, because that is where they will look. A breaking API change is worth a line, as
+  it tells a reader how far the commit reaches.
 - State conclusions directly. Don't narrate the investigation that produced them ("diffing X against Y shows…", "after checking…") and don't cite
   evidence for your own claims.
 - If a detail is needed to work on the code rather than to understand the change, it belongs in a comment, not here.
