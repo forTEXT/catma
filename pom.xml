@@ -354,14 +354,6 @@
 			<artifactId>xom</artifactId>
 			<version>1.3.9</version>
 		</dependency>
-		<!-- Force specific version of xalan to avoid a dependency conflict - otherwise using the `jetty:run` Maven goal causes a later version (2.7.3) to be
-			 pulled and used, which is missing dependencies (see https://issues.apache.org/jira/browse/XALANJ-2649)
-		 -->
-		<dependency>
-			<groupId>xalan</groupId>
-			<artifactId>xalan</artifactId>
-			<version>2.7.2</version>
-		</dependency>
 
 		<!-- JSON handling -->
 		<dependency>
@@ -581,6 +573,14 @@
 						<groupId>org.eclipse.jetty.ee8.websocket</groupId>
 						<artifactId>jetty-ee8-websocket-javax-server</artifactId>
 						<version>${jetty.plugin.version}</version>
+					</dependency>
+					<!-- The plugin pulls in xalan 2.7.3, whose POM omits its serializer dependency (https://issues.apache.org/jira/browse/XALANJ-2649).
+						 Supplying it here keeps xalan out of the WAR, where the JDK's built-in XSLT implementation is used instead.
+					 -->
+					<dependency>
+						<groupId>xalan</groupId>
+						<artifactId>serializer</artifactId>
+						<version>2.7.3</version>
 					</dependency>
 				</dependencies>
 			</plugin>
