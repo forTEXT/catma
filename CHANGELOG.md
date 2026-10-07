@@ -76,13 +76,15 @@ files within the container (e.g. after running `docker exec -it catma-standalone
    CATMA checks the application when it starts (step 4) and refuses to start if it is missing or misconfigured, naming the problem in the Jetty log
    (`/opt/jetty_web/catma_base/logs/` in the container, `$CATMA_HOME/logs/` on the host with bind mounts).
 2. **Fix the `external_url` setting** in `/etc/gitlab/gitlab.rb`. Earlier versions of the image wrote it as an assignment, which GitLab ignores. Replace the
-   line `external_url = '<your-gitlab-url>'` with `external_url '<your-gitlab-url>'` (no equals sign). The line `nginx['listen_port'] = ...` just below it is
-   no longer needed if your `GITLAB_URL` includes the port (as the default `http://gitlab.localhost:8088` does), and you can optionally remove it.
-
-   If instead your `GITLAB_URL` is an `https://` URL behind a reverse proxy, you still need to set the listen port: now that `external_url` takes effect,
-   GitLab would otherwise try to terminate SSL itself. Replace the line with the settings listed under
-   [Exposing the Services](docker/README.md#exposing-the-services), which use the `gitlab_rails['nginx'][...]` keys that GitLab has used for these settings
-   since version 19.2 (the top-level `nginx[...]` keys still work, but are deprecated).
+   line `external_url = '<your-gitlab-url>'` with `external_url '<your-gitlab-url>'` (no equals sign). Then replace the line `nginx['listen_port'] = ...`
+   just below it with the following, which is what the image now writes for new containers:
+   ```
+   gitlab_rails['nginx']['listen_port'] = <your-gitlab-port>
+   gitlab_rails['nginx']['listen_https'] = false
+   ```
+   Now that `external_url` takes effect, GitLab would otherwise take the port and protocol to listen on from it – with an `https://` URL, it would try to
+   terminate SSL itself. (GitLab has used the `gitlab_rails['nginx'][...]` keys since version 19.2; the top-level `nginx[...]` keys still work, but are
+   deprecated.)
 3. **If you offer Google sign-in**, update the OmniAuth settings in `/etc/gitlab/gitlab.rb` as shown under [Multi-User](docker/README.md#multi-user): add
    `gitlab_rails['omniauth_enabled'] = true`, and remove the `omniauth_allow_single_sign_on`, `omniauth_sync_profile_from_provider` and
    `omniauth_sync_profile_attributes` lines. Then remove `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` from `/data/catma/catma.properties`.

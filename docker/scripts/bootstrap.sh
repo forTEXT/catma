@@ -125,6 +125,10 @@ if [[ ! -e $GITLAB_OPTIONS_PATH ]]; then
 
 
 external_url '${GITLAB_URL}'
+# GitLab would otherwise take the port and protocol to listen on from external_url, but it is only ever reached on GITLAB_PORT, and over plain HTTP - any
+# SSL is terminated by a reverse proxy (see README.md)
+gitlab_rails['nginx']['listen_port'] = ${GITLAB_PORT}
+gitlab_rails['nginx']['listen_https'] = false
 gitlab_rails['gitlab_username_changing_enabled'] = false
 gitlab_rails['gitlab_default_projects_features_wiki'] = false
 gitlab_rails['gitlab_default_projects_features_snippets'] = false

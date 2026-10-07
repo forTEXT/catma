@@ -38,7 +38,7 @@ Alternatively, you can manually make the changes via the GitLab Admin UI:
 
 *Note that these manual steps only cover those settings that are absolutely necessary for CATMA to work. There are many others that will improve the user
 experience – refer to the [GitLab configuration Ruby script](../docker/scripts/gitlab_config.rb#L55) and the
-[bootstrap shell script](../docker/scripts/bootstrap.sh#L128-L137).*
+[bootstrap shell script](../docker/scripts/bootstrap.sh#L132-L141).*
 
 ### Create a Personal Access Token for the Admin Account
 

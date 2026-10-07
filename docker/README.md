@@ -187,13 +187,10 @@ For exposure to the internet you should definitely set up a reverse proxy and te
 variables to the real, external URLs, and treat the `*_PORT` environment variables as the internal ports only. Also see the
 [Updates & Security](#updates--security) section.
 
-Because GitLab's `external_url` is then an `https://` URL, GitLab would by default try to terminate SSL itself, listening on port 443 and requesting a
-certificate from Let's Encrypt. To have it serve plain HTTP on the internal port instead, and to have it log the real client IP addresses rather than that of
-the proxy, add the following to `$GITLAB_HOME/config/gitlab.rb` (or `/etc/gitlab/gitlab.rb` within the container) and restart the container:
+With our configuration, GitLab always serves plain HTTP on `GITLAB_PORT`, even with an `https://` URL. To have it log the real client IP addresses rather than
+that of the proxy, add the following to `$GITLAB_HOME/config/gitlab.rb` (or `/etc/gitlab/gitlab.rb` within the container) and restart the container:
 
 ```
-gitlab_rails['nginx']['listen_port'] = 8088   # the value of GITLAB_PORT
-gitlab_rails['nginx']['listen_https'] = false
 gitlab_rails['nginx']['real_ip_trusted_addresses'] = ['<proxy-address>']   # the address(es) or subnet(s) that the proxy connects to the container from
 gitlab_rails['nginx']['real_ip_header'] = 'X-Forwarded-For'
 gitlab_rails['nginx']['real_ip_recursive'] = 'on'
@@ -208,8 +205,8 @@ Ideally, set the URLs when you start the container the first time. If you change
 - `CATMA_URL`: update the redirect URIs of the OAuth application that users sign in through, as described under
   [Create the OAuth Application](https://github.com/forTEXT/catma/blob/master/doc/SELF-HOSTING.md#create-the-oauth-application), otherwise CATMA will
   refuse to start. You may also want to update the links in GitLab's sign-in page description (*Admin → Settings → Appearance*).
-- `GITLAB_URL`: update the `external_url` setting in `$GITLAB_HOME/config/gitlab.rb` (or `/etc/gitlab/gitlab.rb` within the container), and the
-  `--add-host` parameter of the `docker run` command if the host name has changed.
+- `GITLAB_URL`: update the `external_url` setting in `$GITLAB_HOME/config/gitlab.rb` (or `/etc/gitlab/gitlab.rb` within the container), as well as
+  `gitlab_rails['nginx']['listen_port']` if the port has changed, and the `--add-host` parameter of the `docker run` command if the host name has changed.
 
 Both are only applied to GitLab's configuration on the first start, whereas CATMA picks up the new URLs on every start – which is why it won't start after a
 change to `CATMA_URL` until the redirect URIs have been updated.
