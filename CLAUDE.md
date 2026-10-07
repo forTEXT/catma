@@ -159,7 +159,7 @@ language detection).
   kept for reference; do not add to them and don't assume they compile.
 - Tests split into two kinds:
   - **Self-contained**: `api/v1/service/*Test` (Jersey Test Framework + Grizzly + Mockito), `TagsetDefinitionTest`, `SortedReflectiveTypeAdapterFactoryTest`.
-  - **GitLab-backed integration tests**: everything in `repository/git/` (`GitProjectsManagerTest`, `GitProjectHandlerTest`,
+  - **GitLab-backed integration tests**: the rest of `repository/git/` (`GitProjectsManagerTest`, `GitProjectHandlerTest`,
     `GitLabServerManagerTest`, …). These create real data on a live GitLab server, then clean up. They are slow and require a configured properties
     file (`-Dprop=...`) pointing at your dev GitLab.
 - The GitLab-backed classes carry `@Tag("gitlab")`, which `maven-surefire-plugin` excludes by default, so a plain `mvn test` needs neither a GitLab
