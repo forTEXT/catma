@@ -103,8 +103,9 @@ their output is container-startup diagnostics and belongs in the container's log
 **Serialization must be byte-stable across writes** so that Git diffs stay minimal. `SerializationHelper` builds a GSON instance around
 `SortedReflectiveTypeAdapterFactory`, which sorts fields deterministically. This requires the locally-added
 `com.google.gson.internal.bind.SortedFieldTypeAdapterWrapper` in `src/main/java/com/google/gson/internal/` — a class placed in Gson's own package on
-purpose. Similarly, `src/main/java/org/gitlab4j/api/EnhancedPager.java` and `Extended*.java` patch gitlab4j from inside its package (they need
-package-private members like `GitLabApiForm`, `AbstractApi.get` and the `Pager` constructor). Don't "clean these up" into `de.catma`.
+purpose. Similarly, `src/main/java/org/gitlab4j/api/EnhancedPager.java` and `Extended*.java` patch gitlab4j from inside its package. Only
+`EnhancedPager` has to be there (it calls the `protected` `AbstractApi.get` on another object); the rest are there so that all patches to gitlab4j are in one
+place, which is what to review when bumping it. Don't "clean these up" into `de.catma`.
 
 Each exists because upstream is still missing something — the class comment in each one says what, so read it before assuming any of them is redundant.
 `EnhancedPager` is a copy of upstream's `Pager` rather than a subclass: when bumping gitlab4j-api, diff it against the new `Pager` and port any upstream

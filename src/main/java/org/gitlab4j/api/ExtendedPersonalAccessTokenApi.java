@@ -21,8 +21,8 @@ import com.fasterxml.jackson.databind.JsonNode;
  * <code>["api", "sudo", "admin_mode"]</code> deserializes to <code>[API, null, null]</code>. Anything checking that list for <code>sudo</code> would
  * silently conclude it isn't there.
  * <p>
- * NB: this class lives in gitlab4j's own package because it needs the package-private {@link AbstractApi#AbstractApi} constructor chain and
- * {@link AbstractApi#get}.
+ * NB: this class lives in gitlab4j's own package only to keep CATMA's patches to gitlab4j in one place - it doesn't use anything that isn't accessible
+ * from outside the package.
  */
 public class ExtendedPersonalAccessTokenApi extends PersonalAccessTokenApi {
 

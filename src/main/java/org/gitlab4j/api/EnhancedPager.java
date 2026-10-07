@@ -36,10 +36,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *   }
  * </pre>
  *
- * <p><b>NB: this is a CATMA copy of gitlab4j-api's {@link Pager}, taken from version 5.8.1.</b> It lives in gitlab4j's own package because it needs
- * package-private members ({@link GitLabApiForm}, {@link AbstractApi#get}). It exists because upstream's implementation is unusable against endpoints that
- * don't return the <code>X-Total</code>/<code>X-Total-Pages</code> headers, which GitLab dropped for the commits endpoint (see
- * <a href="https://gitlab.com/gitlab-org/gitlab/-/merge_requests/43159">gitlab-org MR 43159</a>). Upstream reads those headers into
+ * <p><b>NB: this is a CATMA copy of gitlab4j-api's {@link Pager}, taken from version 5.8.1.</b> It lives in gitlab4j's own package because it calls
+ * {@link AbstractApi#get} on an API instance, which, being <code>protected</code>, is only possible from within that package. It exists because upstream's
+ * implementation is unusable against endpoints that don't return the <code>X-Total</code>/<code>X-Total-Pages</code> headers, which GitLab dropped for the
+ * commits endpoint (see <a href="https://gitlab.com/gitlab-org/gitlab/-/merge_requests/43159">gitlab-org MR 43159</a>). Upstream reads those headers into
  * <code>totalPages</code>/<code>totalItems</code> and falls back to <code>X-Next-Page</code> only for <code>hasNext()</code>, leaving both totals at
  * <code>-1</code> and every other member that consults them broken - see the comments in <code>page()</code> below for the resulting failure, which is why
  * this copy tracks <code>X-Next-Page</code> throughout instead. <code>getTotalPages()</code>, <code>getTotalItems()</code>, <code>last()</code> and

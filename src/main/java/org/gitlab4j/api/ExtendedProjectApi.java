@@ -12,7 +12,8 @@ import org.gitlab4j.api.ProjectApi;
  * Extends {@link ProjectApi} with a variant of <code>getProject</code> that deserializes into an {@link ExtendedProject}, so that the
  * <code>import_error</code> field is available.
  * <p>
- * NB: this class lives in gitlab4j's own package because it needs package-private members ({@link GitLabApiForm}, {@link AbstractApi#get}).
+ * NB: this class lives in gitlab4j's own package only to keep CATMA's patches to gitlab4j in one place - it doesn't use anything that isn't accessible
+ * from outside the package.
  */
 public class ExtendedProjectApi extends ProjectApi {
 
