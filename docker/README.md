@@ -206,13 +206,13 @@ for details.
 
 Ideally, set the URLs when you start the container the first time. If you change them later:
 - `CATMA_URL`: update the redirect URIs of the OAuth application that users sign in through, as described under
-  [Create the OAuth Application](https://github.com/forTEXT/catma/blob/master/doc/SELF-HOSTING.md#create-the-oauth-application), otherwise GitLab will refuse
-  to send users back to CATMA after they sign in. You may also want to update the links in GitLab's sign-in page description (*Admin → Settings →
-  Appearance*).
+  [Create the OAuth Application](https://github.com/forTEXT/catma/blob/master/doc/SELF-HOSTING.md#create-the-oauth-application), otherwise CATMA will
+  refuse to start. You may also want to update the links in GitLab's sign-in page description (*Admin → Settings → Appearance*).
 - `GITLAB_URL`: update the `external_url` setting in `$GITLAB_HOME/config/gitlab.rb` (or `/etc/gitlab/gitlab.rb` within the container), and the
   `--add-host` parameter of the `docker run` command if the host name has changed.
 
-Both are only applied to GitLab's configuration on the first start, whereas CATMA picks up the new URLs on every start.
+Both are only applied to GitLab's configuration on the first start, whereas CATMA picks up the new URLs on every start – which is why it won't start after a
+change to `CATMA_URL` until the redirect URIs have been updated.
 
 #### Multi-User
 

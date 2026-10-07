@@ -175,19 +175,48 @@ public class GitLabOauthHandler {
         return requestTokens(requestData, httpClient);
     }
 
+    /**
+     * Checks whether GitLab accepts the configured client ID and secret.
+     * <p>
+     * There is no endpoint that just authenticates a client, so this attempts to redeem an authorization code that can't exist. GitLab authenticates the
+     * client before it looks at the code, so it answers <code>invalid_client</code> if the credentials are wrong and <code>invalid_grant</code> if they are
+     * right.
+     *
+     * @param httpClient a {@link CloseableHttpClient} instance that will be used to make an HTTP request to GitLab
+     * @return true if the credentials were accepted, false if they were rejected
+     * @throws IOException if the request failed or GitLab's answer was neither of the expected ones
+     */
+    public static boolean checkClientCredentials(@NotNull CloseableHttpClient httpClient) throws IOException {
+        List<NameValuePair> requestData = new ArrayList<>();
+        requestData.add(new BasicNameValuePair("grant_type", "authorization_code"));
+        // any code that GitLab hasn't issued will do
+        requestData.add(new BasicNameValuePair("code", "catma-startup-check"));
+        requestData.add(new BasicNameValuePair("redirect_uri", CATMAPropertyKey.BASE_URL.getValue()));
+
+        try (CloseableHttpResponse response = postToTokenEndpoint(requestData, httpClient)) {
+            ObjectNode responseJson = readResponseJson(response);
+            String error = responseJson.has("error") ? responseJson.get("error").asText() : "n/a";
+
+            switch (error) {
+                case "invalid_grant":
+                    return true;
+                case "invalid_client":
+                    return false;
+                default:
+                    throw new IOException(
+                            String.format(
+                                    "Unexpected answer from GitLab's token endpoint (HTTP status %d, error: %s)",
+                                    response.getStatusLine().getStatusCode(),
+                                    error
+                            )
+                    );
+            }
+        }
+    }
+
     private static GitLabOauthTokens requestTokens(List<NameValuePair> requestData, CloseableHttpClient httpClient) throws IOException {
-        HttpPost httpPost = new HttpPost(getTokenUrl());
-
-        requestData.add(new BasicNameValuePair("client_id", CATMAPropertyKey.GITLAB_OAUTH_CLIENT_ID.getValue()));
-        requestData.add(new BasicNameValuePair("client_secret", CATMAPropertyKey.GITLAB_OAUTH_CLIENT_SECRET.getValue()));
-        httpPost.setEntity(new UrlEncodedFormEntity(requestData));
-
-        try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
-            HttpEntity entity = response.getEntity();
-            ByteArrayOutputStream bodyBuffer = new ByteArrayOutputStream();
-            entity.writeTo(bodyBuffer);
-
-            ObjectNode responseJson = new ObjectMapper().readValue(bodyBuffer.toString(StandardCharsets.UTF_8), ObjectNode.class);
+        try (CloseableHttpResponse response = postToTokenEndpoint(requestData, httpClient)) {
+            ObjectNode responseJson = readResponseJson(response);
 
             if (!responseJson.has("access_token")) {
                 // don't log the response body, it could contain sensitive information
@@ -207,6 +236,24 @@ public class GitLabOauthHandler {
                     Instant.now().plusSeconds(responseJson.has("expires_in") ? responseJson.get("expires_in").asLong() : 7200L)
             );
         }
+    }
+
+    private static CloseableHttpResponse postToTokenEndpoint(List<NameValuePair> requestData, CloseableHttpClient httpClient) throws IOException {
+        HttpPost httpPost = new HttpPost(getTokenUrl());
+
+        requestData.add(new BasicNameValuePair("client_id", CATMAPropertyKey.GITLAB_OAUTH_CLIENT_ID.getValue()));
+        requestData.add(new BasicNameValuePair("client_secret", CATMAPropertyKey.GITLAB_OAUTH_CLIENT_SECRET.getValue()));
+        httpPost.setEntity(new UrlEncodedFormEntity(requestData));
+
+        return httpClient.execute(httpPost);
+    }
+
+    private static ObjectNode readResponseJson(CloseableHttpResponse response) throws IOException {
+        HttpEntity entity = response.getEntity();
+        ByteArrayOutputStream bodyBuffer = new ByteArrayOutputStream();
+        entity.writeTo(bodyBuffer);
+
+        return new ObjectMapper().readValue(bodyBuffer.toString(StandardCharsets.UTF_8), ObjectNode.class);
     }
 
     private static String getGitLabBaseUrl() {

@@ -33,7 +33,8 @@ Then, before deploying the new CATMA version:
 
 1. **Register the OAuth application** that users sign in through, as described under
    [Create the OAuth Application](doc/SELF-HOSTING.md#create-the-oauth-application), and add its credentials to your `catma.properties` file as two new
-   properties: `GITLAB_OAUTH_CLIENT_ID` and `GITLAB_OAUTH_CLIENT_SECRET`.
+   properties: `GITLAB_OAUTH_CLIENT_ID` and `GITLAB_OAUTH_CLIENT_SECRET`. CATMA checks the application at startup and refuses to start if it is missing or
+   misconfigured, naming the problem in the servlet container log.
 2. **Replace the admin token** if it doesn't have the `sudo` scope, which is now required in addition to `api`. Scopes can't be added to an existing token, so
    create a new one as described under
    [Create a Personal Access Token for the Admin Account](doc/SELF-HOSTING.md#create-a-personal-access-token-for-the-admin-account) and update the
@@ -72,6 +73,8 @@ files within the container (e.g. after running `docker exec -it catma-standalone
    GITLAB_OAUTH_CLIENT_ID=<application-id>
    GITLAB_OAUTH_CLIENT_SECRET=<secret>
    ```
+   CATMA checks the application when it starts (step 4) and refuses to start if it is missing or misconfigured, naming the problem in the Jetty log
+   (`/opt/jetty_web/catma_base/logs/` in the container, `$CATMA_HOME/logs/` on the host with bind mounts).
 2. **Fix the `external_url` setting** in `/etc/gitlab/gitlab.rb`. Earlier versions of the image wrote it as an assignment, which GitLab ignores. Replace the
    line `external_url = '<your-gitlab-url>'` with `external_url '<your-gitlab-url>'` (no equals sign). The line `nginx['listen_port'] = ...` just below it is
    no longer needed if your `GITLAB_URL` includes the port (as the default `http://gitlab.localhost:8088` does), and you can optionally remove it.

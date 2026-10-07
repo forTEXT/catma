@@ -78,8 +78,12 @@ Navigate to *Admin → Applications → New application* and set:
 Copy the resulting *Application ID* and *Secret* into the `GITLAB_OAUTH_CLIENT_ID` and `GITLAB_OAUTH_CLIENT_SECRET` properties. Note that GitLab stores
 application secrets hashed, so the secret is only available immediately after creating the application – if you lose it you have to renew it.
 
-If you later change the URL that CATMA is served at (the `BASE_URL` property), update the redirect URIs to match, otherwise GitLab will refuse to send users
-back to CATMA after they sign in. You can edit them under *Admin → Applications*, without having to create a new application.
+CATMA checks the application at startup and **refuses to start** if it can't find it, if GitLab rejects the secret, if it isn't confidential, or if either
+redirect URI is missing, naming the problem in the servlet container log. Whether the application is trusted and has the `api` scope can't be checked this way,
+so double-check those two settings.
+
+If you later change the URL that CATMA is served at (the `BASE_URL` property), update the redirect URIs to match, otherwise CATMA will refuse to start. You
+can edit them under *Admin → Applications*, without having to create a new application.
 
 ### Google Sign-In (Optional)
 

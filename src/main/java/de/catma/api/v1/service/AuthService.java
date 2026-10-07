@@ -131,7 +131,7 @@ public class AuthService {
 	}
 	
 	@GET
-	@Path("/gitlab")
+	@Path(AuthConstants.GITLAB_OAUTH_PATH)
 	// swagger:
 	@Operation(
 			description = "Authenticate with your CATMA account. A browser is required to complete the OAuth flow. Redirects to CATMA's GitLab backend, where " +
@@ -145,8 +145,7 @@ public class AuthService {
 	public Response gitLabOauth() {
 		try {
 			URI authorizationUri = GitLabOauthHandler.getOauthAuthorizationRequestUri(
-					// appends '/callback' to the current URL path and strips any query params (as they would cause a redirectUrl mismatch)
-					uriInfo.getRequestUriBuilder().path("callback").replaceQuery("").build().toString(),
+					AuthConstants.getGitLabOauthRedirectUrl(),
 					sessionStorageHandler::setAttribute,
 					null
 			);
@@ -161,7 +160,7 @@ public class AuthService {
 
 	@Produces(MediaType.TEXT_PLAIN)
 	@GET
-	@Path("/gitlab/callback")
+	@Path(AuthConstants.GITLAB_OAUTH_CALLBACK_PATH)
 	// swagger:
 	@Hidden
 	public Response gitLabOauthCallback(@QueryParam("code") String authorizationCode, @QueryParam("state") String state, @QueryParam("error") String error) {
@@ -173,16 +172,14 @@ public class AuthService {
 
 			if (authorizationCode == null && error.equals("access_denied")) {
 				// the user cancelled the auth process with GitLab or didn't allow the requested access
-				String requestUrl = uriInfo.getRequestUri().toString();
-				String gitLabAuthUrl = requestUrl.substring(0, requestUrl.lastIndexOf("/")); // removes '/callback' and any query params
 				return Response.ok(
 						"You seem to have cancelled the sign-in or you didn't allow the requested access. " +
-								"To restart the process and try again, please visit the following URL:\n" + gitLabAuthUrl
+								"To restart the process and try again, please visit the following URL:\n" + AuthConstants.getGitLabOauthUrl()
 				).build();
 			}
 
-			// strips any query params (prevents redirectUrl mismatch)
-			String redirectUrl = uriInfo.getRequestUriBuilder().replaceQuery("").build().toString();
+			// has to be the same redirect URL as in gitLabOauth
+			String redirectUrl = AuthConstants.getGitLabOauthRedirectUrl();
 
 			Pair<GitLabOauthTokens, Map<String, String>> resultPair;
 			try (CloseableHttpClient httpClient = httpClientFactory.create()) {

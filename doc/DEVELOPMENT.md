@@ -117,7 +117,7 @@ In GitLab, go to *Admin → Applications → New application* and set:
 - **Scopes**: `api`
 
 Copy the resulting *Application ID* and *Secret* into `GITLAB_OAUTH_CLIENT_ID` and `GITLAB_OAUTH_CLIENT_SECRET`. The secret is stored hashed by GitLab and is
-only shown immediately after creation.
+only shown immediately after creation. CATMA checks the application at startup (`GitLabCapabilitiesCheckServlet`) and refuses to start if it is misconfigured.
 
 Note that this replaces the resource owner password credentials (ROPC) grant that CATMA used previously, which GitLab removed in version 19.0. Users now enter
 their credentials on GitLab's own login page rather than in CATMA, which is why *Settings → General → Sign-in restrictions → Allow password and passkey

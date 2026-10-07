@@ -1,9 +1,15 @@
 package de.catma.repository.git.managers;
 
+import de.catma.oauth.GitLabOauthHandler;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.GitLabUtils;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.gitlab4j.api.ExtendedApplication;
+import org.gitlab4j.api.ExtendedApplicationsApi;
 import org.gitlab4j.api.ExtendedPersonalAccessTokenApi;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
@@ -24,6 +30,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 public class GitlabManagerPrivileged extends GitlabManagerCommon implements RemoteGitManagerPrivileged {
 	private enum CustomAttributeName {
@@ -67,6 +74,11 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 	 *         two differently.
 	 */
 	public static List<String> checkAdminTokenCapabilities() throws IOException {
+		// without a token GitLab would reject our requests, which would look like being unable to check rather than a problem with the token
+		if (StringUtils.isBlank(CATMAPropertyKey.GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN.getValue())) {
+			return List.of(String.format("the %s property is not set", CATMAPropertyKey.GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN.name()));
+		}
+
 		try (GitLabApi gitlabApi = newAdminGitLabApi()) {
 			List<String> scopes = new ExtendedPersonalAccessTokenApi(gitlabApi).getCurrentTokenScopes();
 			User tokenUser = gitlabApi.getUserApi().getCurrentUser();
@@ -94,6 +106,85 @@ public class GitlabManagerPrivileged extends GitlabManagerCommon implements Remo
 		catch (GitLabApiException e) {
 			throw new IOException("Couldn't check the capabilities of the GitLab admin personal access token", e);
 		}
+	}
+
+	/**
+	 * Checks that the OAuth application that users sign in through, identified by {@link CATMAPropertyKey#GITLAB_OAUTH_CLIENT_ID}, is usable: that it exists
+	 * as an instance-wide application, that {@link CATMAPropertyKey#GITLAB_OAUTH_CLIENT_SECRET} is its secret, that it is confidential and that it has all of
+	 * the given redirect URIs.
+	 * <p>
+	 * Confidentiality matters because the application is meant to be trusted, i.e. GitLab skips the consent screen for it - for a client without a secret,
+	 * that screen is one of the few remaining safeguards against an impersonator obtaining an authorization code.
+	 * <p>
+	 * Whether the application is trusted and has the <code>api</code> scope can't be checked: GitLab doesn't expose either attribute through its API. Getting
+	 * these wrong shows up when someone signs in, as a consent screen or an <code>invalid_scope</code> error respectively.
+	 * <p>
+	 * Like {@link #checkAdminTokenCapabilities}, this reports every problem it finds rather than stopping at the first.
+	 *
+	 * @param requiredRedirectUris the redirect URIs that CATMA uses, all of which have to be registered for the application
+	 * @return the problems found, empty if the application is configured correctly
+	 * @throws IOException if the check couldn't be carried out at all, e.g. because the GitLab server is unreachable
+	 */
+	public static List<String> checkOauthApplication(List<String> requiredRedirectUris) throws IOException {
+		// without these, GitLab's answers would only be misleading
+		List<String> unsetProperties = Stream.of(CATMAPropertyKey.GITLAB_OAUTH_CLIENT_ID, CATMAPropertyKey.GITLAB_OAUTH_CLIENT_SECRET)
+				.filter(key -> StringUtils.isBlank(key.getValue()))
+				.map(key -> String.format("the %s property is not set", key.name()))
+				.toList();
+		if (!unsetProperties.isEmpty()) {
+			return unsetProperties;
+		}
+
+		String clientId = CATMAPropertyKey.GITLAB_OAUTH_CLIENT_ID.getValue();
+
+		Optional<ExtendedApplication> application;
+		try (GitLabApi gitlabApi = newAdminGitLabApi()) {
+			application = new ExtendedApplicationsApi(gitlabApi).getExtendedApplications().stream()
+					.filter(app -> app.getApplicationId().equals(clientId))
+					.findFirst();
+		}
+		catch (GitLabApiException e) {
+			throw new IOException("Couldn't check the GitLab OAuth application", e);
+		}
+
+		if (application.isEmpty()) {
+			// any further problems would only be consequences of this one
+			return List.of(
+					String.format(
+							"there is no instance-wide application with the application ID \"%s\" - it has to be created in the Admin area (see "
+									+ "doc/SELF-HOSTING.md)",
+							clientId
+					)
+			);
+		}
+
+		List<String> problems = new ArrayList<>();
+
+		try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+			if (!GitLabOauthHandler.checkClientCredentials(httpClient)) {
+				problems.add("GitLab rejected its secret - if the secret has been lost, it can be renewed in the Admin area");
+			}
+		}
+
+		if (!Boolean.TRUE.equals(application.get().getConfidential())) {
+			problems.add("it is not confidential");
+		}
+
+		// GitLab returns the redirect URIs as they were entered, one per line
+		List<String> redirectUris = application.get().getCallbackUrl() == null ?
+				List.of() : application.get().getCallbackUrl().lines().map(String::trim).toList();
+		List<String> missingRedirectUris = requiredRedirectUris.stream().filter(uri -> !redirectUris.contains(uri)).toList();
+		if (!missingRedirectUris.isEmpty()) {
+			problems.add(
+					String.format(
+							"its redirect URIs don't include %s - it has %s. They have to match the BASE_URL property exactly, including the trailing slash",
+							String.join(", ", missingRedirectUris),
+							redirectUris.isEmpty() ? "none" : String.join(", ", redirectUris)
+					)
+			);
+		}
+
+		return problems;
 	}
 
 	@Override
