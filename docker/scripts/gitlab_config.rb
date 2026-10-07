@@ -55,6 +55,12 @@ end
 ApplicationSetting.current.update!(
   # these are absolutely necessary for CATMA to work (as are the admin PAT and OAuth application that are created further down):
   password_authentication_enabled_for_web: true, # users sign in on GitLab's own login page as part of the OAuth flow
+  # accounts must only be created through CATMA, which verifies the email address first - otherwise someone could register the address of a future
+  # CATMA user, whose Google sign-in would then be linked to that account (see gitlab_rails['omniauth_auto_link_user'] in docker/README.md)
+  # NB: this does *not* cover OmniAuth providers - account creation through those is governed by the separate gitlab_rails['omniauth_allow_single_sign_on']
+  # setting in gitlab.rb, which should be left unset (see docker/README.md)
+  signup_enabled: false,
+  email_confirmation_setting: :hard,
   auto_devops_enabled: false,
   default_branch_name: 'master',
   # default_branch_protection: Gitlab::Access::PROTECTION_DEV_CAN_PUSH, # deprecated
@@ -75,11 +81,7 @@ ApplicationSetting.current.update!(
   user_oauth_applications: false,
   user_show_add_ssh_key_message: false,
   diff_max_patch_bytes: 512000,
-  # NB: this does *not* cover OmniAuth providers - account creation through those is governed by the separate gitlab_rails['omniauth_allow_single_sign_on']
-  # setting in gitlab.rb, which should be left unset (see docker/README.md)
-  signup_enabled: false,
   require_admin_approval_after_user_signup: false,
-  email_confirmation_setting: :hard,
   password_authentication_enabled_for_git: true,
   silent_mode_enabled: true,
   diagramsnet_enabled: false,

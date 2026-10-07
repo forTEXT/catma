@@ -47,7 +47,7 @@ Then, before deploying the new CATMA version:
 
 We also recommend that you update GitLab's appearance settings (*Admin → Settings → Appearance*), because users now see GitLab's login page every time they
 sign in to CATMA, and its description should tell them where they are and why. You can use the
-[GitLab configuration Ruby script](docker/scripts/gitlab_config.rb#L127-L157) as a reference: besides the description, it sets the site name and logos, and
+[GitLab configuration Ruby script](docker/scripts/gitlab_config.rb#L129-L159) as a reference: besides the description, it sets the site name and logos, and
 links to CATMA's terms of use and privacy policy from GitLab's terms of service (*Admin → Settings → General → Terms of Service and Privacy Policy*).
 
 ### Docker (Standalone)

@@ -16,13 +16,14 @@ You will need to install the GitLab server using the [cloud native or Linux pack
 administrator access is required).
 
 Also note that there are some configuration changes that you need to make within GitLab before CATMA will work properly. The necessary changes are listed in the
-[GitLab configuration Ruby script](../docker/scripts/gitlab_config.rb#L56-L68) for the Docker image. This script can also be run independently on the GitLab
+[GitLab configuration Ruby script](../docker/scripts/gitlab_config.rb#L56-L74) for the Docker image. This script can also be run independently on the GitLab
 server using `gitlab-rails runner` (usage hint [here](../docker/scripts/gitlab_config.rb#L29)). You should delete the OAuth application credentials file (see
 the `oauth_creds_path` parameter) that the script creates, once you have retrieved the credentials and placed them in your `catma.properties` file as described
 under [Application Deployment](#application-deployment) below.
 
 Alternatively, you can manually make the changes via the GitLab Admin UI:
 - Turn **OFF**: Settings → General → New user account restrictions → Allow new user accounts
+- Set to **Hard**: Settings → General → New user account restrictions → Email confirmation settings
 - Turn **ON**: Settings → General → Sign-in restrictions → Allow password and passkey authentication for the web interface
 - Turn **OFF**: Settings → CI/CD → Continuous Integration and Deployment → Default to Auto DevOps pipeline for all projects
 - Set the default branch name to "**master**": Settings → Repository → Default branch → Initial default branch name
