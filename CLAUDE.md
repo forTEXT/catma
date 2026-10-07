@@ -166,6 +166,9 @@ language detection).
 - The GitLab-backed classes carry `@Tag("gitlab")`, which `maven-surefire-plugin` excludes by default, so a plain `mvn test` needs neither a GitLab
   server nor a properties file. The `gitlab-tests` profile clears the exclusion. **Tag any new test that touches GitLab**, or it will break `mvn test`
   for everyone without a dev instance.
+- In a sandboxed Claude Code session, writes to `/tmp` are blocked, which makes `ProjectServiceTest` fail (JGit can't create its test repositories) and
+  surefire warn that it can't create its temp directory. Redirect both the Maven JVM's and the forked test JVM's temp dir to the sandbox's:
+  `mvn test -Djava.io.tmpdir=$TMPDIR -DargLine="-Djava.io.tmpdir=$TMPDIR"`.
 - JUnit 5 (Jupiter) is the API for `src/test/java`. `maven-surefire-plugin` has to stay pinned in `pom.xml`: Maven's default is 2.17, which predates
   JUnit 5 and reports "Tests run: 0" instead of failing, so nothing in `src/test/java` runs at all.
 
