@@ -49,6 +49,25 @@ mvn test -Pgitlab-tests -Dprop=catma_local-dev.properties
 `mvn dependency:tree` / `dependency:analyze` are used often here — the POM contains many deliberate version pins and exclusions (Jersey, Tika,
 commons-logging, xalan, activation), and `maven-enforcer-plugin` bans several artifacts. Read the comments in `pom.xml` before changing a dependency.
 
+**Maven behind a proxy (e.g. a sandboxed shell):** Maven ignores `HTTP(S)_PROXY` environment variables, so downloads fail with "Could not transfer
+artifact" even though `curl` works. Generate a settings file from the variable in `$TMPDIR` and pass it with `-s` (which replaces
+`~/.m2/settings.xml` for that run). Never write the file into the repo, as it contains the proxy credentials:
+
+```bash
+u=$(echo "$HTTPS_PROXY" | sed -E 's#^https?://([^:]+):([^@]+)@.*#\1#'); p=$(echo "$HTTPS_PROXY" | sed -E 's#^https?://([^:]+):([^@]+)@.*#\2#')
+h=$(echo "$HTTPS_PROXY" | sed -E 's#^.*@([^:/]+):([0-9]+).*#\1#'); port=$(echo "$HTTPS_PROXY" | sed -E 's#^.*@([^:/]+):([0-9]+).*#\2#')
+cat > "$TMPDIR/mvn-proxy-settings.xml" <<EOF
+<settings><proxies>
+<proxy><id>https</id><active>true</active><protocol>https</protocol><host>$h</host><port>$port</port><username>$u</username><password>$p</password></proxy>
+<proxy><id>http</id><active>true</active><protocol>http</protocol><host>$h</host><port>$port</port><username>$u</username><password>$p</password></proxy>
+</proxies></settings>
+EOF
+mvn -s "$TMPDIR/mvn-proxy-settings.xml" package   # same -s for any other goal
+```
+
+Such a proxy may not pass through checksum files ("Checksum validation failed, no checksums available"), so artifacts downloaded this way are
+unverified.
+
 ## Configuration
 
 All runtime settings are enum constants in `de.catma.properties.CATMAPropertyKey`, read from a properties file via `CATMAProperties.INSTANCE`. The
