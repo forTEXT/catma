@@ -29,7 +29,7 @@
 
 		<jetty.plugin.version>12.0.16</jetty.plugin.version>
 		
-		<jersey.version>2.47</jersey.version>
+		<jersey.version>2.48</jersey.version>
 
 		<!-- the JUnit 5 tag carried by the GitLab-backed integration tests, excluded by default; cleared by the 'gitlab-tests' profile -->
 		<surefire.excludedGroups>gitlab</surefire.excludedGroups>
@@ -51,17 +51,29 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			<!-- Must come before the Tika imports: where imported BOMs overlap, the first one wins, and tika-parent manages JUnit too. Keep the version
+			     in line with the one tika-parent declares. -->
 			<dependency>
-				<groupId>org.apache.tika</groupId>
-				<artifactId>tika-bom</artifactId>
-				<version>3.2.3</version>
+				<groupId>org.junit</groupId>
+				<artifactId>junit-bom</artifactId>
+				<version>5.14.4</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.junit</groupId>
-				<artifactId>junit-bom</artifactId>
-				<version>5.14.1</version>
+				<groupId>org.apache.tika</groupId>
+				<artifactId>tika-bom</artifactId>
+				<version>3.3.2</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<!-- Up to 3.2.x, tika-bom inherited tika-parent and with it a dependencyManagement section that pins most of our third-party libraries
+			     (Jackson, JAXB, commons-*, jsoup, ...). Since 3.3.0 it no longer does, which lets nearest-wins mediation pick much older versions
+			     (e.g. jsoup from Vaadin, commons-codec from httpclient) and mixed Jackson versions. Import it explicitly to keep those pins. -->
+			<dependency>
+				<groupId>org.apache.tika</groupId>
+				<artifactId>tika-parent</artifactId>
+				<version>3.3.2</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -400,7 +412,7 @@
 		<dependency>
 			<groupId>io.swagger.core.v3</groupId>
 			<artifactId>swagger-jaxrs2</artifactId>
-			<version>2.2.30</version>
+			<version>2.2.55</version>
 		</dependency>
 
 		<!-- Test dependencies -->
