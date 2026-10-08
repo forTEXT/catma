@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.stream.Stream;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -42,8 +41,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * commits endpoint (see <a href="https://gitlab.com/gitlab-org/gitlab/-/merge_requests/43159">gitlab-org MR 43159</a>). Upstream reads those headers into
  * <code>totalPages</code>/<code>totalItems</code> and falls back to <code>X-Next-Page</code> only for <code>hasNext()</code>, leaving both totals at
  * <code>-1</code> and every other member that consults them broken - see the comments in <code>page()</code> below for the resulting failure, which is why
- * this copy tracks <code>X-Next-Page</code> throughout instead. <code>getTotalPages()</code>, <code>getTotalItems()</code>, <code>last()</code> and
- * <code>all()</code> are omitted for the same reason: without a known total they cannot be implemented.
+ * this copy tracks <code>X-Next-Page</code> throughout instead. That also changes what <code>hasNext()</code> means - see the comment there.
+ * <code>getTotalPages()</code>, <code>getTotalItems()</code>, <code>last()</code> and <code>all()</code> are omitted because without a known total they
+ * cannot be implemented, <code>stream()</code> because it relies on upstream's meaning of <code>hasNext()</code>, and <code>lazyStream()</code> because
+ * upstream's <code>PagerSpliterator</code> takes a {@link Pager}, which this class does not extend.
  *
  * <p>Everything apart from that is a verbatim copy. When updating gitlab4j-api, diff this class against the new <code>Pager</code> and port any upstream
  * changes across (between 5.0.1 and 5.8.1 there were none of substance).
@@ -59,7 +60,6 @@ public class EnhancedPager<T> implements Iterator<List<T>>, Constants {
 
     private List<String> pageParam = new ArrayList<>(1);
     private List<T> currentItems;
-    private Stream<T> pagerStream = null;
 
     private AbstractApi api;
     private MultivaluedMap<String, String> queryParams;
@@ -209,6 +209,10 @@ public class EnhancedPager<T> implements Iterator<List<T>>, Constants {
      *
      * @return true if there are additional pages to iterate over, otherwise returns false
      */
+    // CATMA: upstream's hasNext() means "is there a page that hasn't been returned yet", so it is true before the first page has been returned. This one
+    // means "is there a page after the current one", where a pager that hasn't returned anything yet counts as being on the first page (which the
+    // constructor has already fetched, and current() returns). ProjectEventPanel relies on that to tell whether there is more than one page. The
+    // difference matters for a single page only: iterating with 'while (hasNext()) next()' would skip it.
     @Override
     public boolean hasNext() {
         return (currentPage < nextPage);
@@ -312,42 +316,5 @@ public class EnhancedPager<T> implements Iterator<List<T>>, Constants {
     public int getNextPage() {
         return (nextPage);
     }
-
-    /**
-     * Builds and returns a Stream instance which is pre-populated with all items from all pages.
-     *
-     * @return a Stream instance which is pre-populated with all items from all pages
-     * @throws IllegalStateException if Stream has already been issued
-     * @throws GitLabApiException if any other error occurs
-     */
-    public Stream<T> stream() throws GitLabApiException, IllegalStateException {
-
-        if (pagerStream == null) {
-            synchronized (this) {
-                if (pagerStream == null) {
-
-                    // Make sure that current page is 0, this will ensure the whole list is streamed
-                    // regardless of what page the instance is currently on.
-                    currentPage = 0;
-
-                    // Create a Stream.Builder to contain all the items. This is more efficient than
-                    // getting a List with all() and streaming that List
-                    Stream.Builder<T> streamBuilder = Stream.builder();
-
-                    // Iterate through the pages and append each page of items to the stream builder
-                    while (hasNext()) {
-                        next().forEach(streamBuilder);
-                    }
-
-                    pagerStream = streamBuilder.build();
-                    return (pagerStream);
-                }
-            }
-        }
-
-        throw new IllegalStateException("Stream already issued");
-    }
-
-    // CATMA: lazyStream() is omitted because upstream's PagerSpliterator takes a Pager, which this class does not extend.
 
 }
