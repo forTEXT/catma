@@ -44,6 +44,8 @@ Then, before deploying the new CATMA version:
    particular, `gitlab_rails['omniauth_enabled'] = true` is new, and `omniauth_allow_single_sign_on`, `omniauth_sync_profile_from_provider` and
    `omniauth_sync_profile_attributes` should be removed from `gitlab.rb` if you had set them – the section explains why.
 4. **Remove obsolete properties** from your `catma.properties` file: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` and `RESET_PASSWORD_URL`.
+5. **Update Jetty to 12.0.22 or later** if you run it on Java 25 or later. Otherwise CATMA fails to start with "Unable to parse class" errors – see
+   [Java Web Server and Servlet Container](doc/SELF-HOSTING.md#java-web-server-and-servlet-container).
 
 We also recommend that you update GitLab's appearance settings (*Admin → Settings → Appearance*), because users now see GitLab's login page every time they
 sign in to CATMA, and its description should tell them where they are and why. You can use the

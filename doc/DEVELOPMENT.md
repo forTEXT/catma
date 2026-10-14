@@ -4,7 +4,8 @@ These are instructions for setting up a development environment to work on the C
 
 ## Prerequisites
 
-- JDK 21
+- JDK 21 – use it to run Jetty as well. Both `mvn jetty:run` and the IDEA setup below use Jetty 12.0.16, which fails to start CATMA on Java 25 or later
+  ("Unable to parse class") because some of CATMA's libraries contain classes compiled for Java 25 that it can't read.
 - Maven
 - A self-managed GitLab server, with full administrator access and that is dedicated to CATMA (for example, using GitLab's Docker image – refer to the
   [self-hosting instructions](SELF-HOSTING.md))
