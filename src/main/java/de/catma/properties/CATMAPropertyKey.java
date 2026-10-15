@@ -65,17 +65,16 @@ public enum CATMAPropertyKey {
 	GOOGLE_RECAPTCHA_SECRET_KEY,
 	SIGNUP_TOKEN_KEY,
 
-	GOOGLE_OAUTH_AUTHORIZATION_CODE_REQUEST_URL("https://accounts.google.com/o/oauth2/v2/auth"),
-	GOOGLE_OAUTH_ACCESS_TOKEN_REQUEST_URL("https://oauth2.googleapis.com/token"),
-	GOOGLE_OAUTH_CLIENT_ID,
-	GOOGLE_OAUTH_CLIENT_SECRET,
+	// credentials of the instance-wide OAuth application that must be registered on the GitLab server (see doc/SELF-HOSTING.md)
+	// the corresponding endpoints are derived from GITLAB_SERVER_URL
+	GITLAB_OAUTH_CLIENT_ID,
+	GITLAB_OAUTH_CLIENT_SECRET,
 
 	ABOUT_URL("https://catma.de"),
 	IMPRINT_URL("https://catma.de/about/imprint/"),
 	TERMS_OF_USE_URL("https://catma.de/documentation/terms-of-use/"),
 	PRIVACY_POLICY_URL("https://catma.de/documentation/privacy-policy/"),
 	STATUS_URL("https://catma.de/status/"),
-	RESET_PASSWORD_URL("https://git.catma.de/users/password/new"),
 	LOGOUT_URL("https://app.catma.de"),
 	CONTEXT_DEFINITION_URL("https://www.catma.de/"),
 	

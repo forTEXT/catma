@@ -1,0 +1,102 @@
+package de.catma.oauth;
+
+import org.apache.http.impl.client.CloseableHttpClient;
+
+import javax.validation.constraints.NotNull;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * Holds the {@link GitLabOauthTokens} for a session and transparently refreshes the access token before it expires.
+ * <p>
+ * GitLab access tokens expire after 2 hours by default, which is shorter than a CATMA session can live (see the session timeout in web.xml), so the access
+ * token has to be refreshed. All access is synchronized because refreshing invalidates both of the old tokens - two concurrent refreshes for the same session
+ * (which is entirely possible, as background threads perform Git operations while the UI thread makes API calls) would leave us holding a dead refresh token.
+ */
+public class GitLabOauthTokenProvider {
+	// refresh a little before the token actually expires, so that we don't hand out a token that expires while it is in flight
+	private static final long REFRESH_LEEWAY_SECONDS = 60;
+	// how long to wait before trying again after a failed refresh (see getAccessToken)
+	private static final long RETRY_AFTER_FAILURE_SECONDS = 30;
+
+	private static final Logger logger = Logger.getLogger(GitLabOauthTokenProvider.class.getName());
+
+	private final String redirectUrl;
+	private final Supplier<CloseableHttpClient> httpClientSupplier;
+
+	private GitLabOauthTokens tokens;
+	private Instant nextRefreshAttempt = Instant.MIN;
+
+	/**
+	 * @param tokens the tokens as obtained from {@link GitLabOauthHandler#handleCallbackAndGetTokens}
+	 * @param redirectUrl the redirect URL that was used to obtain <code>tokens</code>, which is repeated when refreshing them
+	 * @param httpClientSupplier supplies the {@link CloseableHttpClient} used for refresh requests (refreshes happen long after the initial request, and
+	 *                           potentially on a background thread, so we can't hold on to the client that was used for the initial token request)
+	 */
+	public GitLabOauthTokenProvider(
+			@NotNull GitLabOauthTokens tokens, @NotNull String redirectUrl, @NotNull Supplier<CloseableHttpClient> httpClientSupplier
+	) {
+		this.tokens = tokens;
+		this.redirectUrl = redirectUrl;
+		this.httpClientSupplier = httpClientSupplier;
+	}
+
+	/**
+	 * Returns a currently valid access token, refreshing it first if it is about to expire.
+	 * <p>
+	 * This is used as the auth token supplier for gitlab4j-api and as the password for Git over HTTPS, neither of which can handle a checked exception, so a
+	 * failed refresh is logged and the existing (probably expired) token is returned - the resulting API or Git failure is handled by the caller.
+	 * <p>
+	 * A failure doesn't move the expiry, so without a back-off every subsequent call would attempt another refresh: that is one synchronous request to GitLab
+	 * per API call and per Git credentials lookup, all serialized on this instance, and all followed by the failure the caller was going to get anyway. Note
+	 * that a refresh failure is frequently permanent, because GitLab invalidates the old refresh token as soon as it issues a new pair, so a response we don't
+	 * receive leaves us holding a token that will never work again.
+	 *
+	 * @return the access token
+	 */
+	public synchronized String getAccessToken() {
+		Instant now = Instant.now();
+
+		if (now.plusSeconds(REFRESH_LEEWAY_SECONDS).isAfter(tokens.expiresAt()) && now.isAfter(nextRefreshAttempt)) {
+			try {
+				refresh();
+			}
+			catch (IOException e) {
+				nextRefreshAttempt = now.plusSeconds(RETRY_AFTER_FAILURE_SECONDS);
+				logger.log(Level.WARNING, "Failed to refresh the GitLab OAuth access token, returning the existing one", e);
+			}
+		}
+
+		return tokens.accessToken();
+	}
+
+	/**
+	 * Refreshes the access token irrespective of whether it has expired.
+	 * <p>
+	 * Unlike {@link #getAccessToken()} this propagates a failure rather than logging it and backing off, because its callers can handle one - it is called
+	 * from {@link de.catma.repository.git.managers.JGitCredentialsManager#refreshTransientCredentials}, i.e. when a Git operation has been rejected and is
+	 * about to be retried. Callers are expected to surface the failure; nothing is logged here.
+	 *
+	 * @throws IOException if the tokens couldn't be refreshed
+	 */
+	public synchronized void forceRefresh() throws IOException {
+		refresh();
+	}
+
+	private void refresh() throws IOException {
+		nextRefreshAttempt = Instant.MIN;
+
+		if (tokens.refreshToken() == null) {
+			throw new IOException("Can't refresh the GitLab OAuth access token, no refresh token is available");
+		}
+
+		logger.info("Refreshing the GitLab OAuth access token...");
+
+		try (CloseableHttpClient httpClient = httpClientSupplier.get()) {
+			tokens = GitLabOauthHandler.refreshTokens(tokens.refreshToken(), redirectUrl, httpClient);
+		}
+	}
+}

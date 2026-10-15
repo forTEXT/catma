@@ -111,8 +111,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 		catch (GitAPIException e) {
 			if (e instanceof TransportException && e.getMessage().contains("not authorized") && refreshCredentialsTryCount < 1) {
-				// it's likely that the user is logged in using the username/password authentication method and that their
-				// GitLab OAuth access token has expired - try to refresh credentials and retry the operation once
+				// it's likely that the GitLab OAuth access token has expired - try to refresh credentials and retry the operation once
 				detach();
 				jGitCredentialsManager.refreshTransientCredentials();
 				return clone(namespace, name, uri, jGitCredentialsManager, refreshCredentialsTryCount + 1, tryCount);
@@ -238,8 +237,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 		catch (GitAPIException e) {
 			if (e instanceof TransportException && e.getMessage().contains("not authorized") && refreshCredentialsTryCount < 1) {
-				// it's likely that the user is logged in using the username/password authentication method and that their
-				// GitLab OAuth access token has expired - try to refresh credentials and retry the operation once
+                // it's likely that the GitLab OAuth access token has expired - try to refresh credentials and retry the operation once
 				jGitCredentialsManager.refreshTransientCredentials();
 				fetch(jGitCredentialsManager, refreshCredentialsTryCount + 1, tryCount);
 				return;
@@ -744,8 +742,7 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 		catch (GitAPIException e) {
 			if (e instanceof TransportException && e.getMessage().contains("not authorized") && refreshCredentialsTryCount < 1) {
-				// it's likely that the user is logged in using the username/password authentication method and that their
-				// GitLab OAuth access token has expired - try to refresh credentials and retry the operation once
+                // it's likely that the GitLab OAuth access token has expired - try to refresh credentials and retry the operation once
 				jGitCredentialsManager.refreshTransientCredentials();
 				return push(jGitCredentialsManager, branch, skipBranchChecks, refreshCredentialsTryCount + 1, tryCount);
 			}

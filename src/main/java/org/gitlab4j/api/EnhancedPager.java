@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.stream.Stream;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -36,19 +35,31 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *   }
  * </pre>
  *
+ * <p><b>NB: this is a CATMA copy of gitlab4j-api's {@link Pager}, taken from version 5.8.1.</b> It lives in gitlab4j's own package because it calls
+ * {@link AbstractApi#get} on an API instance, which, being <code>protected</code>, is only possible from within that package. It exists because upstream's
+ * implementation is unusable against endpoints that don't return the <code>X-Total</code>/<code>X-Total-Pages</code> headers, which GitLab dropped for the
+ * commits endpoint (see <a href="https://gitlab.com/gitlab-org/gitlab/-/merge_requests/43159">gitlab-org MR 43159</a>). Upstream reads those headers into
+ * <code>totalPages</code>/<code>totalItems</code> and falls back to <code>X-Next-Page</code> only for <code>hasNext()</code>, leaving both totals at
+ * <code>-1</code> and every other member that consults them broken - see the comments in <code>page()</code> below for the resulting failure, which is why
+ * this copy tracks <code>X-Next-Page</code> throughout instead. That also changes what <code>hasNext()</code> means - see the comment there.
+ * <code>getTotalPages()</code>, <code>getTotalItems()</code>, <code>last()</code> and <code>all()</code> are omitted because without a known total they
+ * cannot be implemented, <code>stream()</code> because it relies on upstream's meaning of <code>hasNext()</code>, and <code>lazyStream()</code> because
+ * upstream's <code>PagerSpliterator</code> takes a {@link Pager}, which this class does not extend.
+ *
+ * <p>Everything apart from that is a verbatim copy. When updating gitlab4j-api, diff this class against the new <code>Pager</code> and port any upstream
+ * changes across (between 5.0.1 and 5.8.1 there were none of substance).
+ *
  * @param <T> the GitLab4J type contained in the List.
  */
 public class EnhancedPager<T> implements Iterator<List<T>>, Constants {
 
     private int itemsPerPage;
-//    private int totalPages; mpetris: isn't included anymore, see https://gitlab.com/gitlab-org/gitlab/-/merge_requests/43159
-//    private int totalItems; mpetris: isn't included anymore, see https://gitlab.com/gitlab-org/gitlab/-/merge_requests/43159
     private int currentPage;
+    // CATMA: replaces upstream's totalPages/totalItems/kaminariNextPage
     private int nextPage;
 
     private List<String> pageParam = new ArrayList<>(1);
     private List<T> currentItems;
-    private Stream<T> pagerStream = null;
 
     private AbstractApi api;
     private MultivaluedMap<String, String> queryParams;
@@ -68,7 +79,13 @@ public class EnhancedPager<T> implements Iterator<List<T>>, Constants {
      * @param pathArgs HTTP path arguments
      * @throws GitLabApiException if any error occurs
      */
-    EnhancedPager(AbstractApi api, Class<T> type, int itemsPerPage, MultivaluedMap<String, String> queryParams, Object... pathArgs) throws GitLabApiException {
+    public EnhancedPager(
+            AbstractApi api,
+            Class<T> type,
+            int itemsPerPage,
+            MultivaluedMap<String, String> queryParams,
+            Object... pathArgs)
+            throws GitLabApiException {
 
         javaType = mapper.getTypeFactory().constructCollectionType(List.class, type);
 
@@ -78,7 +95,8 @@ public class EnhancedPager<T> implements Iterator<List<T>>, Constants {
 
         // Make sure the per_page parameter is present
         if (queryParams == null) {
-            queryParams = new GitLabApiForm().withParam(PER_PAGE_PARAM, itemsPerPage).asMap();
+            queryParams =
+                    new GitLabApiForm().withParam(PER_PAGE_PARAM, itemsPerPage).asMap();
         } else {
             queryParams.remove(PER_PAGE_PARAM);
             queryParams.add(PER_PAGE_PARAM, Integer.toString(itemsPerPage));
@@ -105,39 +123,17 @@ public class EnhancedPager<T> implements Iterator<List<T>>, Constants {
         this.pathArgs = pathArgs;
         this.itemsPerPage = getIntHeaderValue(response, PER_PAGE);
 
-        // Some API endpoints do not return the "X-Per-Page" header when there is only 1 page, check for that condition and act accordingly
+        // Some API endpoints do not return the "X-Per-Page" header when there is only 1 page, check for that condition
+        // and act accordingly
         if (this.itemsPerPage == -1) {
             this.itemsPerPage = itemsPerPage;
-            
-//            mpetris: isn't included anymore, see https://gitlab.com/gitlab-org/gitlab/-/merge_requests/43159
-//            totalPages = 1;
-//            totalItems = currentItems.size();
-            
             return;
         }
 
-//        mpetris: isn't included anymore, see https://gitlab.com/gitlab-org/gitlab/-/merge_requests/43159
-//        totalPages = getIntHeaderValue(response, TOTAL_PAGES_HEADER);
-//        totalItems = getIntHeaderValue(response, TOTAL_HEADER);
-
-        // Since GitLab 11.8 and behind the api_kaminari_count_with_limit feature flag,
-        // if the number of resources is more than 10,000, the X-Total and X-Total-Page
-        // headers as well as the rel="last" Link are not present in the response headers.
-
-        //      mpetris: isn't included anymore, see https://gitlab.com/gitlab-org/gitlab/-/merge_requests/43159
-//        if (totalPages == -1 || totalItems == -1) {
-//
-//            int nextPage = getIntHeaderValue(response, NEXT_PAGE_HEADER);
-//            if (nextPage < 2) {
-//                totalPages = 1;
-//                totalItems = currentItems.size();
-//            } else {
-//                kaminariNextPage = 2;
-//            }
-//        }
-        // mpetris: we use next-page instead:
+        // CATMA: GitLab's commits endpoint no longer returns the X-Total/X-Total-Pages headers, see
+        // https://gitlab.com/gitlab-org/gitlab/-/merge_requests/43159 - we track X-Next-Page instead
         nextPage = getIntHeaderValue(response, NEXT_PAGE_HEADER);
-     }
+    }
 
     /**
      * Get the specified header value from the Response instance.
@@ -200,26 +196,6 @@ public class EnhancedPager<T> implements Iterator<List<T>>, Constants {
     }
 
     /**
-     * Get the total number of pages returned by the GitLab API.
-     *
-     * @return the total number of pages returned by the GitLab API, or -1 if the Kaminari limit of 10,000 has been exceeded
-     */
-// mpetris: isn't included anymore, see https://gitlab.com/gitlab-org/gitlab/-/merge_requests/43159
-//    public int getTotalPages() {
-//        return (totalPages);
-//    }
-
-    /**
-     * Get the total number of items (T instances) returned by the GitLab API.
-     *
-     * @return the total number of items (T instances) returned by the GitLab API, or -1 if the Kaminari limit of 10,000 has been exceeded
-     */
-// mpetris: isn't included anymore, see https://gitlab.com/gitlab-org/gitlab/-/merge_requests/43159
-//    public int getTotalItems() {
-//        return (totalItems);
-//    }
-
-    /**
      * Get the current page of the iteration.
      *
      * @return the current page of the iteration
@@ -233,12 +209,13 @@ public class EnhancedPager<T> implements Iterator<List<T>>, Constants {
      *
      * @return true if there are additional pages to iterate over, otherwise returns false
      */
+    // CATMA: upstream's hasNext() means "is there a page that hasn't been returned yet", so it is true before the first page has been returned. This one
+    // means "is there a page after the current one", where a pager that hasn't returned anything yet counts as being on the first page (which the
+    // constructor has already fetched, and current() returns). ProjectEventPanel relies on that to tell whether there is more than one page. The
+    // difference matters for a single page only: iterating with 'while (hasNext()) next()' would skip it.
     @Override
     public boolean hasNext() {
-// mpetris: isn't included anymore, see https://gitlab.com/gitlab-org/gitlab/-/merge_requests/43159
-//        return (currentPage < totalPages || currentPage < kaminariNextPage);
-//		we use just the next page:
-    	return (currentPage < nextPage);
+        return (currentPage < nextPage);
     }
 
     /**
@@ -267,36 +244,17 @@ public class EnhancedPager<T> implements Iterator<List<T>>, Constants {
      * Returns the first page of List. Will rewind the iterator.
      *
      * @return the first page of List
-     * @throws GitLabApiException if any error occurs
      */
-    public List<T> first() throws GitLabApiException {
+    public List<T> first() {
         return (page(1));
     }
-
-    /**
-     * Returns the last page of List. Will set the iterator to the end.
-     *
-     * @return the last page of List
-     * @throws GitLabApiException if any error occurs
-     */
-
-//  mpetris: isn't included anymore, see https://gitlab.com/gitlab-org/gitlab/-/merge_requests/43159
-//    public List<T> last() throws GitLabApiException {
-//
-//        if (kaminariNextPage != 0) {
-//            throw new GitLabApiException("Kaminari count limit exceeded, unable to fetch last page");
-//        }
-//
-//        return (page(totalPages));
-//    }
 
     /**
      * Returns the previous page of List. Will set the iterator to the previous page.
      *
      * @return the previous page of List
-     * @throws GitLabApiException if any error occurs
      */
-    public List<T> previous() throws GitLabApiException {
+    public List<T> previous() {
         return (page(currentPage - 1));
     }
 
@@ -304,9 +262,8 @@ public class EnhancedPager<T> implements Iterator<List<T>>, Constants {
      * Returns the current page of List.
      *
      * @return the current page of List
-     * @throws GitLabApiException if any error occurs
      */
-    public List<T> current() throws GitLabApiException {
+    public List<T> current() {
         return (page(currentPage));
     }
 
@@ -329,14 +286,11 @@ public class EnhancedPager<T> implements Iterator<List<T>>, Constants {
             return (currentItems);
         }
 
-//      mpetris: isn't included anymore, see https://gitlab.com/gitlab-org/gitlab/-/merge_requests/43159
-//        if (pageNumber > totalPages && pageNumber > kaminariNextPage) {
-//      we use the kaminariNextPage and currentPage instead
-//        if (pageNumber > currentPage && pageNumber > nextPage) {
-//            throw new NoSuchElementException();
-//        } else if (pageNumber < 1) {
-//            throw new NoSuchElementException();
-//        }
+        // CATMA: upstream throws NoSuchElementException here if 'pageNumber > totalPages && pageNumber > kaminariNextPage'.
+        // With the X-Total headers absent totalPages stays at -1, so the left operand is true for every valid page number
+        // and the check collapses to 'pageNumber > kaminariNextPage'. That rejects any forward jump of more than one page
+        // (ProjectEventPanel allows those, see setAllowInputPastLastPageNumber) and, once the last page is reached and
+        // kaminariNextPage becomes -1, every page number. There is no total to validate against, so we drop the check.
 
         try {
 
@@ -355,90 +309,12 @@ public class EnhancedPager<T> implements Iterator<List<T>>, Constants {
     }
 
     /**
-     * Gets all the items from each page as a single List instance.
+     * Returns the value of the X-Next-Page header of the most recently fetched page, or -1 if there is no next page.
      *
-     * @return all the items from each page as a single List instance
-     * @throws GitLabApiException if any error occurs
+     * @return the index of the next page, or -1
      */
-//  mpetris: isn't included anymore, see https://gitlab.com/gitlab-org/gitlab/-/merge_requests/43159    
-//    public List<T> all() throws GitLabApiException {
-//
-//        // Make sure that current page is 0, this will ensure the whole list is fetched
-//        // regardless of what page the instance is currently on.
-//        currentPage = 0;
-//        List<T> allItems = new ArrayList<>(Math.max(totalItems, 0));
-//
-//        // Iterate through the pages and append each page of items to the list
-//        while (hasNext()) {
-//            allItems.addAll(next());
-//        }
-//
-//        return (allItems);
-//    }
-
-    /**
-     * Builds and returns a Stream instance which is pre-populated with all items from all pages.
-     *
-     * @return a Stream instance which is pre-populated with all items from all pages
-     * @throws IllegalStateException if Stream has already been issued
-     * @throws GitLabApiException if any other error occurs
-     */
-    public Stream<T> stream() throws GitLabApiException, IllegalStateException {
-
-        if (pagerStream == null) {
-            synchronized (this) {
-                if (pagerStream == null) {
-
-                    // Make sure that current page is 0, this will ensure the whole list is streamed
-                    // regardless of what page the instance is currently on.
-                    currentPage = 0;
-
-                    // Create a Stream.Builder to contain all the items. This is more efficient than
-                    // getting a List with all() and streaming that List
-                    Stream.Builder<T> streamBuilder = Stream.builder();
-
-                    // Iterate through the pages and append each page of items to the stream builder
-                    while (hasNext()) {
-                        next().forEach(streamBuilder);
-                    }
-
-                    pagerStream = streamBuilder.build();
-                    return (pagerStream);
-                }
-            }
-        }
-
-        throw new IllegalStateException("Stream already issued");
+    public int getNextPage() {
+        return (nextPage);
     }
 
-	public int getNextPage() {
-		return nextPage;
-	}
-
-    /**
-     * Creates a Stream instance for lazily streaming items from the GitLab server.
-     *
-     * @return a Stream instance for lazily streaming items from the GitLab server
-     * @throws IllegalStateException if Stream has already been issued
-     */
-//  mpetris: not supported in this enhanced version because EnhancedPager does not inherit Pager    
-
-//    public Stream<T> lazyStream() throws IllegalStateException {
-//
-//        if (pagerStream == null) {
-//            synchronized (this) {
-//                if (pagerStream == null) {
-//
-//                    // Make sure that current page is 0, this will ensure the whole list is streamed
-//                    // regardless of what page the instance is currently on.
-//                    currentPage = 0;
-//
-//                    pagerStream = StreamSupport.stream(new PagerSpliterator<T>(this), false);
-//                    return (pagerStream);
-//                }
-//            }
-//        }
-//
-//        throw new IllegalStateException("Stream already issued");
-//    }
 }

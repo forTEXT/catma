@@ -16,16 +16,13 @@ import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.UI;
 
 import de.catma.backgroundservice.BackgroundServiceProvider;
-import de.catma.hazelcast.HazelCastService;
 import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.GitlabManagerPrivileged;
-import de.catma.sqlite.SqliteService;
 import de.catma.ui.events.GroupsChangedEvent;
 import de.catma.ui.events.ProjectsChangedEvent;
 import de.catma.ui.events.ShowGroupsEvent;
 import de.catma.ui.events.routing.RouteToProjectEvent;
-import de.catma.ui.login.InitializationService;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.module.main.NotLoggedInMainView;
@@ -42,29 +39,23 @@ import de.catma.user.signup.SignupTokenManager.TokenValidityHandler;
 public class RequestTokenHandler {
 	
 	private final SignupTokenManager signupTokenManager;
-	private final EventBus eventBus;
 	private final LoginService loginService;
-	private final InitializationService initService;
-	private final HazelCastService hazelCastService;
-	private final SqliteService sqliteService;
 	private final ErrorHandler errorHandler;
 	private final Supplier<Component> contentComponentSupplier;
 	private final BackgroundServiceProvider backgroundServiceProvider;
-	
-	public RequestTokenHandler(SignupTokenManager signupTokenManager, EventBus eventBus, LoginService loginService,
-			InitializationService initService, HazelCastService hazelCastService, SqliteService sqliteService,
-			ErrorHandler errorHandler, ParameterProvider parameterProvider,
-			Supplier<Component> contentComponentSupplier, BackgroundServiceProvider backgroundServiceProvider) {
+	private final EventBus eventBus;
+
+	public RequestTokenHandler(SignupTokenManager signupTokenManager, LoginService loginService, ErrorHandler errorHandler,
+							   Supplier<Component> contentComponentSupplier, BackgroundServiceProvider backgroundServiceProvider, EventBus eventBus)
+	{
 		super();
+
 		this.signupTokenManager = signupTokenManager;
-		this.eventBus = eventBus;
 		this.loginService = loginService;
-		this.initService = initService;
-		this.hazelCastService = hazelCastService;
-		this.sqliteService = sqliteService;
 		this.errorHandler = errorHandler;
 		this.contentComponentSupplier = contentComponentSupplier;
 		this.backgroundServiceProvider = backgroundServiceProvider;
+		this.eventBus = eventBus;
 	}
 
 	public void handleRequestToken(String action, String token) {
@@ -73,14 +64,12 @@ public class RequestTokenHandler {
 		
 		switch (tokenAction) {
 			case verify: {				
-				// validate token to either display the reason for invalidity or show the create account creation dialog
+				// validate token and show CreateUserDialog, or display the reason for invalidity
 				signupTokenManager.validateAccountSignupToken(token, new TokenValidityHandler<AccountSignupToken>() {
 					
 					@Override
 					public void tokenValid(AccountSignupToken signupToken) {
-						CreateUserDialog createUserDialog = new CreateUserDialog(
-								"Create User", signupToken.email(), 
-								eventBus, loginService, initService, hazelCastService, sqliteService);
+						CreateUserDialog createUserDialog = new CreateUserDialog(signupToken.email());
 						createUserDialog.show();
 					}
 					
@@ -95,7 +84,7 @@ public class RequestTokenHandler {
 				break;
 			}
 			case joingroup: {
-				// validate token to either display the reason for invalidity or to join the group
+				// validate token and prompt user to join the group, or display the reason for invalidity
 				signupTokenManager.validateGroupSignupToken(token, new TokenValidityHandler<GroupSignupToken>() {
 					
 					@Override
@@ -179,7 +168,7 @@ public class RequestTokenHandler {
 				break;
 			}
 			case joinproject: {
-				// validate token to either display the reason for invalidity or to join the project
+				// validate token and prompt user to join the project, or display the reason for invalidity
 				signupTokenManager.validateProjectSignupToken(token, new TokenValidityHandler<ProjectSignupToken>() {
 					
 					@Override
@@ -232,7 +221,7 @@ public class RequestTokenHandler {
 							signupTokenManager.put(projectSignupToken);
 							Component contentComponent = contentComponentSupplier.get();
 							if (contentComponent instanceof NotLoggedInMainView) {
-								// use the email from the group invitation for a possible account signup since it is already verified
+								// use the email from the project invitation for a possible account signup since it is already verified
 								((NotLoggedInMainView)contentComponent).setSignupEmail(projectSignupToken.email());
 							}
 

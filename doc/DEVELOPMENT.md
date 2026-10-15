@@ -4,9 +4,10 @@ These are instructions for setting up a development environment to work on the C
 
 ## Prerequisites
 
-- JDK 21
+- JDK 21 – use it to run Jetty as well. Both `mvn jetty:run` and the IDEA setup below use Jetty 12.0.16, which fails to start CATMA on Java 25 or later
+  ("Unable to parse class") because some of CATMA's libraries contain classes compiled for Java 25 that it can't read.
 - Maven
-- A self-managed GitLab server <v19, with full administrator access and that is dedicated to CATMA (for example, using GitLab's Docker image – refer to the
+- A self-managed GitLab server, with full administrator access and that is dedicated to CATMA (for example, using GitLab's Docker image – refer to the
   [self-hosting instructions](SELF-HOSTING.md))
 
 ## Installation & Setup
@@ -39,38 +40,43 @@ If you use IDEA, there are a few additional points worth noting:
 
 ### Forked Dependencies
 
-CATMA currently uses forked versions of `gitlab4j-api` and `org.vaadin.elements`. You need to install the custom builds in your local Maven repository using
-`mvn install:install-file -Dfile=<path-to-dependency-jar-file> -DpomFile=<path-to-dependency-pom-file>` (the installation commands are also shown in the next
+CATMA currently uses a forked version of `org.vaadin.elements`. You need to install the custom build in your local Maven repository using
+`mvn install:install-file -Dfile=<path-to-dependency-jar-file> -DpomFile=<path-to-dependency-pom-file>` (the installation command is also shown in the next
 section). The CATMA build won't succeed otherwise!
 
-You can find the pre-built JAR files and associated pom.xml files here:
-- gitlab4j-api - [JAR](https://github.com/forTEXT/gitlab4j-api/releases/download/gitlab4j-api-5.0.1-CATMA-v3/gitlab4j-api-5.0.1-CATMA-v3.jar)
-  | [pom.xml](https://github.com/forTEXT/gitlab4j-api/raw/refs/tags/gitlab4j-api-5.0.1-CATMA-v3/pom.xml)
+You can find the pre-built JAR file and associated pom.xml file here:
 - serverside-elements - [JAR](https://github.com/forTEXT/serverside-elements/releases/download/0.2.3-CATMA/elements-0.2.3-CATMA.jar)
   | [pom.xml](https://github.com/forTEXT/serverside-elements/raw/refs/tags/0.2.3-CATMA/elements/pom.xml)
+
+Note that `gitlab4j-api` used to be forked as well, but we now use the stock release from Maven Central. Stay on the 5.x line - 6.x requires Jakarta EE
+(`jakarta.ws.rs`, Jersey 3.x) and is incompatible with CATMA's javax-based stack (Vaadin 8, Jersey 2.x, `javax.servlet`).
 
 ### Building & Running for Testing Purposes
 
 These are the generic steps to build CATMA and to run it via Maven on a Linux system. Your GitLab server should be running and configured already (see
 [prerequisites](#prerequisites)). The JDK and Maven installations are included below.
 
-Note that we are skipping the automated tests here – this is because a number of them test interactions with the GitLab server (setting up data, performing the
-test, and cleaning up again) and are quite slow as a result.
+The automated tests run as part of the build below. They can be skipped by adding `-DskipTests=true`, which is worth doing if you are only interested in
+producing a deployable artifact.
+
+A number of tests exercise interactions with the GitLab server (setting up data, performing the test, and cleaning up again). These are tagged `gitlab` and are
+**excluded by default**, because they are slow and need a properties file pointing at a GitLab server that you can freely create and delete data on. To include
+them, activate the `gitlab-tests` profile and name your properties file:
+```
+mvn test -Pgitlab-tests -Dprop=catma_local-dev.properties
+```
 
 ```
 apt update && apt install openjdk-21-jdk maven git curl
 
-curl -L https://github.com/forTEXT/gitlab4j-api/releases/download/gitlab4j-api-5.0.1-CATMA-v3/gitlab4j-api-5.0.1-CATMA-v3.jar -o gitlab4j-api-5.0.1-CATMA-v3.jar
-curl -L https://github.com/forTEXT/gitlab4j-api/raw/refs/tags/gitlab4j-api-5.0.1-CATMA-v3/pom.xml -o gitlab4j-api-5.0.1-CATMA-v3.pom.xml
 curl -L https://github.com/forTEXT/serverside-elements/releases/download/0.2.3-CATMA/elements-0.2.3-CATMA.jar -o elements-0.2.3-CATMA.jar
 curl -L https://github.com/forTEXT/serverside-elements/raw/refs/tags/0.2.3-CATMA/elements/pom.xml -o elements-0.2.3-CATMA.pom.xml
 
 mvn install:install-file -Dfile=elements-0.2.3-CATMA.jar -DpomFile=elements-0.2.3-CATMA.pom.xml
-mvn install:install-file -Dfile=gitlab4j-api-5.0.1-CATMA-v3.jar -DpomFile=gitlab4j-api-5.0.1-CATMA-v3.pom.xml
 
 git clone https://github.com/forTEXT/catma
 cd catma
-mvn clean compile package -DskipTests=true
+mvn clean compile package
 
 mkdir -p temp db repo/git repo/git_api
 cp src/main/resources/catma.db db/
@@ -84,9 +90,10 @@ BASE_URL=http://localhost:8080/
 TEMP_DIR=/your/path/to/catma/temp
 GITLAB_SERVER_URL=http://localhost:8088
 GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN=your-admin-personal-access-token
+GITLAB_OAUTH_CLIENT_ID=your-oauth-application-id
+GITLAB_OAUTH_CLIENT_SECRET=your-oauth-application-secret
 GIT_REPOSITORY_BASE_PATH=/your/path/to/catma/repo/git
 SQLITE_DB_BASE_PATH=/your/path/to/catma/db
-RESET_PASSWORD_URL=http://localhost:8088/users/password/new
 LOGOUT_URL=http://localhost:8080/
 API_GIT_REPOSITORY_BASE_PATH=/your/path/to/catma/repo/git_api
 API_HMAC_SECRET=your-long-and-random-secret
@@ -95,16 +102,39 @@ API_HMAC_SECRET=your-long-and-random-secret
 Finally, you can simply run the following to start the Jetty server:
 `mvn jetty:run`
 
+#### The GitLab OAuth Application
+
+Signing in to CATMA is an OAuth authorization code flow against your GitLab server, so you have to register an application there before anyone can log in.
+In GitLab, go to *Admin → Applications → New application* and set:
+- **Name**: CATMA
+- **Redirect URI** (one per line):
+  ```
+  http://localhost:8080/
+  http://localhost:8080/api/v1/auth/gitlab/callback
+  ```
+  These must match `BASE_URL` exactly (including the trailing slash), plus the same value with `api/v1/auth/gitlab/callback` appended for the REST API.
+- **Confidential**: checked
+- **Trusted**: checked – this skips the authorization (consent) screen, which is appropriate because CATMA is a first-party application
+- **Scopes**: `api`
+
+Copy the resulting *Application ID* and *Secret* into `GITLAB_OAUTH_CLIENT_ID` and `GITLAB_OAUTH_CLIENT_SECRET`. The secret is stored hashed by GitLab and is
+only shown immediately after creation. CATMA checks the application at startup (`GitLabCapabilitiesCheckServlet`) and refuses to start if it is misconfigured.
+
+Note that this replaces the resource owner password credentials (ROPC) grant that CATMA used previously, which GitLab removed in version 19.0. Users now enter
+their credentials on GitLab's own login page rather than in CATMA, which is why *Settings → General → Sign-in restrictions → Allow password and passkey
+authentication for the web interface* must remain enabled.
+
 #### Additional Notes
 
 To enable **user registration**, you will also need to set the `MAIL_*`, `GOOGLE_RECAPTCHA_*` and `SIGNUP_TOKEN_KEY` properties. Alternatively, you can log in
-to CATMA with any regular email/password-based user account that exists on your GitLab server. By default, creating user accounts using the GitLab admin
-interface requires GitLab to be configured to be able to send emails, because email confirmation is a strict requirement. You can change the email confirmation
-settings at: *Settings → General → New user account restrictions*. User accounts can also be created directly using the
+to CATMA with any regular user account that exists on your GitLab server. Note that, by default, creating user accounts using the GitLab admin interface
+requires GitLab to be configured to be able to send emails, because email confirmation is a strict requirement. You can change the email confirmation settings
+at: *Settings → General → New user account restrictions*. User accounts can also be created directly using the
 [GitLab API](https://docs.gitlab.com/api/users/#create-a-user).
 
-To enable **Google account logins**, you will also need to set the `GOOGLE_OAUTH_*` properties and configure the GitLab OmniAuth settings in GitLab's
-`gitlab.rb` configuration file, as shown [here](../docker/README.md#multi-user).
+To enable **Google account logins**, configure the GitLab OmniAuth settings in GitLab's `gitlab.rb` configuration file, as shown
+[here](../docker/README.md#multi-user). Nothing is needed on the CATMA side – Google appears as a button on GitLab's login page, which is where users sign in
+either way.
 
-An internet connection is not strictly necessary if you are running everything locally, however external mail or Google reCAPTCHA / OAuth will obviously not
-work without one.
+An internet connection is not strictly necessary if you are running everything locally, however external mail or Google reCAPTCHA will obviously not work
+without one.

@@ -1,5 +1,6 @@
 package de.catma.ui.di;
 
+import de.catma.oauth.GitLabOauthTokenProvider;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 
 import java.io.IOException;
@@ -10,5 +11,5 @@ import java.io.IOException;
 public interface RemoteGitManagerFactory {
 	RemoteGitManagerRestricted createFromImpersonationToken(String userImpersonationToken) throws IOException;
 
-	RemoteGitManagerRestricted createFromUsernameAndPassword(String username, String password) throws IOException;
+	RemoteGitManagerRestricted createFromOauthTokenProvider(GitLabOauthTokenProvider oauthTokenProvider) throws IOException;
 }

@@ -1,12 +1,9 @@
 package de.catma.ui.login;
 
 import com.vaadin.server.VaadinSession;
-import de.catma.repository.git.GitUser;
-import de.catma.repository.git.managers.GitlabManagerPrivileged;
-import de.catma.repository.git.managers.interfaces.RemoteGitManagerPrivileged;
+import de.catma.oauth.GitLabOauthTokenProvider;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
 import de.catma.ui.di.RemoteGitManagerFactory;
-import de.catma.util.Pair;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,23 +26,15 @@ public class GitlabLoginService implements LoginService {
 	}
 
 	@Override
-	public void login(String username, String password) throws IOException {
-		remoteGitManagerRestricted = remoteGitManagerFactory.createFromUsernameAndPassword(username, password);
-		logLoginEvent("username/password");
+	public void loggedInFromGitLabOauth(GitLabOauthTokenProvider oauthTokenProvider) throws IOException {
+		remoteGitManagerRestricted = remoteGitManagerFactory.createFromOauthTokenProvider(oauthTokenProvider);
+		logLoginEvent("GitLab OAuth");
 	}
 
 	@Override
 	public void login(String personalAccessToken) throws IOException {
 		remoteGitManagerRestricted = remoteGitManagerFactory.createFromImpersonationToken(personalAccessToken);
 		logLoginEvent("token");
-	}
-
-	@Override
-	public void loggedInFromThirdParty(String identifier, String provider, String email, String name) throws IOException {
-		RemoteGitManagerPrivileged gitlabManagerPrivileged = new GitlabManagerPrivileged();
-		Pair<GitUser, String> userAndToken = gitlabManagerPrivileged.acquireImpersonationToken(identifier, provider, email, name);
-		remoteGitManagerRestricted = remoteGitManagerFactory.createFromImpersonationToken(userAndToken.getSecond());
-		logLoginEvent("third party");
 	}
 
 	private void logLoginEvent(String authMethod) {

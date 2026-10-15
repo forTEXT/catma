@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.eventbus.EventBus;
@@ -23,6 +24,7 @@ import de.catma.repository.git.managers.GitlabManagerRestricted;
 import de.catma.repository.git.managers.GitProjectsManager;
 import de.catma.util.Pair;
 
+@Tag("gitlab")
 class GitProjectsManagerTest {
 	
 	private GitlabManagerPrivileged gitlabManagerPrivileged;

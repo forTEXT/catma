@@ -3,12 +3,14 @@ package de.catma.repository.git;
 import de.catma.repository.git.serialization.SerializationHelper;
 import de.catma.repository.git.serialization.models.GitMarkupCollectionHeader;
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+@Tag("gitlab")
 class GitAnnotationCollectionHandlerTest {
 	@Test
 	void loadSampleAnnotationCollectionHeader() throws IOException {

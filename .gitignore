@@ -23,8 +23,9 @@ tmp
 # Mac
 .DS_Store
 
-# Properties files that may contain secrets
-catma*.properties
+# Ignore all .properties files except the template (as they may contain secrets)
+*.properties
+!src/main/resources/catma.properties
 
 # Group/project signup-token transaction log
 group_project_signup_token*.*

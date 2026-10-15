@@ -19,10 +19,10 @@ import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.gitlab4j.api.UserApi;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 //import org.junit.Rule;
 //import org.junit.rules.ExpectedException;
@@ -51,6 +51,7 @@ import de.catma.repository.git.managers.interfaces.LocalGitRepositoryManager;
 import de.catma.util.IDGenerator;
 //import de.catma.repository.git.serialization.models.json_ld.JsonLdWebAnnotationTest;
 
+@Tag("gitlab")
 public class GitSourceDocumentHandlerTest {
 	private GitlabManagerPrivileged gitlabManagerPrivileged;
 	private GitlabManagerRestricted gitlabManagerRestricted;
@@ -69,13 +70,8 @@ public class GitSourceDocumentHandlerTest {
     @BeforeEach
 	public void setUp() throws Exception {
 		// create a fake CATMA user which we'll use to instantiate GitlabManagerRestricted (using the corresponding impersonation token) & JGitRepoManager
-		Integer randomUserId = Integer.parseInt(RandomStringUtils.randomNumeric(3));
-		String username = String.format("testuser-%s", randomUserId);
-		String email = String.format("%s@catma.de", username);
-		String name = String.format("Test User %s", randomUserId);
-
 		gitlabManagerPrivileged = new GitlabManagerPrivileged();
-		String impersonationToken = gitlabManagerPrivileged.acquireImpersonationToken(username, "catma", email, name).getSecond();
+		String impersonationToken = GitLabTestHelper.createTestUserAndImpersonationToken(gitlabManagerPrivileged);
 
 		gitlabManagerRestricted = new GitlabManagerRestricted(impersonationToken);
 	}

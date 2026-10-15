@@ -26,11 +26,12 @@ options = {
   du_password: 'St4nd@lone',
 }
 parser = OptionParser.new do |opts|
-  opts.banner = "Usage: [sudo] gitlab-rails runner #{$0} -- --app_url <value> --admin_token <value>"
+  opts.banner = "Usage: [sudo] gitlab-rails runner #{$0} -- --app_url <value> --admin_token <value> --oauth_creds_path <value>"
 
   # required:
   opts.on("--app_url <value>", "Required: CATMA application URL") { |v| options[:app_url] = v }
   opts.on("--admin_token <value>", "Required: GitLab admin personal access token (will be prefixed with pat_prefix)") { |v| options[:admin_token] = v }
+  opts.on("--oauth_creds_path <value>", "Required: Path to write the OAuth application credentials to") { |v| options[:oauth_creds_path] = v }
   # optional:
   opts.on("--pat_prefix <value>", "Optional: Personal access token prefix (default: 'catma-glpat-')") { |v| options[:pat_prefix] = v }
   opts.on("--du_username <value>", "Optional: Username of the automatically created default user (default: 'standalone')") { |v| options[:du_username] = v }
@@ -44,6 +45,7 @@ begin
   # check required options manually
   raise OptionParser::MissingArgument, "--app_url" unless options[:app_url]
   raise OptionParser::MissingArgument, "--admin_token" unless options[:admin_token]
+  raise OptionParser::MissingArgument, "--oauth_creds_path" unless options[:oauth_creds_path]
 rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
   puts e.message
   puts parser
@@ -51,13 +53,19 @@ rescue OptionParser::InvalidOption, OptionParser::MissingArgument => e
 end
 
 ApplicationSetting.current.update!(
-  # these are absolutely necessary for CATMA to work:
-  password_authentication_enabled_for_web: true, # apparently, this also enables the (deprecated) resource owner password credentials (ROPC) flow
+  # these are absolutely necessary for CATMA to work (as are the admin PAT and OAuth application that are created further down):
+  password_authentication_enabled_for_web: true, # users sign in on GitLab's own login page as part of the OAuth flow
+  # accounts must only be created through CATMA, which verifies the email address first - otherwise someone could register the address of a future
+  # CATMA user, whose Google sign-in would then be linked to that account (see gitlab_rails['omniauth_auto_link_user'] in docker/README.md)
+  # NB: this does *not* cover OmniAuth providers - account creation through those is governed by the separate gitlab_rails['omniauth_allow_single_sign_on']
+  # setting in gitlab.rb, which should be left unset (see docker/README.md)
+  signup_enabled: false,
+  email_confirmation_setting: :hard,
   auto_devops_enabled: false,
   default_branch_name: 'master',
   # default_branch_protection: Gitlab::Access::PROTECTION_DEV_CAN_PUSH, # deprecated
-  # refs: https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.4-ee/app/models/application_setting.rb?ref_type=tags
-  #       https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.4-ee/app/validators/json_schemas/default_branch_protection_defaults.json?ref_type=tags
+  # refs: https://gitlab.com/gitlab-org/gitlab/-/blob/v19.4.1-ee/app/models/application_setting.rb?ref_type=tags
+  #       https://gitlab.com/gitlab-org/gitlab/-/blob/v19.4.1-ee/app/validators/json_schemas/default_branch_protection_defaults.json?ref_type=tags
   default_branch_protection_defaults: {
     "allowed_to_push" => [{"access_level" => Gitlab::Access::DEVELOPER}],
     "allow_force_push" => false,
@@ -73,28 +81,26 @@ ApplicationSetting.current.update!(
   user_oauth_applications: false,
   user_show_add_ssh_key_message: false,
   diff_max_patch_bytes: 512000,
-  signup_enabled: false,
   require_admin_approval_after_user_signup: false,
-  email_confirmation_setting: :hard,
   password_authentication_enabled_for_git: true,
   silent_mode_enabled: true,
   diagramsnet_enabled: false,
   hide_third_party_offers: true,
-  # ref: https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.4-ee/app/validators/json_schemas/application_setting_search.json?ref_type=tags
-  search: {
-    "global_search_issues_enabled" => true,
-    "global_search_merge_requests_enabled" => true,
-    "global_search_snippet_titles_enabled" => false,
-    "global_search_users_enabled" => true,
-    "anonymous_searches_allowed" => false
-  },
+  vscode_extension_marketplace_single_origin_fallback_enabled: false,
+  # these are keys within the 'search' jsonb column; setting them individually rather than assigning the whole hash leaves the other keys at their defaults
+  # refs: https://gitlab.com/gitlab-org/gitlab/-/blob/v19.4.1-ee/app/validators/json_schemas/application_setting_search.json?ref_type=tags
+  #       https://gitlab.com/gitlab-org/gitlab/-/blob/v19.4.1-ee/ee/app/validators/json_schemas/application_setting_ee_search.json?ref_type=tags
+  global_search_work_items_enabled: true,
+  global_search_merge_requests_enabled: true,
+  global_search_snippet_titles_enabled: false,
+  global_search_users_enabled: true,
+  anonymous_searches_allowed: false,
   mirror_available: false,
   shared_runners_enabled: false,
-  suggest_pipeline_enabled: false,
   show_migrate_from_jenkins_banner: false,
   allow_runner_registration_token: false,
-  # refs: https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.4-ee/app/models/application_setting.rb?ref_type=tags
-  #       https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.4-ee/app/models/application_setting_implementation.rb?ref_type=tags (VALID_RUNNER_REGISTRAR_TYPES)
+  # refs: https://gitlab.com/gitlab-org/gitlab/-/blob/v19.4.1-ee/app/models/application_setting.rb?ref_type=tags
+  #       https://gitlab.com/gitlab-org/gitlab/-/blob/v19.4.1-ee/app/models/application_setting_implementation.rb?ref_type=tags (VALID_RUNNER_REGISTRAR_TYPES)
   valid_runner_registrars: [],
   prometheus_metrics_enabled: false,
   # the following 3 usage/service ping settings can also be configured in gitlab.rb (https://docs.gitlab.com/administration/settings/usage_statistics/),
@@ -104,11 +110,10 @@ ApplicationSetting.current.update!(
   usage_ping_generation_enabled: false,
   include_optional_metrics_in_service_ping: false,
   usage_ping_features_enabled: false,
-  # ref: https://gitlab.com/gitlab-org/gitlab/-/blob/v18.8.4-ee/app/validators/json_schemas/application_setting_service_ping_settings.json?ref_type=tags
-  service_ping_settings: {
-    "gitlab_environment_toolkit_instance" => false,
-    "gitlab_product_usage_data_enabled" => false
-  },
+  # keys within the 'service_ping_settings' jsonb column
+  # ref: https://gitlab.com/gitlab-org/gitlab/-/blob/v19.4.1-ee/app/validators/json_schemas/application_setting_service_ping_settings.json?ref_type=tags
+  gitlab_environment_toolkit_instance: false,
+  gitlab_product_usage_data_enabled: false,
   snowplow_enabled: false,
   whats_new_variant: "disabled",
   help_page_hide_commercial_content: true,
@@ -121,20 +126,35 @@ ApplicationSetting.current.update!(
 # puts Appearance.current.title
 # puts Appearance.current.description
 # p Appearance.current
+app_host = options[:app_url].sub(%r{\Ahttps?://}i, '')
 appearance = Appearance.first_or_create!
 appearance.update!(
   favicon: File.open("/var/opt/gitlab/gitlab-rails/uploads/catma-gitlab-combo-favicon.ico"),
+  site_name: "CATMA",
   header_logo: File.open("/var/opt/gitlab/gitlab-rails/uploads/catma-gitlab-combo-logo-blue-on-white-pill-50a.svg"),
   title: "CATMA GitLab",
-  description: <<EOF
-This is CATMA's self-managed GitLab backend.
+  description: <<EOF,
+CATMA is built on GitLab, which we use to manage your account and data.
 
-**NB:** Before you can sign in here, you need to have created an account directly in the [CATMA application](#{options[:app_url]})!
+**Came from CATMA?** Sign in with your CATMA username and password, and you'll be redirected back to CATMA once you're signed in.
 
-Confused? Perhaps you are looking for:\
-→ The [CATMA application](#{options[:app_url]})\
-→ More information on CATMA's [Git Access](https://catma.de/documentation/git-access/)\
-→ The CATMA [website](https://catma.de/), including tutorials, FAQs and other documentation
+**Didn't come here from CATMA?** Then signing in on this page will take you to GitLab itself, not to CATMA. To use CATMA, go to
+[#{app_host}](#{options[:app_url]}), click "Sign In" and follow the steps.
+
+**Don't have a CATMA account yet?** Click "Sign Up" at [#{app_host}](#{options[:app_url]}) first. You can't create an account on this page.
+
+Signing in with Google only works if your CATMA account was created with the same email address.
+
+For tutorials, FAQs and other documentation, visit the [CATMA website](https://catma.de/).
+EOF
+  logo: File.open("/var/opt/gitlab/gitlab-rails/uploads/catma-gitlab-combo-logo-blue-on-white-pill-50a_V3.svg")
+)
+
+# Terms of service and privacy policy, shown at /-/users/terms and available via GitLab's Help menu
+# The text isn't an ApplicationSetting column: each version is an ApplicationSetting::Term record
+ApplicationSetting::Term.create!(terms: <<EOF
+CATMA's Terms of Use and Privacy Policy can be found at the following links: [Terms of Use](https://catma.de/documentation/terms-of-use/) |
+[Privacy Policy](https://catma.de/documentation/privacy-policy/)
 EOF
 )
 
@@ -143,6 +163,29 @@ admin_user = User.find_by_username('root')
 admin_pat = admin_user.personal_access_tokens.create(scopes: ['api', 'sudo', 'admin_mode'], name: 'CATMA')
 admin_pat.set_token("#{options[:pat_prefix]}#{options[:admin_token]}")
 admin_pat.save!
+
+# create the instance-wide OAuth application that CATMA users sign in through
+# this replaces the resource owner password credentials (ROPC) grant, which GitLab removed in version 19.0
+# it has to be done here rather than through the Applications API, because that API doesn't expose the 'trusted' attribute
+# 'trusted' skips the user authorization (consent) step, which is appropriate because CATMA is a first-party application
+# refs: https://docs.gitlab.com/integration/oauth_provider/#create-an-instance-wide-application
+#       https://docs.gitlab.com/api/oauth2/
+# NB: application secrets are stored hashed, so the plaintext secret is only available here, immediately after creation
+oauth_app = Authn::OauthApplication.create!(
+  name: 'CATMA',
+  redirect_uri: ["#{options[:app_url]}/", "#{options[:app_url]}/api/v1/auth/gitlab/callback"].join("\n"),
+  scopes: 'api',
+  confidential: true,
+  trusted: true,
+  organization: Organizations::Organization.default_organization
+)
+# these are read by bootstrap.sh and written to catma.properties
+# we write them to a file rather than stdout, because stdout is captured in a log file and the secret shouldn't end up there
+File.write(
+  options[:oauth_creds_path],
+  "GITLAB_OAUTH_CLIENT_ID=#{oauth_app.uid}\nGITLAB_OAUTH_CLIENT_SECRET=#{oauth_app.plaintext_secret}\n"
+)
+File.chmod(0600, options[:oauth_creds_path])
 
 # create the default user, ref: https://docs.gitlab.com/user/profile/account/create_accounts/?tab=17.7+and+later#create-a-user-through-the-rails-console
 user = Users::CreateService.new(

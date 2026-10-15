@@ -181,11 +181,35 @@ configuration steps are required if you plan to make your instance accessible mo
 
 To expose CATMA and/or GitLab beyond the host machine, you could set up a reverse proxy and/or modify the `--publish` parameters to change the host ports and
 the interface they are published on (or use `--expose` instead if the reverse proxy is also a container on the same internal network). Also see the `*_PORT` and
-`*_URL` environment variables in [the Dockerfile](https://github.com/forTEXT/catma/blob/master/docker/Dockerfile#L44-L51) and how these are used.
+`*_URL` environment variables in [the Dockerfile](https://github.com/forTEXT/catma/blob/master/docker/Dockerfile#L44-L52) and how these are used.
 
 For exposure to the internet you should definitely set up a reverse proxy and terminate SSL connections at the proxy. In that case, set the `*_URL` environment
 variables to the real, external URLs, and treat the `*_PORT` environment variables as the internal ports only. Also see the
 [Updates & Security](#updates--security) section.
+
+With our configuration, GitLab always serves plain HTTP on `GITLAB_PORT`, even with an `https://` URL. To have it log the real client IP addresses rather than
+that of the proxy, add the following to `$GITLAB_HOME/config/gitlab.rb` (or `/etc/gitlab/gitlab.rb` within the container) and restart the container:
+
+```
+gitlab_rails['nginx']['real_ip_trusted_addresses'] = ['<proxy-address>']   # the address(es) or subnet(s) that the proxy connects to the container from
+gitlab_rails['nginx']['real_ip_header'] = 'X-Forwarded-For'
+gitlab_rails['nginx']['real_ip_recursive'] = 'on'
+```
+
+Your proxy needs to set the `X-Forwarded-For` and `X-Forwarded-Proto` headers. The `real_ip_*` values above suit most setups – see GitLab's documentation on
+[SSL termination at a reverse proxy](https://docs.gitlab.com/omnibus/settings/ssl/#configure-a-reverse-proxy-or-load-balancer-ssl-termination) and
+[trusted proxies and the NGINX `real_ip` module](https://docs.gitlab.com/omnibus/settings/nginx/#configure-gitlab-trusted-proxies-and-nginx-real_ip-module)
+for details.
+
+Ideally, set the URLs when you start the container the first time. If you change them later:
+- `CATMA_URL`: update the redirect URIs of the OAuth application that users sign in through, as described under
+  [Create the OAuth Application](https://github.com/forTEXT/catma/blob/master/doc/SELF-HOSTING.md#create-the-oauth-application), otherwise CATMA will
+  refuse to start. You may also want to update the links in GitLab's sign-in page description (*Admin → Settings → Appearance*).
+- `GITLAB_URL`: update the `external_url` setting in `$GITLAB_HOME/config/gitlab.rb` (or `/etc/gitlab/gitlab.rb` within the container), as well as
+  `gitlab_rails['nginx']['listen_port']` if the port has changed, and the `--add-host` parameter of the `docker run` command if the host name has changed.
+
+Both are only applied to GitLab's configuration on the first start, whereas CATMA picks up the new URLs on every start – which is why it won't start after a
+change to `CATMA_URL` until the redirect URIs have been updated.
 
 #### Multi-User
 
@@ -203,18 +227,15 @@ properties (see the reference file [here](https://github.com/forTEXT/catma/blob/
 - `SIGNUP_TOKEN_KEY`
 - `GOOGLE_RECAPTCHA_*`
 
-Alternatively, regular email/password-based user accounts can be created directly within GitLab. By default, creating user accounts using the GitLab admin
-interface requires GitLab to be configured to be able to send emails, because email confirmation is a strict requirement. You can change the email confirmation
-settings at: *Settings → General → New user account restrictions*. User accounts can also be created directly using the
+Alternatively, user accounts can be created directly within GitLab. Note that, by default, creating user accounts using the GitLab admin interface requires
+GitLab to be configured to be able to send emails, because email confirmation is a strict requirement. You can change the email confirmation settings at:
+*Settings → General → New user account restrictions*. User accounts can also be created directly using the
 [GitLab API](https://docs.gitlab.com/api/users/#create-a-user).
 
-To enable **Google account logins**, edit `catma.properties` and set the `GOOGLE_OAUTH_*` properties. You will also need to configure the GitLab OmniAuth
-settings in `gitlab.rb` as follows:
+To enable **Google account logins**, configure the GitLab OmniAuth settings in `gitlab.rb` as follows:
 
 ```
-gitlab_rails['omniauth_allow_single_sign_on'] = ['google_oauth2']
-gitlab_rails['omniauth_sync_profile_from_provider'] = ['google_oauth2']
-gitlab_rails['omniauth_sync_profile_attributes'] = ['email']
+gitlab_rails['omniauth_enabled'] = true
 gitlab_rails['omniauth_auto_link_user'] = ['google_oauth2']
 gitlab_rails['omniauth_providers'] = [
   {
@@ -225,6 +246,15 @@ gitlab_rails['omniauth_providers'] = [
   }
 ]
 ```
+
+Nothing is needed on the CATMA side – users always sign in on GitLab's login page, where Google then appears as an additional button. This is a way of signing
+in to an account that already exists, **not** a registration route: accounts are created through CATMA, and an existing account is linked by email address the
+first time its owner signs in with Google.
+
+Note that `omniauth_allow_single_sign_on`, `omniauth_sync_profile_from_provider` and `omniauth_sync_profile_attributes` are deliberately absent, and should be
+left unset – the first would let any Google account create itself an account directly in GitLab (even with signup disabled in GitLab), and the other two
+would take control of the user's email address away from them. See the
+[self-hosting documentation](https://github.com/forTEXT/catma/blob/master/doc/SELF-HOSTING.md#google-sign-in-optional) for the details.
 
 ### Updates & Security
 
@@ -245,6 +275,9 @@ If you have any questions or concerns related to the security of CATMA Standalon
 #### Update Process
 
 Generally speaking, the update process is quite safe and you shouldn't lose any data. However, we still recommend that you create a [backup](#backups) first!
+
+Before updating, read the [changelog](https://github.com/forTEXT/catma/blob/master/CHANGELOG.md). Some versions require additional steps, which are listed
+there for every version.
 
 To get the latest version of the image, simply re-run the `docker pull` command as shown in the [Setup & Usage](#setup--usage) section. The output of the
 command will tell you if anything new was fetched.

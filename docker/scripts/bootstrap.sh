@@ -110,7 +110,6 @@ sed -i "s|^\(BASE_URL=\).*$|\1${CATMA_URL}/|" "$CATMA_PROPERTIES_PATH" # note tr
 # 127.0.0.1 within the container
 sed -i "s|^\(GITLAB_SERVER_URL=\).*$|\1${GITLAB_URL}|" "$CATMA_PROPERTIES_PATH"
 sed -i "s|^\(LOGOUT_URL=\).*$|\1${CATMA_URL}|" "$CATMA_PROPERTIES_PATH"
-sed -i "s|^\(RESET_PASSWORD_URL=\).*$|\1${GITLAB_URL}/users/password/new|" "$CATMA_PROPERTIES_PATH"
 
 # 3. if /etc/gitlab/gitlab.rb doesn't exist then we're starting for the first time - set a flag for later use, copy the template file and set some initial
 #    config options
@@ -125,8 +124,11 @@ if [[ ! -e $GITLAB_OPTIONS_PATH ]]; then
   cat << EOF >> "$GITLAB_OPTIONS_PATH"
 
 
-external_url = '${GITLAB_URL}'
-nginx['listen_port'] = ${GITLAB_PORT}
+external_url '${GITLAB_URL}'
+# GitLab would otherwise take the port and protocol to listen on from external_url, but it is only ever reached on GITLAB_PORT, and over plain HTTP - any
+# SSL is terminated by a reverse proxy (see README.md)
+gitlab_rails['nginx']['listen_port'] = ${GITLAB_PORT}
+gitlab_rails['nginx']['listen_https'] = false
 gitlab_rails['gitlab_username_changing_enabled'] = false
 gitlab_rails['gitlab_default_projects_features_wiki'] = false
 gitlab_rails['gitlab_default_projects_features_snippets'] = false
@@ -193,6 +195,18 @@ else
 fi
 
 # 5. start GitLab
+#    if this isn't the first start, the container may have been created from a newer image than the existing data - some versions require manual migration
+#    steps, which we can't detect, so we point to the changelog every time
+if [[ $FIRST_START != 'true' ]]
+then
+  cat << EOF
+
+
+$(color_yellow "NB: If you are updating from an earlier version of CATMA Standalone, check the changelog for any steps that you need to complete as part of
+the update: https://github.com/forTEXT/catma/blob/master/CHANGELOG.md")
+EOF
+fi
+
 GITLAB_INIT_LOG_PATH='/var/log/gitlab/gitlab_init.log'
 echo -e '\n\nStarting GitLab ... (this will take a while, especially on the first run)'
 echo -e "\n--- $(date)\n\n" >> "$GITLAB_INIT_LOG_PATH"
@@ -226,7 +240,8 @@ PAT_PREFIX=catma-glpat-
 DU_USERNAME=standalone
 DU_PASSWORD=St4nd@lone
 
-# 7. if this is the first start of the GitLab server, complete the initial GitLab setup (set default settings, create an admin PAT, create the default user)
+# 7. if this is the first start of the GitLab server, complete the initial GitLab setup (set default settings, create an admin PAT and OAuth application, create
+#    the default user)
 #    also generate a CATMA API secret
 if [[ $FIRST_START = 'true' ]]
 then
@@ -234,12 +249,18 @@ then
   echo -e 'Configuring GitLab ...'
   echo -e "\n--- $(date)\n\n" >> "$GITLAB_CONFIG_LOG_PATH"
   GITLAB_UPLOADS_DIR='/var/opt/gitlab/gitlab-rails/uploads/'
-  cp /opt/catma/assets/catma-gitlab-combo-favicon.ico /opt/catma/assets/catma-gitlab-combo-logo-blue-on-white-pill-50a.svg "$GITLAB_UPLOADS_DIR"
-  chown git:git ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-favicon.ico ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-logo-blue-on-white-pill-50a.svg
+  cp /opt/catma/assets/catma-gitlab-combo-favicon.ico /opt/catma/assets/catma-gitlab-combo-logo-blue-on-white-pill-50a.svg \
+    /opt/catma/assets/catma-gitlab-combo-logo-blue-on-white-pill-50a_V3.svg "$GITLAB_UPLOADS_DIR"
+  chown git:git ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-favicon.ico ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-logo-blue-on-white-pill-50a.svg \
+    ${GITLAB_UPLOADS_DIR}catma-gitlab-combo-logo-blue-on-white-pill-50a_V3.svg
   ADMIN_TOKEN=$(pwgen -snc 20 1)
+  # the OAuth application credentials are written to a file rather than stdout, as stdout ends up in the log file above
+  # gitlab-rails runs as the 'git' user, so it has to own the file to be able to write it (we can still read it back as root)
+  OAUTH_CREDS_PATH=$(mktemp)
+  chown git:git "$OAUTH_CREDS_PATH"
   # https://docs.gitlab.com/administration/operations/rails_console/#using-the-rails-runner
   gitlab-rails runner /opt/catma/scripts/gitlab_config.rb --app_url "$CATMA_URL" --admin_token "$ADMIN_TOKEN" --pat_prefix "$PAT_PREFIX" \
-    --du_username "$DU_USERNAME" --du_password "$DU_PASSWORD" &>> "$GITLAB_CONFIG_LOG_PATH"
+    --oauth_creds_path "$OAUTH_CREDS_PATH" --du_username "$DU_USERNAME" --du_password "$DU_PASSWORD" &>> "$GITLAB_CONFIG_LOG_PATH"
   if [[ $? -ne 0 ]]
   then
     cat << EOF
@@ -254,6 +275,13 @@ EOF
   fi
   sed -i "s|^\(GITLAB_ADMIN_PERSONAL_ACCESS_TOKEN=\).*$|\1${PAT_PREFIX}${ADMIN_TOKEN}|" "$CATMA_PROPERTIES_PATH"
   sed -i "s|^\(API_HMAC_SECRET=\).*$|\1$(pwgen -snc 32 1)|" "$CATMA_PROPERTIES_PATH"
+
+  # OAuth application credentials, as written by gitlab_config.rb (these are what users sign in through, see GitLabOauthHandler)
+  # shellcheck disable=SC1090
+  source "$OAUTH_CREDS_PATH"
+  rm -f "$OAUTH_CREDS_PATH"
+  sed -i "s|^\(GITLAB_OAUTH_CLIENT_ID=\).*$|\1${GITLAB_OAUTH_CLIENT_ID}|" "$CATMA_PROPERTIES_PATH"
+  sed -i "s|^\(GITLAB_OAUTH_CLIENT_SECRET=\).*$|\1${GITLAB_OAUTH_CLIENT_SECRET}|" "$CATMA_PROPERTIES_PATH"
 fi
 
 # 8. start Jetty

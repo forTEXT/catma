@@ -14,9 +14,11 @@ live in Git repositories on GitLab; SQLite is used only for a small amount of au
 ## Prerequisites & one-time setup
 
 - JDK 21, Maven.
-- A dedicated self-managed GitLab server (<v19) with admin access. Not needed to compile, but needed to run or to execute the GitLab-backed tests.
-- **Two forked dependencies must be installed into the local Maven repo or the build will fail** (`gitlab4j-api 5.0.1-CATMA-v3`,
-  `org.vaadin:elements 0.2.3-CATMA`). Download URLs and the exact `mvn install:install-file` commands are in `doc/DEVELOPMENT.md`.
+- A dedicated self-managed GitLab server with admin access, plus an instance-wide OAuth application registered on it (see `doc/SELF-HOSTING.md`). Not
+  needed to compile, but needed to run or to execute the GitLab-backed tests.
+- **A forked dependency must be installed into the local Maven repo or the build will fail** (`org.vaadin:elements 0.2.3-CATMA`). Download URL and the
+  exact `mvn install:install-file` command are in `doc/DEVELOPMENT.md`. `gitlab4j-api` uses the stock release (5.x — the 6.x line is Jakarta-based and
+  incompatible with the javax stack).
 
 Full setup instructions: `doc/DEVELOPMENT.md`. Self-hosting: `doc/SELF-HOSTING.md`. Docker/standalone: `docker/README.md`.
 
@@ -24,10 +26,10 @@ Full setup instructions: `doc/DEVELOPMENT.md`. Self-hosting: `doc/SELF-HOSTING.m
 
 ```bash
 # Full build (includes the GWT widgetset + theme compile — slow, several minutes)
-mvn clean compile package -DskipTests=true
+mvn clean compile package
 
 # Rebuild skipping the GWT widgetset compile (much faster; safe when no client-side code changed)
-mvn package -DskipTests=true -Dgwt.compiler.skip=true
+mvn package -Dgwt.compiler.skip=true
 
 # Run locally on Jetty (http://localhost:8080/)
 mvn jetty:run
@@ -35,14 +37,36 @@ mvn jetty:run
 # Run against an alternative properties file (see "Configuration" below)
 mvn -Dprop=catma_local-dev.properties package jetty:run
 
-# Tests
+# Tests — the self-contained ones only; the GitLab-backed ones are tagged "gitlab" and excluded by default
 mvn test
 mvn test -Dtest=TagsetDefinitionTest
 mvn test -Dtest=AuthServiceTest#methodName
+
+# Also run the GitLab-backed tests, against the dev GitLab the properties file points at
+mvn test -Pgitlab-tests -Dprop=catma_local-dev.properties
 ```
 
 `mvn dependency:tree` / `dependency:analyze` are used often here — the POM contains many deliberate version pins and exclusions (Jersey, Tika,
 commons-logging, xalan, activation), and `maven-enforcer-plugin` bans several artifacts. Read the comments in `pom.xml` before changing a dependency.
+
+**Maven behind a proxy (e.g. a sandboxed shell):** Maven ignores `HTTP(S)_PROXY` environment variables, so downloads fail with "Could not transfer
+artifact" even though `curl` works. Generate a settings file from the variable in `$TMPDIR` and pass it with `-s` (which replaces
+`~/.m2/settings.xml` for that run). Never write the file into the repo, as it contains the proxy credentials:
+
+```bash
+u=$(echo "$HTTPS_PROXY" | sed -E 's#^https?://([^:]+):([^@]+)@.*#\1#'); p=$(echo "$HTTPS_PROXY" | sed -E 's#^https?://([^:]+):([^@]+)@.*#\2#')
+h=$(echo "$HTTPS_PROXY" | sed -E 's#^.*@([^:/]+):([0-9]+).*#\1#'); port=$(echo "$HTTPS_PROXY" | sed -E 's#^.*@([^:/]+):([0-9]+).*#\2#')
+cat > "$TMPDIR/mvn-proxy-settings.xml" <<EOF
+<settings><proxies>
+<proxy><id>https</id><active>true</active><protocol>https</protocol><host>$h</host><port>$port</port><username>$u</username><password>$p</password></proxy>
+<proxy><id>http</id><active>true</active><protocol>http</protocol><host>$h</host><port>$port</port><username>$u</username><password>$p</password></proxy>
+</proxies></settings>
+EOF
+mvn -s "$TMPDIR/mvn-proxy-settings.xml" package   # same -s for any other goal
+```
+
+Such a proxy may not pass through checksum files ("Checksum validation failed, no checksums available"), so artifacts downloaded this way are
+unverified.
 
 ## Configuration
 
@@ -60,12 +84,19 @@ template is `src/main/resources/catma.properties`.
 
 ### Entry points (`src/main/webapp/WEB-INF/web.xml`)
 
-1. `PropertiesInitializerServlet` — loads config, `load-on-startup 1`.
-2. `de.catma.ui.CatmaApplicationServlet` → `de.catma.ui.CatmaApplication` (the Vaadin `UI`, mapped at `/*`) — the interactive application, with Vaadin
-   Push over WebSocket/XHR.
-3. A Jersey `ServletContainer` at `/api/v1/*` → `de.catma.api.v1.ApiApplication` — the read/export REST API, documented via Swagger annotations.
+Every servlet is declared in `web.xml` rather than with `@WebServlet`, so that the startup order is visible in one place. It matters: each of the first
+three depends on the ones before it. In `load-on-startup` order:
 
-`HazelCastInitializerServlet` + `de.catma.hazelcast` provide cross-session messaging and caching (signup tokens, project invitation codes).
+1. `PropertiesInitializerServlet` — loads config.
+2. `GitLabCapabilitiesCheckServlet` — verifies that the admin token has the scopes CATMA needs and belongs to an administrator. A definite
+   misconfiguration aborts deployment; being unable to reach GitLab at all only logs.
+3. `HazelCastInitializerServlet` — with `de.catma.hazelcast`, provides cross-session messaging and caching (signup tokens, project invitation codes).
+4. `de.catma.ui.CatmaApplicationServlet` → `de.catma.ui.CatmaApplication` (the Vaadin `UI`, mapped at `/*`) — the interactive application, with Vaadin
+   Push over WebSocket/XHR.
+5. A Jersey `ServletContainer` at `/api/v1/*` → `de.catma.api.v1.ApiApplication` — the read/export REST API, documented via Swagger annotations.
+
+The init servlets (1–3) log through `GenericServlet.log()` rather than `java.util.logging` — a deliberate exception to the convention below, because
+their output is container-startup diagnostics and belongs in the container's log.
 
 ### Persistence model — the important part
 
@@ -82,14 +113,22 @@ template is `src/main/resources/catma.properties`.
   are stored as **paged** JSON-LD Web Annotation files, capped by `MAX_ANNOTATION_PAGE_FILE_SIZE_BYTES` so that diffs stay viewable in GitLab.
 - `GitlabManagerPrivileged` (admin token) vs `GitlabManagerRestricted` (per-user token) — the split matters for permissions; `de.catma.rbac` maps
   GitLab roles onto `RBACRole`/`RBACPermission`.
+- Sign-in is an **OAuth authorization code flow** against the GitLab server (`de.catma.oauth.GitLabOauthHandler`) — the only one there is; the
+  resulting access token is refreshed by `GitLabOauthTokenProvider` and used both as the gitlab4j auth token and as the Git-over-HTTPS password.
+  Google is offered by GitLab itself as an OmniAuth provider, so it needs no code here.
 - `repository/git/resource/provider` selects *which* revision a project is read at (`SynchronizedResourceProvider` for the user's own branch,
   `LatestContributionsResourceProvider` for viewing others' unmerged work).
 
 **Serialization must be byte-stable across writes** so that Git diffs stay minimal. `SerializationHelper` builds a GSON instance around
 `SortedReflectiveTypeAdapterFactory`, which sorts fields deterministically. This requires the locally-added
 `com.google.gson.internal.bind.SortedFieldTypeAdapterWrapper` in `src/main/java/com/google/gson/internal/` — a class placed in Gson's own package on
-purpose. Similarly, `src/main/java/org/gitlab4j/api/EnhancedPager.java` and `Extended*.java` patch gitlab4j from inside its package (they need
-package-private members like `GitLabApiForm`, `AbstractApi.get` and the `Pager` constructor). Don't "clean these up" into `de.catma`.
+purpose. Similarly, `src/main/java/org/gitlab4j/api/EnhancedPager.java` and `Extended*.java` patch gitlab4j from inside its package. Only
+`EnhancedPager` has to be there (it calls the `protected` `AbstractApi.get` on another object); the rest are there so that all patches to gitlab4j are in one
+place, which is what to review when bumping it. Don't "clean these up" into `de.catma`.
+
+Each exists because upstream is still missing something — the class comment in each one says what, so read it before assuming any of them is redundant.
+`EnhancedPager` is a copy of upstream's `Pager` rather than a subclass: when bumping gitlab4j-api, diff it against the new `Pager` and port any upstream
+changes across.
 
 ### In-memory graph & indexing
 
@@ -140,18 +179,38 @@ language detection).
   kept for reference; do not add to them and don't assume they compile.
 - Tests split into two kinds:
   - **Self-contained**: `api/v1/service/*Test` (Jersey Test Framework + Grizzly + Mockito), `TagsetDefinitionTest`, `SortedReflectiveTypeAdapterFactoryTest`.
-  - **GitLab-backed integration tests**: everything in `repository/git/` (`GitProjectsManagerTest`, `GitProjectHandlerTest`,
+  - **GitLab-backed integration tests**: the rest of `repository/git/` (`GitProjectsManagerTest`, `GitProjectHandlerTest`,
     `GitLabServerManagerTest`, …). These create real data on a live GitLab server, then clean up. They are slow and require a configured properties
-    file (`-Dprop=...`) pointing at your dev GitLab. The documented build skips them (`-DskipTests=true`).
-- JUnit 5 (Jupiter) is the API for `src/test/java`.
+    file (`-Dprop=...`) pointing at your dev GitLab.
+- The GitLab-backed classes carry `@Tag("gitlab")`, which `maven-surefire-plugin` excludes by default, so a plain `mvn test` needs neither a GitLab
+  server nor a properties file. The `gitlab-tests` profile clears the exclusion. **Tag any new test that touches GitLab**, or it will break `mvn test`
+  for everyone without a dev instance.
+- In a sandboxed Claude Code session, writes to `/tmp` are blocked, which makes `ProjectServiceTest` fail (JGit can't create its test repositories),
+  surefire warn that it can't create its temp directory, and `package` fail while assembling the WAR ("Read-only file system"). Redirect both the Maven
+  JVM's and the forked test JVM's temp dir to the sandbox's. The Maven JVM's has to be set through `MAVEN_OPTS`, as the WAR plugin doesn't pick up a
+  `-Djava.io.tmpdir` given on the command line: `MAVEN_OPTS="-Djava.io.tmpdir=$TMPDIR" mvn package -DargLine="-Djava.io.tmpdir=$TMPDIR"`.
+- JUnit 5 (Jupiter) is the API for `src/test/java`. `maven-surefire-plugin` has to stay pinned in `pom.xml`: Maven's default is 2.17, which predates
+  JUnit 5 and reports "Tests run: 0" instead of failing, so nothing in `src/test/java` runs at all.
 
 ## Conventions
 
+- **Consistency is valued highly.** When there is an established way of doing something here, follow it rather than introducing a second one. If you
+  find the codebase already doing the same thing two different ways, don't quietly pick a side and don't add a third: say so, and propose how to make
+  it uniform, with the trade-offs of each option. Where the inconsistency is deliberate, record why, next to the exception.
 - Logging in application code is `java.util.logging` throughout (`slf4j-simple` is present only as a provider for third-party libraries). Don't
-  introduce SLF4J calls in `de.catma`.
+  introduce SLF4J calls in `de.catma`. The one exception is the init servlets — see "Entry points" above.
 - Existing Java sources are indented with **tabs**; lines run long (the `.editorconfig` — a large IDEA export — sets `max_line_length = 160` but
   declares spaces at the root level, which the codebase does not follow). Match the surrounding file.
-- `.aiignore` marks files that should not be fed to AI tooling (all `*.properties`, `doc/`, `.run/`, `testdocs/`, build output).
+- `.aiignore` marks files that should not be fed to AI tooling (all `*.properties` except the template, `.run/`, `testdocs/`, build output).
+
+### Working with the user
+
+Unless you have been sent off to work unattended, agree the design before you build it:
+
+- Put design decisions to the user before implementing — which approach, what the trade-offs are, anything you had to assume. Answer any questions
+  they've asked and confirm the details they've asked you to confirm, then wait for a go-ahead rather than starting.
+- Don't commit on your own initiative while questions are open, or while it's likely you'll be asked to change what you've just done. In an active
+  session, finish the work, report it, and let the user ask for the commit.
 
 ### Where documentation belongs
 
@@ -161,6 +220,8 @@ Put an explanation next to the thing it explains, at the narrowest scope that fi
   field that must not be reordered, a guard that looks removable. Someone editing the file must be able to see the reason without consulting git.
 - **How a subsystem fits together** → this file, at a level that stays true as the code changes. Don't restate what a class comment already says.
 - **Operator-facing setup** → `doc/`, `docker/README.md` and the `catma.properties` template.
+- **Steps needed only when updating an existing installation** → `CHANGELOG.md`, under the version that requires them, in the section for each usage
+  scenario it affects. The setup documentation describes the current state only and points to the changelog for updates.
 - **Why a change was made** → the commit message.
 - **Work you've identified but aren't doing** → `TODO.md`, unless a plan already covers it. Don't leave it in operator-facing documentation or as a
   speculative comment in the code. That file collects AI-identified follow-up work only, grouped by the branch or task the note came out of — add the
@@ -168,10 +229,16 @@ Put an explanation next to the thing it explains, at the narrowest scope that fi
 
 ### Commit messages
 
-Subject in the imperative, then a blank line, then prose explaining **why**. Keep it short — a reader wanting the detail has the diff, the code comments
-and this file.
+Subject in the imperative, then a blank line, then prose explaining **why**. Keep it short — two or three short paragraphs is usually plenty, and a
+reader who wants more has the diff, the code comments and this file. Err on the side of leaving things out.
 
+- Explain the motivation and any non-obvious consequence. Don't list what changed file by file — the diff already says that.
+- **Don't explain how the new code works.** That belongs in the code, or a comment beside it, where someone changing it will see it. A commit message
+  describing the mechanism is both a duplicate and the copy that goes stale.
+- **Say no more about the old behaviour than it takes to see why the change was made.** Naming the machinery that went away is noise.
+- **Nothing here is written for an operator.** Anything someone has to *do* — a setting to add, a token to replace, a migration step — goes in `doc/`,
+  `docker/README.md`, the `catma.properties` template or `CHANGELOG.md`, because that is where they will look. A breaking API change is worth a line, as
+  it tells a reader how far the commit reaches.
 - State conclusions directly. Don't narrate the investigation that produced them ("diffing X against Y shows…", "after checking…") and don't cite
   evidence for your own claims.
-- Explain the motivation and any non-obvious consequence. Don't list what changed file by file — the diff already says that.
 - If a detail is needed to work on the code rather than to understand the change, it belongs in a comment, not here.

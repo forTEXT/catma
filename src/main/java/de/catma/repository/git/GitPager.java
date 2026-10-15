@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.gitlab4j.api.EnhancedPager;
-import org.gitlab4j.api.GitLabApiException;
 
 import de.catma.project.BackendPager;
 
@@ -25,11 +24,13 @@ public class GitPager<X, T> implements BackendPager<T> {
 		return delegate.next().stream().map(typeMapper).toList();
 	}
 
+	// EnhancedPager wraps any GitLabApiException in a RuntimeException, we translate that back into an IOException where the BackendPager interface allows
+	// it, so that callers keep seeing backend failures as IOExceptions
 	@Override
 	public List<T> first() throws IOException {
 		try {
 			return delegate.first().stream().map(typeMapper).toList();
-		} catch (GitLabApiException e) {
+		} catch (RuntimeException e) {
 			throw new IOException(e);
 		}
 	}
@@ -38,7 +39,7 @@ public class GitPager<X, T> implements BackendPager<T> {
 	public List<T> current() throws IOException {
 		try {
 			return delegate.current().stream().map(typeMapper).toList();
-		} catch (GitLabApiException e) {
+		} catch (RuntimeException e) {
 			throw new IOException(e);
 		}
 	}

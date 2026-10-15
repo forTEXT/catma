@@ -9,19 +9,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.UserApi;
-import org.gitlab4j.api.models.PersonalAccessToken;
+import org.gitlab4j.api.models.ImpersonationToken;
 import org.gitlab4j.api.models.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import de.catma.properties.CATMAProperties;
+import de.catma.repository.git.GitLabTestHelper;
 
+@Tag("gitlab")
 public class GitLabServerManagerTest {
 	private GitlabManagerPrivileged gitlabManagerPrivileged;
 	private GitlabManagerRestricted gitlabManagerRestricted;
@@ -40,13 +42,8 @@ public class GitLabServerManagerTest {
 	@BeforeEach
 	public void setUp() throws Exception {
 		// create a fake CATMA user which we'll use to instantiate GitlabManagerRestricted (using the corresponding impersonation token)
-		Integer randomUserId = Integer.parseInt(RandomStringUtils.randomNumeric(3));
-		String username = String.format("testuser-%s", randomUserId);
-		String email = String.format("%s@catma.de", username);
-		String name = String.format("Test User %s", randomUserId);
-
 		gitlabManagerPrivileged = new GitlabManagerPrivileged();
-		String impersonationToken = gitlabManagerPrivileged.acquireImpersonationToken(username, "catma", email, name).getSecond();
+		String impersonationToken = GitLabTestHelper.createTestUserAndImpersonationToken(gitlabManagerPrivileged);
 
 		gitlabManagerRestricted = new GitlabManagerRestricted(impersonationToken);
 	}
@@ -105,11 +102,11 @@ public class GitLabServerManagerTest {
 		assertEquals(gitlabManagerRestricted.getUser().getIdentifier(), matchedUser.getUsername());
 		assertEquals(gitlabManagerRestricted.getUser().getName(), matchedUser.getName());
 
-		// assert that the user has the expected impersonation token
-		List<PersonalAccessToken> impersonationTokens = userApi.getImpersonationTokens(gitlabManagerRestricted.getUser().getUserId());
+		// assert that the user has the impersonation token that setUp created for it (production code doesn't create impersonation tokens)
+		List<ImpersonationToken> impersonationTokens = userApi.getImpersonationTokens(gitlabManagerRestricted.getUser().getUserId());
 
 		assertEquals(1, impersonationTokens.size());
-		assertEquals(GitlabManagerPrivileged.GITLAB_DEFAULT_IMPERSONATION_TOKEN_NAME, impersonationTokens.get(0).getName());
+		assertEquals(GitLabTestHelper.TEST_IMPERSONATION_TOKEN_NAME, impersonationTokens.get(0).getName());
 	}
 
 //	@Test

@@ -13,8 +13,10 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.UI;
 import de.catma.backgroundservice.*;
 import de.catma.hazelcast.HazelCastService;
-import de.catma.oauth.GoogleOauthHandler;
-import de.catma.oauth.OauthIdentity;
+import de.catma.oauth.GitLabOauthHandler;
+import de.catma.oauth.GitLabOauthTokenProvider;
+import de.catma.oauth.GitLabOauthTokens;
+import de.catma.oauth.OauthConstants;
 import de.catma.properties.CATMAPropertyKey;
 import de.catma.repository.git.managers.GitlabManagerRestricted;
 import de.catma.repository.git.managers.interfaces.RemoteGitManagerRestricted;
@@ -31,6 +33,7 @@ import de.catma.ui.module.main.ErrorHandler;
 import de.catma.ui.util.Version;
 import de.catma.user.signup.SignupTokenManager;
 import de.catma.util.Pair;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
 import java.io.Closeable;
@@ -72,8 +75,8 @@ public class CatmaApplication extends UI
 
 		loginService = new GitlabLoginService(new RemoteGitManagerFactory() {
 			@Override
-			public RemoteGitManagerRestricted createFromUsernameAndPassword(String username, String password) throws IOException {
-				return new GitlabManagerRestricted(username, password);
+			public RemoteGitManagerRestricted createFromOauthTokenProvider(GitLabOauthTokenProvider oauthTokenProvider) throws IOException {
+				return new GitlabManagerRestricted(oauthTokenProvider);
 			}
 
 			@Override
@@ -103,9 +106,7 @@ public class CatmaApplication extends UI
 		eventBus.post(new RouteToDashboardEvent());
 
 		requestTokenHandler = new RequestTokenHandler(
-				signupTokenManager, eventBus,
-				loginService, initService, hazelCastService, sqliteService,
-				this, this, this::getContent, this
+				signupTokenManager, loginService, this, this::getContent, this, eventBus
 		);
 
 		if (!handleRequestOauth(request)) { // handle oauth
@@ -163,27 +164,31 @@ public class CatmaApplication extends UI
 	private boolean handleRequestOauth(VaadinRequest request) {
 		// do we have an oauth authentication process ongoing?
 		if (request.getParameter("code") != null
-				&& VaadinSession.getCurrent().getAttribute(GoogleOauthHandler.OAUTH_CSRF_TOKEN_SESSION_ATTRIBUTE_NAME) != null
+				&& VaadinSession.getCurrent().getAttribute(OauthConstants.OAUTH_CSRF_TOKEN_SESSION_ATTRIBUTE_NAME) != null
 		) {
 			// yes, handle oauth authentication result
 			Map<String, String> additionalStateParams = null;
 
 			try {
-				Pair<OauthIdentity, Map<String, String>> resultPair = GoogleOauthHandler.handleCallbackAndGetIdentity(
-						request.getParameter("code"),
-						request.getParameter("state"),
-						request.getParameter("error"),
-						CATMAPropertyKey.BASE_URL.getValue(),
-						HttpClients.createDefault(),
-						VaadinSession.getCurrent()::getAttribute,
-						VaadinSession.getCurrent()::setAttribute
-				);
+				Pair<GitLabOauthTokens, Map<String, String>> resultPair;
+				try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+					resultPair = GitLabOauthHandler.handleCallbackAndGetTokens(
+							request.getParameter("code"),
+							request.getParameter("state"),
+							request.getParameter("error"),
+							CATMAPropertyKey.BASE_URL.getValue(),
+							httpClient,
+							VaadinSession.getCurrent()::getAttribute,
+							VaadinSession.getCurrent()::setAttribute
+					);
+				}
 
-				OauthIdentity oauthIdentity = resultPair.getFirst();
 				additionalStateParams = resultPair.getSecond();
 
 				// log the user in
-				loginService.loggedInFromThirdParty(oauthIdentity.identifier(), oauthIdentity.provider(), oauthIdentity.email(), oauthIdentity.name());
+				loginService.loggedInFromGitLabOauth(
+						new GitLabOauthTokenProvider(resultPair.getFirst(), CATMAPropertyKey.BASE_URL.getValue(), HttpClients::createDefault)
+				);
 			}
 			catch (Exception e) {
 				showAndLogError("Error during login", e);
@@ -194,7 +199,7 @@ public class CatmaApplication extends UI
 
 			eventBus.post(new RouteToDashboardEvent());
 
-			// handle our own action and token parameters if present (for invitations - also see AuthenticationDialog.googleLinkClickListener)
+			// handle our own action and token parameters if present (for invitations - also see AuthenticationDialog.redirectToGitLabOauth)
 			if (additionalStateParams != null && additionalStateParams.containsKey(Parameter.ACTION.getKey())
 					&& additionalStateParams.containsKey(Parameter.TOKEN.getKey())
 			) {
