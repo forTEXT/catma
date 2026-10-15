@@ -154,6 +154,12 @@ public class CatmaApplicationServlet extends VaadinServlet {
 
 	@Override
 	protected void servletInitialized() throws ServletException {
+		// The Servlet 4 API has no way to set SameSite on the session cookie, so this uses Jetty's context-wide default
+		// (HttpCookieUtils.SAME_SITE_DEFAULT_ATTRIBUTE), which applies to every cookie that doesn't set its own. Other containers
+		// ignore the attribute. Not Strict: when sign-in goes through another site (Google via GitLab, or a GitLab server on a
+		// different domain), the OAuth callback would arrive without the session cookie and fail the state check.
+		getServletContext().setAttribute("org.eclipse.jetty.cookie.sameSiteDefault", "Lax");
+
 		getService().addSessionInitListener(new SessionInitListener() {
 			@Override
 			public void sessionInit(SessionInitEvent event) throws ServiceException {
