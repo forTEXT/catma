@@ -148,7 +148,7 @@ public class AnnotatedTextProvider {
 
             builder.append("<br /><hr />");
             builder.append("Tag Path: <strong>");
-            builder.append(tagPath);
+            builder.append(HtmlEscaper.escape(tagPath));
             builder.append("</strong>");
         }
         catch (IOException e) {
@@ -193,7 +193,7 @@ public class AnnotatedTextProvider {
 
             String joinedAnnotatedText = kwics.stream()
                     .map(kwic -> kwic.getKeyword())
-                    .map(keyword -> shorten(keyword, SMALL_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH))
+                    .map(keyword -> HtmlEscaper.escape(shorten(keyword, SMALL_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH)))
                     .collect(Collectors.joining(" [" + HORIZONTAL_ELLIPSIS + "] "));
 
             builder.append(joinedAnnotatedText);

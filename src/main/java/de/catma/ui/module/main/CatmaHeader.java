@@ -18,9 +18,8 @@ import de.catma.ui.events.routing.RouteToDashboardEvent;
 import de.catma.ui.login.LoginService;
 import de.catma.ui.module.account.AccessTokenDialog;
 import de.catma.ui.module.account.EditAccountDialog;
+import de.catma.ui.util.HtmlEscaper;
 import de.catma.ui.util.Version;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
 
 /**
  * Displays the header and context information
@@ -86,7 +85,7 @@ public class CatmaHeader extends HorizontalLayout {
 	public void headerContextChange(HeaderContextChangeEvent headerContextChangeEvent) {
 		btnHome.setIcon(headerContextChangeEvent.isDashboard() ? null : VaadinIcons.HOME);
 
-		String contextInfo = Jsoup.clean(headerContextChangeEvent.getProjectName(), Safelist.basic());
+		String contextInfo = HtmlEscaper.escape(headerContextChangeEvent.getProjectName());
 
 		if (!headerContextChangeEvent.isDashboard()) {
 			contextInfo = contextInfo +

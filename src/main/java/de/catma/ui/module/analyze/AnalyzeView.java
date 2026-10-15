@@ -69,6 +69,7 @@ import de.catma.ui.module.analyze.visualization.vega.DistributionDisplaySettingH
 import de.catma.ui.module.analyze.visualization.vega.VegaPanel;
 import de.catma.ui.module.analyze.visualization.vega.WordCloudDisplaySettingHandler;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.ui.util.HtmlEscaper;
 
 public class AnalyzeView extends HorizontalLayout
 		implements ClosableTab {
@@ -671,9 +672,9 @@ public class AnalyzeView extends HorizontalLayout
 										"approximately at position {1} character <strong>{2}</strong>.</p>" +
 										"<p>If you are unsure about how to construct a query, try the Query Builder!</p>" +
 										"</html>",
-										input,
+										HtmlEscaper.escape(input),
 										idx + 1,
-										character
+										HtmlEscaper.escape(String.valueOf(character))
 								);
 								HTMLNotification.show("Info", message, 
 										Type.TRAY_NOTIFICATION);
@@ -683,7 +684,7 @@ public class AnalyzeView extends HorizontalLayout
 										"<p>There is something wrong with your query <strong>{0}</strong>.</p>" +
 										"<p>If you are unsure about how to construct a query, try the Query Builder!</p>" +
 										"</html>",
-										input
+										HtmlEscaper.escape(input)
 								);
 								HTMLNotification.show("Info", message, 
 										Type.TRAY_NOTIFICATION);

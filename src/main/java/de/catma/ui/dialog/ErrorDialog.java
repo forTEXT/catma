@@ -7,6 +7,7 @@ import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.ui.*;
 import de.catma.ui.i18n.Messages;
+import de.catma.ui.util.HtmlEscaper;
 
 public class ErrorDialog extends Window {
     private final String message;
@@ -60,8 +61,8 @@ public class ErrorDialog extends Window {
                         "The underlying error message is:<br/>"
                         + "%s<br/>"
                         + "%s",
-                        message,
-                        exception.getMessage() == null ? "" : exception.getMessage()
+                        HtmlEscaper.escape(message),
+                        exception.getMessage() == null ? "" : HtmlEscaper.escape(exception.getMessage())
                 ),
                 ContentMode.HTML
         );
