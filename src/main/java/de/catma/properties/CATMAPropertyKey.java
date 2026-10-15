@@ -47,6 +47,9 @@ public enum CATMAPropertyKey {
 	
 	MAX_KEYWORD_IN_CONTEXT_SIZE("30"),
 
+	// comma-separated hosts that documents may be imported from by URL although they resolve to a non-public address (see PublicUrlOpener)
+	DOCUMENT_URL_IMPORT_ALLOWED_INTERNAL_HOSTS,
+
 	SQLITE_DB_BASE_PATH,
 	
 	GROUP_PROJECT_SIGNUP_TOKEN_CACHE_TRANSACTION_LOG_PATH_PATTERN("group_project_signup_token%g.log"),
