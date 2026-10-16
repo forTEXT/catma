@@ -105,9 +105,19 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 				.toFile();
 
 		try {
-			CloneCommand cloneCommand = new CloneCommand().setURI(uri).setDirectory(targetPath);
+			// no checkout yet, so that symlinks are already disabled when the working tree is first written
+			CloneCommand cloneCommand = new CloneCommand().setURI(uri).setDirectory(targetPath).setNoCheckout(true);
 			cloneCommand.setCredentialsProvider(jGitCredentialsManager.getCredentialsProvider());
 			gitApi = cloneCommand.call();
+
+			disableSymlinks(gitApi.getRepository());
+
+			// populate the index and working tree from HEAD, which the clone skipped (it only set up the branch and HEAD); this has to be a hard reset,
+			// as a mixed one would only populate the index, leaving the files to show up as deleted
+			// HEAD can't be resolved in an empty repository, which has nothing to check out
+			if (gitApi.getRepository().resolve(Constants.HEAD) != null) {
+				gitApi.reset().setMode(ResetType.HARD).call();
+			}
 		}
 		catch (GitAPIException e) {
 			if (e instanceof TransportException && e.getMessage().contains("not authorized") && refreshCredentialsTryCount < 1) {
@@ -175,6 +185,27 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 		}
 
 		gitApi = Git.open(dotGitDirOrFile);
+
+		disableSymlinks(gitApi.getRepository());
+	}
+
+	/**
+	 * Makes JGit check out symlinks committed to the repository as regular files containing the link target.
+	 * <p>
+	 * Any project member can commit a symlink, and CATMA reads and writes working-tree files with APIs that follow links, so a real symlink would
+	 * give them access to any file the server process can read or write. The Docker image also disables symlinks in the Jetty user's
+	 * <code>~/.gitconfig</code>, but setting it per repository means it doesn't depend on the environment.
+	 */
+	private static void disableSymlinks(Repository repository) throws IOException {
+		StoredConfig config = repository.getConfig();
+
+		// getBoolean would also see the user's ~/.gitconfig, so check that the repository's own config sets it
+		boolean setInRepositoryConfig = config.getNames(ConfigConstants.CONFIG_CORE_SECTION, null, false).contains(ConfigConstants.CONFIG_KEY_SYMLINKS);
+
+		if (!setInRepositoryConfig || config.getBoolean(ConfigConstants.CONFIG_CORE_SECTION, null, ConfigConstants.CONFIG_KEY_SYMLINKS, true)) {
+			config.setBoolean(ConfigConstants.CONFIG_CORE_SECTION, null, ConfigConstants.CONFIG_KEY_SYMLINKS, false);
+			config.save();
+		}
 	}
 
 
