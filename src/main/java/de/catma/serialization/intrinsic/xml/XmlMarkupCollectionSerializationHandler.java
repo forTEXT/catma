@@ -10,7 +10,7 @@ import de.catma.serialization.AnnotationCollectionSerializationHandler;
 import de.catma.tag.*;
 import de.catma.util.ColorConverter;
 import de.catma.util.IDGenerator;
-import nu.xom.Builder;
+import de.catma.util.SafeXmlBuilder;
 import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Node;
@@ -47,8 +47,7 @@ public class XmlMarkupCollectionSerializationHandler implements AnnotationCollec
 	@Override
 	public AnnotationCollection deserialize(SourceDocument sourceDocument, String id, InputStream inputStream) throws IOException {
 		try {
-			Builder builder = new Builder();
-			Document document = builder.build(inputStream);
+			Document document = SafeXmlBuilder.build(inputStream);
 
 			Map<String, String> namespacePrefixesToTagsetIds = new HashMap<>();
 			for (int i=0; i<document.getRootElement().getNamespaceDeclarationCount(); i++) {

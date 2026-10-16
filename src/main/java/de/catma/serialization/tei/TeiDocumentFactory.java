@@ -21,7 +21,7 @@ package de.catma.serialization.tei;
 import java.io.IOException;
 import java.io.InputStream;
 
-import nu.xom.Builder;
+import de.catma.util.SafeXmlBuilder;
 import nu.xom.ParsingException;
 import nu.xom.ValidityException;
 
@@ -36,9 +36,7 @@ public class TeiDocumentFactory {
 	private TeiDocument createDocumentFromStream(
 			String id, InputStream inputStream, boolean versionUpgrade) 
 			throws ValidityException, ParsingException, IOException {
-		Builder builder = new Builder( new TeiNodeFactory() );
-		
-		TeiDocument teiDocument =  new TeiDocument(id, builder.build(inputStream));
+		TeiDocument teiDocument = new TeiDocument(id, SafeXmlBuilder.build(inputStream, new TeiNodeFactory()));
 		TeiDocumentVersion.convertToLatest(teiDocument);
 		teiDocument.hashIDs();
 		

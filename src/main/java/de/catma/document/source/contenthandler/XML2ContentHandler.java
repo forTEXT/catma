@@ -1,5 +1,6 @@
 package de.catma.document.source.contenthandler;
 
+import de.catma.util.SafeXmlBuilder;
 import nu.xom.*;
 
 import java.io.IOException;
@@ -25,8 +26,7 @@ public class XML2ContentHandler extends AbstractSourceContentHandler {
 
 	private void load(InputStream inputStream) throws IOException {
 		try {
-			Builder builder = new Builder();
-			Document document = builder.build(inputStream);
+			Document document = SafeXmlBuilder.build(inputStream);
 
 			StringBuilder contentBuilder = new StringBuilder();
 			processTextNodes(contentBuilder, document.getRootElement(), null);
