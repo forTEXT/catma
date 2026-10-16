@@ -178,10 +178,11 @@ language detection).
 - Only `src/test/java` is compiled. **`src/test/de` and `src/test/helpers` are legacy trees outside the Maven test source root** — they are dead code
   kept for reference; do not add to them and don't assume they compile.
 - Tests split into two kinds:
-  - **Self-contained**: `api/v1/service/*Test` (Jersey Test Framework + Grizzly + Mockito), `TagsetDefinitionTest`, `SortedReflectiveTypeAdapterFactoryTest`.
-  - **GitLab-backed integration tests**: the rest of `repository/git/` (`GitProjectsManagerTest`, `GitProjectHandlerTest`,
-    `GitLabServerManagerTest`, …). These create real data on a live GitLab server, then clean up. They are slow and require a configured properties
-    file (`-Dprop=...`) pointing at your dev GitLab.
+  - **Self-contained**: everything not tagged `gitlab`, e.g. `api/v1/service/*Test` (Jersey Test Framework + Grizzly + Mockito), and tests that use
+    local repositories in a `@TempDir`, such as `JGitRepoManagerSymlinkTest`.
+  - **GitLab-backed integration tests**: most of `repository/git/` (`GitProjectsManagerTest`, `GitProjectHandlerTest`, `GitLabServerManagerTest`, …).
+    These create real data on a live GitLab server, then clean up. They are slow and require a configured properties file (`-Dprop=...`) pointing at
+    your dev GitLab.
 - The GitLab-backed classes carry `@Tag("gitlab")`, which `maven-surefire-plugin` excludes by default, so a plain `mvn test` needs neither a GitLab
   server nor a properties file. The `gitlab-tests` profile clears the exclusion. **Tag any new test that touches GitLab**, or it will break `mvn test`
   for everyone without a dev instance.
@@ -189,6 +190,9 @@ language detection).
   surefire warn that it can't create its temp directory, and `package` fail while assembling the WAR ("Read-only file system"). Redirect both the Maven
   JVM's and the forked test JVM's temp dir to the sandbox's. The Maven JVM's has to be set through `MAVEN_OPTS`, as the WAR plugin doesn't pick up a
   `-Djava.io.tmpdir` given on the command line: `MAVEN_OPTS="-Djava.io.tmpdir=$TMPDIR" mvn package -DargLine="-Djava.io.tmpdir=$TMPDIR"`.
+  The same applies to any JVM that runs JGit, e.g. a quick experiment in `$TMPDIR`: JGit probes symlink support by writing to the temp dir, and if
+  that fails it treats the filesystem as not supporting symlinks and checks every link out as a plain file, so symlink handling looks safe when it
+  isn't.
 - JUnit 5 (Jupiter) is the API for `src/test/java`. `maven-surefire-plugin` has to stay pinned in `pom.xml`: Maven's default is 2.17, which predates
   JUnit 5 and reports "Tests run: 0" instead of failing, so nothing in `src/test/java` runs at all.
 
