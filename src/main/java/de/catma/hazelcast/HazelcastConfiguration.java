@@ -4,6 +4,7 @@ import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.cache.configuration.Configuration;
@@ -64,6 +65,23 @@ public final class HazelcastConfiguration {
     		new MutableConfiguration<Integer, String>()
     		.setExpiryPolicyFactory(AccessedExpiryPolicy.factoryOf(new Duration(MINUTES, 30)));
     
-    public final static ClientConfig CLIENT_CONFIG = new ClientConfig().setProperty("hazelcast.client.internal.executor.pool.size", "1");
+    public final static String MEMBER_HOST = "127.0.0.1";
+    public final static int MEMBER_PORT = 5701;
+
+    /**
+     * Shared by the member and its clients, which all run in this JVM. Hazelcast's open-source edition has no authentication, so a cluster name
+     * that nobody else knows is what keeps other processes on this host from connecting.
+     */
+    public final static String CLUSTER_NAME = UUID.randomUUID().toString();
+
+    public final static ClientConfig CLIENT_CONFIG = createClientConfig();
+
+    private static ClientConfig createClientConfig() {
+    	ClientConfig config = new ClientConfig()
+    			.setClusterName(CLUSTER_NAME)
+    			.setProperty("hazelcast.client.internal.executor.pool.size", "1");
+    	config.getNetworkConfig().addAddress(MEMBER_HOST + ":" + MEMBER_PORT);
+    	return config;
+    }
     
 }

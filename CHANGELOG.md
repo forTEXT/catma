@@ -50,6 +50,8 @@ Then, before deploying the new CATMA version:
 5. **Remove obsolete properties** from your `catma.properties` file: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` and `RESET_PASSWORD_URL`.
 6. **Update Jetty to 12.0.22 or later** if you run it on Java 25 or later. Otherwise CATMA fails to start with "Unable to parse class" errors – see
    [Java Web Server and Servlet Container](doc/SELF-HOSTING.md#java-web-server-and-servlet-container).
+7. **Make sure port 5701 on `127.0.0.1` is free** on the CATMA host. CATMA's embedded Hazelcast now listens only there and no longer moves to another
+   port, so CATMA fails to start if something else is using it.
 
 We also recommend that you update GitLab's appearance settings (*Admin → Settings → Appearance*), because users now see GitLab's login page every time they
 sign in to CATMA, and its description should tell them where they are and why. You can use the
