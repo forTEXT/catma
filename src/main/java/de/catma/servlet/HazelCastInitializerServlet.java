@@ -29,7 +29,8 @@ public class HazelCastInitializerServlet extends HttpServlet{
 
 		// we need this to avoid an exception being thrown, the cause being the fact that we have Xerces on the classpath (via xom, TODO: replace)
 		// see https://github.com/hazelcast/hazelcast/issues/17839
-		// we don't use Hazelcast to pass any XML messages, and certainly not anything that comes from outside, so there shouldn't be any security impact
+		// the property only relaxes the XXE protection of the parser Hazelcast uses for its own XML configuration, which comes from the operator, so it
+		// has no security impact; it doesn't apply to anything Hazelcast receives over the network, nor to the XML that CATMA parses itself
 		System.setProperty("hazelcast.ignoreXxeProtectionFailures", "true");
 
 		Config config = Config.load();
