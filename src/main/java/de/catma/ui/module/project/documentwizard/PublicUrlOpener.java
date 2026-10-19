@@ -29,6 +29,11 @@ class PublicUrlOpener {
 	private static final int MAX_REDIRECTS = 5;
 	private static final Set<Integer> REDIRECT_STATUS_CODES = Set.of(301, 302, 303, 307, 308);
 
+	// the JDK's defaults are infinite, and the connection is opened on the UI thread, holding the user's session; the read timeout applies to each
+	// read, so it also covers the download that follows, without limiting its total duration
+	private static final int CONNECT_TIMEOUT_MILLIS = 10_000;
+	private static final int READ_TIMEOUT_MILLIS = 30_000;
+
 	/**
 	 * @return a connection whose response is not a redirect, ready for {@link HttpURLConnection#getInputStream()}
 	 * @throws IOException if the URL or a redirect target is not an http(s) URL with a public or allowed host, or on connection errors
@@ -41,6 +46,8 @@ class PublicUrlOpener {
 
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			connection.setInstanceFollowRedirects(false);
+			connection.setConnectTimeout(CONNECT_TIMEOUT_MILLIS);
+			connection.setReadTimeout(READ_TIMEOUT_MILLIS);
 
 			if (!REDIRECT_STATUS_CODES.contains(connection.getResponseCode())) {
 				return connection;
