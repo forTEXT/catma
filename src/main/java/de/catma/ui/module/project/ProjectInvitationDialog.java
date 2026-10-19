@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.cache.Cache;
-import javax.cache.Caching;
 
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
@@ -32,6 +31,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 import de.catma.hazelcast.HazelCastService;
+import de.catma.hazelcast.CacheManagerProvider;
 import de.catma.hazelcast.HazelcastConfiguration;
 import de.catma.project.Project;
 import de.catma.rbac.RBACRole;
@@ -55,7 +55,7 @@ public class ProjectInvitationDialog extends Window {
 	private ProgressBar progressIndicator;
 	
     private final Cache<Integer, String> invitationCache = 
-    		Caching.getCachingProvider().getCacheManager().getCache(
+    		CacheManagerProvider.get().getCache(
     				HazelcastConfiguration.CacheKeyName.PROJECT_INVITATION.name());
     
 	private final List<String> joinedUsers = new ArrayList<>();

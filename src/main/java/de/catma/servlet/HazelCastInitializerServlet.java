@@ -12,6 +12,7 @@ import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 
+import de.catma.hazelcast.CacheManagerProvider;
 import de.catma.hazelcast.HazelcastConfiguration;
 import de.catma.user.signup.SignupTokenManager;
 
@@ -58,10 +59,11 @@ public class HazelCastInitializerServlet extends HttpServlet{
 		
 		hazelcastNode = Hazelcast.newHazelcastInstance(config);
 
-		// later calls to getCacheManager() without arguments return this same manager, and therefore use this member too
+		// bound to the member above; everything else gets it from CacheManagerProvider (see there why)
 		CacheManager cacheManager = Caching.getCachingProvider().getCacheManager(
 				null, null, HazelcastCachingProvider.propertiesByInstanceItself(hazelcastNode)
 		);
+		CacheManagerProvider.set(cacheManager);
 		cacheManager.createCache(
 				HazelcastConfiguration.CacheKeyName.ACCOUNT_SIGNUP_TOKEN.name(),
 				HazelcastConfiguration.ACCOUNT_SIGNUP_TOKEN_CONFIG
