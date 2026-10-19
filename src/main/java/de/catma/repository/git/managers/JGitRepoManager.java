@@ -109,15 +109,6 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			CloneCommand cloneCommand = new CloneCommand().setURI(uri).setDirectory(targetPath).setNoCheckout(true);
 			cloneCommand.setCredentialsProvider(jGitCredentialsManager.getCredentialsProvider());
 			gitApi = cloneCommand.call();
-
-			disableSymlinks(gitApi.getRepository());
-
-			// populate the index and working tree from HEAD, which the clone skipped (it only set up the branch and HEAD); this has to be a hard reset,
-			// as a mixed one would only populate the index, leaving the files to show up as deleted
-			// HEAD can't be resolved in an empty repository, which has nothing to check out
-			if (gitApi.getRepository().resolve(Constants.HEAD) != null) {
-				gitApi.reset().setMode(ResetType.HARD).call();
-			}
 		}
 		catch (GitAPIException e) {
 			if (e instanceof TransportException && e.getMessage().contains("not authorized") && refreshCredentialsTryCount < 1) {
@@ -153,7 +144,42 @@ public class JGitRepoManager implements LocalGitRepositoryManager, AutoCloseable
 			);
 		}
 
+		checkOutWithoutSymlinks(targetPath);
+
 		return targetPath.getName();
+	}
+
+	/**
+	 * Populates the index and working tree of a repository that was cloned without checkout, with symlinks disabled first (see
+	 * {@link #disableSymlinks}).
+	 */
+	private void checkOutWithoutSymlinks(File targetPath) throws IOException {
+		if (gitApi == null) {
+			throw new IllegalStateException("Can't check out a clone on a detached instance");
+		}
+
+		try {
+			disableSymlinks(gitApi.getRepository());
+
+			// populate the index and working tree from HEAD, which the clone skipped (it only set up the branch and HEAD); this has to be a hard reset,
+			// as a mixed one would only populate the index, leaving the files to show up as deleted
+			// HEAD can't be resolved in an empty repository, which has nothing to check out
+			if (gitApi.getRepository().resolve(Constants.HEAD) != null) {
+				gitApi.reset().setMode(ResetType.HARD).call();
+			}
+		}
+		catch (IOException | GitAPIException e) {
+			// CloneCommand only cleans up after its own failures; a clone left without its working tree would be taken for a complete one next time,
+			// with every file showing up as deleted
+			detach();
+			try {
+				FileUtils.deleteDirectory(targetPath);
+			}
+			catch (IOException deleteException) {
+				e.addSuppressed(deleteException);
+			}
+			throw new IOException("Failed to check out the cloned repository", e);
+		}
 	}
 
 	@Override
