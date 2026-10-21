@@ -10,7 +10,7 @@
 # syntax=docker/dockerfile:1
 FROM  gitlab/gitlab-ee:19.4.2-ee.0 AS base
 LABEL maintainer="CATMA Team" \
-      version="1.2.2"
+      version="1.2.3"
 
 SHELL ["/bin/bash", "-c"]
 
@@ -107,7 +107,7 @@ COPY --link --parents --chmod=0755 assets scripts templates /opt/catma/
 # we *could* also copy the .gitconfig template in the bootstrap script, it's just easier to do it all with one command here
 # files copied to bind-mounted locations (the volumes declared below are expected to be bind-mounted), e.g. the catma.properties template, **have** to be copied
 # in the bootstrap script, as they would otherwise be obscured by the bind mount
-COPY --link --chown=jetty:jetty --chmod=0640 templates/.gitconfig.template /opt/jetty_usr_home/.gitconfig
+COPY --link --chown=$JETTY_USER_UID:$JETTY_USER_UID --chmod=0640 templates/.gitconfig.template /opt/jetty_usr_home/.gitconfig
 
 EXPOSE $GITLAB_PORT $CATMA_PORT
 
