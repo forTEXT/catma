@@ -16,6 +16,7 @@ import de.catma.tag.TagManager;
 import de.catma.tag.TagManager.TagManagerEvent;
 import de.catma.tag.TagsetDefinition;
 import de.catma.ui.module.annotate.Tagger;
+import de.catma.ui.util.HtmlEscaper;
 import de.catma.util.ColorConverter;
 import de.catma.util.Pair;
 
@@ -153,11 +154,11 @@ public class TaggerContextMenu {
 				+ "class=\"tagger-contextmenu-menuitem-caption\" "
 				+ "style=\"background-color:#"+ColorConverter.toHex(tag.getColor())+"\">"
 				+ "&nbsp;</div>" 
-				+ tag.getName();
+				+ HtmlEscaper.escape(tag.getName());
 	}
 
 	private void addTagset(TagsetDefinition tagset) {
-		MenuItem tagsetItem = contextMenu.addItem(tagset.getName(), VaadinIcons.TAGS, null);
+		MenuItem tagsetItem = contextMenu.addItem(HtmlEscaper.escape(tagset.getName()), VaadinIcons.TAGS, null);
 		entryToMenuItemMap.put(tagset, tagsetItem);
 		
 		tagset.getRootTagDefinitions()

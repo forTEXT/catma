@@ -13,6 +13,7 @@ import de.catma.queryengine.result.QueryResultRow;
 import de.catma.queryengine.result.QueryResultRowArray;
 import de.catma.queryengine.result.TagQueryResultRow;
 import de.catma.ui.module.main.ErrorHandler;
+import de.catma.ui.util.HtmlEscaper;
 
 public class QueryIdQueryResultRowItem implements QueryResultRowItem {
 	
@@ -31,12 +32,12 @@ public class QueryIdQueryResultRowItem implements QueryResultRowItem {
 
 	@Override
 	public String getKey() {
-		return queryId.getName();
+		return HtmlEscaper.escape(queryId.getName());
 	}
 	
 	@Override
 	public String getFilterKey() {
-		return getKey();
+		return queryId.getName();
 	}
 
 	@Override

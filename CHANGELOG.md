@@ -13,6 +13,8 @@ updating, and apply the steps for every version between the one you are running 
   CATMA's former Google sign-in need no migration – they are linked by email address the first time their owner signs in with Google.
 - GitLab 19 is now supported. GitLab 19.0 removed the "external" password-based sign-in that earlier CATMA versions relied on, which is what made the changes
   above necessary.
+- Importing a document from a URL now only works for `http` and `https` URLs whose host has a public address. Hosts on a local or private network have to
+  be allowed explicitly, see the steps for your scenario below.
 
 **Breaking REST API changes:**
 - `/api/v1/auth` no longer accepts a username and password (HTTP Basic authentication). Pass a GitLab access token instead (bearer authentication or the
@@ -43,9 +45,13 @@ Then, before deploying the new CATMA version:
 3. **If you offer Google sign-in**, move it to GitLab as described under [Google Sign-In (Optional)](doc/SELF-HOSTING.md#google-sign-in-optional). In
    particular, `gitlab_rails['omniauth_enabled'] = true` is new, and `omniauth_allow_single_sign_on`, `omniauth_sync_profile_from_provider` and
    `omniauth_sync_profile_attributes` should be removed from `gitlab.rb` if you had set them – the section explains why.
-4. **Remove obsolete properties** from your `catma.properties` file: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` and `RESET_PASSWORD_URL`.
-5. **Update Jetty to 12.0.22 or later** if you run it on Java 25 or later. Otherwise CATMA fails to start with "Unable to parse class" errors – see
+4. **If your users import documents by URL from internal hosts**, e.g. an institutional repository on your intranet, list those hosts in the new
+   `DOCUMENT_URL_IMPORT_ALLOWED_INTERNAL_HOSTS` property (see the [template](src/main/resources/catma.properties)).
+5. **Remove obsolete properties** from your `catma.properties` file: `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` and `RESET_PASSWORD_URL`.
+6. **Update Jetty to 12.0.22 or later** if you run it on Java 25 or later. Otherwise CATMA fails to start with "Unable to parse class" errors – see
    [Java Web Server and Servlet Container](doc/SELF-HOSTING.md#java-web-server-and-servlet-container).
+7. **Make sure port 5701 on `127.0.0.1` is free** on the CATMA host. CATMA's embedded Hazelcast now listens only there and no longer moves to another
+   port, so CATMA fails to start if something else is using it.
 
 We also recommend that you update GitLab's appearance settings (*Admin → Settings → Appearance*), because users now see GitLab's login page every time they
 sign in to CATMA, and its description should tell them where they are and why. You can use the
@@ -88,7 +94,7 @@ files within the container (e.g. after running `docker exec -it catma-standalone
    GITLAB_OAUTH_CLIENT_ID=<application-id>
    GITLAB_OAUTH_CLIENT_SECRET=<secret>
    ```
-   CATMA checks the application when it starts (step 4) and refuses to start if it is missing or misconfigured, naming the problem in the Jetty log
+   CATMA checks the application when it starts (step 5) and refuses to start if it is missing or misconfigured, naming the problem in the Jetty log
    (`/opt/jetty_web/catma_base/logs/` in the container, `$CATMA_HOME/logs/` on the host with bind mounts).
 2. **Fix the `external_url` setting** in `/etc/gitlab/gitlab.rb`. Earlier versions of the image wrote it as an assignment, which GitLab ignores. Replace the
    line `external_url = '<your-gitlab-url>'` with `external_url '<your-gitlab-url>'` (no equals sign). Then replace the line `nginx['listen_port'] = ...`
@@ -103,7 +109,9 @@ files within the container (e.g. after running `docker exec -it catma-standalone
 3. **If you offer Google sign-in**, update the OmniAuth settings in `/etc/gitlab/gitlab.rb` as shown under [Multi-User](docker/README.md#multi-user): add
    `gitlab_rails['omniauth_enabled'] = true`, and remove the `omniauth_allow_single_sign_on`, `omniauth_sync_profile_from_provider` and
    `omniauth_sync_profile_attributes` lines. Then remove `GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` from `/data/catma/catma.properties`.
-4. **Restart the container** (e.g. `docker restart catma-standalone`) so that both GitLab and CATMA pick up the changes.
+4. **If your users import documents by URL from hosts on your local network**, list those hosts in the new `DOCUMENT_URL_IMPORT_ALLOWED_INTERNAL_HOSTS`
+   property in `/data/catma/catma.properties` (see the [template](src/main/resources/catma.properties)).
+5. **Restart the container** (e.g. `docker restart catma-standalone`) so that both GitLab and CATMA pick up the changes.
 
 Optionally, you can remove the obsolete `RESET_PASSWORD_URL` line from `/data/catma/catma.properties`. The admin token needs no changes, as the image has
 always created it with the required scopes.

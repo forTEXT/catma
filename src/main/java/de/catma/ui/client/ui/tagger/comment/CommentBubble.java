@@ -6,7 +6,6 @@ import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 
 import de.catma.ui.client.ui.tagger.comment.ReplyPanel.ReplyPanelListener;
@@ -32,7 +31,7 @@ public class CommentBubble extends FlowPanel {
 	private ReplyCommentButton btReply;
 	private FlowPanel commentLayoutPanel;
 	private FlowPanel buttonPanel;
-	private HTML content;
+	private Label content;
 	private CommentBubbleListener listener;
 	private FlowPanel replyLayoutPanel;
 	private HandlerRegistration mouseUpReg;
@@ -52,7 +51,7 @@ public class CommentBubble extends FlowPanel {
 			@Override
 			public void onMouseUp(MouseUpEvent event) {
 				buttonPanel.setVisible(true);
-				content.setHTML(comment.getBody());
+				content.setText(comment.getBody());
 				addReplies();
 				listener.selected(comment);
 				mouseUpReg.removeHandler();
@@ -118,7 +117,7 @@ public class CommentBubble extends FlowPanel {
 		commentLayoutPanel = new FlowPanel();
 		commentLayoutPanel.addStyleName("comment");
 		
-		this.content = new HTML(getShortBody());
+		this.content = new Label(getShortBody());
 		this.content.addStyleName("comment-content");
 		commentLayoutPanel.add(content);
 		
@@ -157,7 +156,7 @@ public class CommentBubble extends FlowPanel {
 
 	public void deselect() {
 		buttonPanel.setVisible(false);
-		this.content.setHTML(getShortBody());
+		this.content.setText(getShortBody());
 		this.replyLayoutPanel.clear();
 		addMouseUpHandler();
 	}
@@ -168,12 +167,12 @@ public class CommentBubble extends FlowPanel {
 
 	public void refresh() {
 		if (buttonPanel.isVisible()) {
-			this.content.setHTML(comment.getBody());
+			this.content.setText(comment.getBody());
 			
 			
 		}
 		else {
-			this.content.setHTML(getShortBody());
+			this.content.setText(getShortBody());
 		}
 		
 		addReplies();

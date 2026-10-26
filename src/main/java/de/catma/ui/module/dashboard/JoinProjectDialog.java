@@ -1,7 +1,6 @@
 package de.catma.ui.module.dashboard;
 
 import javax.cache.Cache;
-import javax.cache.Caching;
 
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
@@ -21,6 +20,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 
 import de.catma.hazelcast.HazelCastService;
+import de.catma.hazelcast.CacheManagerProvider;
 import de.catma.hazelcast.HazelcastConfiguration;
 import de.catma.rbac.RBACRole;
 import de.catma.ui.CatmaApplication;
@@ -50,7 +50,7 @@ public class JoinProjectDialog extends Window {
 	private Button btnCancel;
     
 	private final Cache<Integer, String> invitationCache = 
-    		Caching.getCachingProvider().getCacheManager().getCache(
+    		CacheManagerProvider.get().getCache(
     				HazelcastConfiguration.CacheKeyName.PROJECT_INVITATION.name());
     
     private final User currentUser;

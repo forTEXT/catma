@@ -207,7 +207,7 @@ class CollectionSelectionStep extends VerticalLayout implements WizardStep {
 			if(resource.hasDetail()){
 		        sb
 		        .append("<span class='documentsgrid__doc__author'> ")
-		        .append(resource.getDetail())
+		        .append(HtmlEscaper.escape(resource.getDetail()))
 		        .append("</span>");
 			}
 			sb.append("</div>");

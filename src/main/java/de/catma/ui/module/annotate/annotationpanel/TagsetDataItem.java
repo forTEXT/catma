@@ -46,7 +46,7 @@ class TagsetDataItem implements TagsetTreeItem {
 				rootTags.stream()
 				.limit(3)
 				.sorted((t1, t2)->collator.compare(Optional.ofNullable(t1.getName()).orElse(""), Optional.ofNullable(t2.getName()).orElse("")))
-				.map(tag -> HtmlEscaper.escape(tag.getName()))
+				.map(tag -> tag.getName())
 				.collect(Collectors.joining(", ")));
 			tagSummeryBuilder.append(
 				((rootTags.size() > 3)?"...":""));

@@ -74,8 +74,8 @@ from the dialog - which is the part they are asked to include in a bug report.
 `GitLabCapabilitiesCheckServlet` currently checks the GitLab admin token and OAuth application.
 
 Other properties could be validated the same way — that `SQLITE_DB_BASE_PATH` holds a database, that `GIT_REPOSITORY_BASE_PATH` and
-`API_GIT_REPOSITORY_BASE_PATH` are writable and distinct, that `MAIL_*` will actually send once `DEV_MAIL_LOG_ONLY` is off — so it is worth deciding what should
-be checked under the "definite misconfiguration is fatal, can't tell is not" principle.
+`API_GIT_REPOSITORY_BASE_PATH` are writable and distinct, that `MAIL_*` will actually send once `DEV_MAIL_LOG_ONLY` is off — so it is worth deciding what
+should be checked under the "definite misconfiguration is fatal, can't tell is not" principle.
 
 ### Surface OAuth error responses in the web app
 
@@ -103,3 +103,30 @@ way back to it short of the original invitation email.
 
 `close()` should only reset the URL for the `verify` action, mirroring what the success path already does when it decides whether to carry the parameters
 through the OAuth flow.
+
+## `security-hardening` — fixes for a stored XSS report and related issues
+
+### Filter KWIC rows by their text, not their markup
+
+`KwicQueryResultRowItem` and `KwicPropertiesAsColumnsQueryResultRowItem` return their rendered HTML from `getFilterKey()`. That HTML is never a single
+character long, so the punctuation filter never removes a KWIC row. Returning the keyword text would fix it, if annotated punctuation should be
+filtered there at all.
+
+### Shorten annotation property values before escaping them
+
+`AnnotationDetailsPanel` escapes a property value (`HtmlEscaper.escape(value)`) and only then does `AnnotationPropertyValueDataItem` shorten it. The cut can
+fall in the middle of an entity, and the escaped value is also what gets sorted. The item should keep the raw value and escape it after shortening.
+This is a display problem, not a security one.
+
+### Close the URL import's connection on failure and report the HTTP status
+
+`UploadStep.fetchFileURL` opens the connection on the UI thread (`PublicUrlOpener.open`), but nothing disconnects it if a later step fails before
+the background download starts, e.g. creating the temp folder. A 4xx or 5xx response is also passed on as a normal connection, so the download then
+fails with a bare `FileNotFoundException`/`IOException` naming the URL rather than the status. Checking the response code in `open` (or before
+downloading) and disconnecting on failure would fix both.
+
+### Show the alphabetically first tags in a collapsed tagset's summary
+
+Both `TagsetDataItem`s (`module/tags` and `module/annotate/annotationpanel`) apply `.limit(3)` before `.sorted(...)`, so the summary shows the first
+three root tags in insertion order, sorted among themselves, rather than the first three alphabetically. A tagset with root tags Z, Y, X, A shows
+"X, Y, Z..." instead of "A, X, Y...". Sorting before limiting fixes it.

@@ -25,9 +25,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
-import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
@@ -150,7 +150,7 @@ class UploadStep extends VerticalLayout implements WizardStep {
 				URL url = new URL(urlValue);
 				urlInputField.setValue("");
 				
-				URLConnection conn = url.openConnection();
+				HttpURLConnection conn = PublicUrlOpener.open(url);
 				String urlConnContentEncoding = conn.getContentEncoding();
 				final String fileId = idGenerator.generateDocumentId();
 				String tempDir = 
@@ -168,9 +168,8 @@ class UploadStep extends VerticalLayout implements WizardStep {
 				backgroundServiceProvider.submit("fetch-url", new DefaultProgressCallable<Long>() {
 					@Override
 					public Long call() throws Exception {
-						ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
-						
-						try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+						try (ReadableByteChannel readableByteChannel = Channels.newChannel(conn.getInputStream());
+								FileOutputStream fos = new FileOutputStream(tempFile)) {
 							FileChannel outChannel = fos.getChannel();
 							outChannel
 							  .transferFrom(readableByteChannel, 0, Long.MAX_VALUE);

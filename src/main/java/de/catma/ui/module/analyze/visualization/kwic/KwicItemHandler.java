@@ -99,8 +99,8 @@ public class KwicItemHandler {
             }
         }
 
-        return AnnotatedTextProvider.shorten(
-                row.getPhrase(), AnnotatedTextProvider.LARGE_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH);
+        return HtmlEscaper.escape(AnnotatedTextProvider.shorten(
+                row.getPhrase(), AnnotatedTextProvider.LARGE_MAX_ANNOTATED_KEYWORD_DISPLAY_LENGTH));
     }
 
     public String getKeywordDescription(QueryResultRow row, int contextSize) {

@@ -24,7 +24,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.cache.Cache;
-import javax.cache.Caching;
 
 import org.apache.commons.codec.digest.HmacAlgorithms;
 import org.apache.commons.codec.digest.HmacUtils;
@@ -34,6 +33,7 @@ import com.google.common.base.Splitter;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+import de.catma.hazelcast.CacheManagerProvider;
 import de.catma.hazelcast.HazelcastConfiguration;
 import de.catma.project.ProjectReference;
 import de.catma.properties.CATMAPropertyKey;
@@ -84,11 +84,11 @@ public class SignupTokenManager {
 	private final static char TRANSACTION_COLUMN_SEPARATOR = ';';
 	
     private final Cache<String, String> accountSignupTokenCache = 
-    		Caching.getCachingProvider().getCacheManager().getCache(
+    		CacheManagerProvider.get().getCache(
     				HazelcastConfiguration.CacheKeyName.ACCOUNT_SIGNUP_TOKEN.name());
 
     private final Cache<String, String> groupProjectSignupTokenCache = 
-    		Caching.getCachingProvider().getCacheManager().getCache(
+    		CacheManagerProvider.get().getCache(
     				HazelcastConfiguration.CacheKeyName.GROUP_PROJECT_SIGNUP_TOKEN.name());
 
     private final HashSet<String> consumedTokens = new HashSet<String>();
