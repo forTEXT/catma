@@ -52,6 +52,19 @@ sign in to CATMA, and its description should tell them where they are and why. Y
 [GitLab configuration Ruby script](docker/scripts/gitlab_config.rb#L129-L159) as a reference: besides the description, it sets the site name and logos, and
 links to CATMA's terms of use and privacy policy from GitLab's terms of service (*Admin → Settings → General → Terms of Service and Privacy Policy*).
 
+Finally, we recommend that you disable GitLab's activity notifications for existing users. CATMA does this for every account it creates through sign-up, but
+accounts that CATMA's former Google sign-in created automatically were missed, so their owners may be receiving GitLab emails for activity in CATMA (such as
+comments, which are stored as GitLab issues and notes). The [migration script](doc/migration_scripts/disable_user_notifications.rb) sets the global
+notification level to "disabled" for every user except admins and GitLab's bot and internal accounts. Note that this also overrides the choice of users who
+have deliberately set a different level. GitLab's security and membership emails (e.g. unknown sign-in, password changed, added to a project) are sent
+regardless. Copy the script to the GitLab server and run it there, first as a dry run, which reports the current levels and what would change, without
+changing anything:
+
+```
+sudo DRY_RUN=1 gitlab-rails runner /path/to/disable_user_notifications.rb
+sudo gitlab-rails runner /path/to/disable_user_notifications.rb
+```
+
 ### Docker (Standalone)
 
 The image is now based on GitLab 19.4.3 (`7.4.0-gl19.4.3`). It now uses OpenJDK instead of Oracle's JDK, and an updated version of Jetty.
@@ -97,3 +110,13 @@ always created it with the required scopes.
 
 We also recommend updating GitLab's appearance settings, as described at the end of the [Self-Hosting](#self-hosting) section above. The logos that the
 configuration script refers to can be found in [docker/assets](docker/assets).
+
+Finally, we recommend disabling GitLab's activity notifications for existing users, as described at the end of the [Self-Hosting](#self-hosting) section
+above. The script isn't part of the image, so copy it into the container and run it there:
+
+```
+docker cp doc/migration_scripts/disable_user_notifications.rb catma-standalone:/tmp/
+docker exec -it -e DRY_RUN=1 catma-standalone gitlab-rails runner /tmp/disable_user_notifications.rb
+docker exec -it catma-standalone gitlab-rails runner /tmp/disable_user_notifications.rb
+docker exec catma-standalone rm /tmp/disable_user_notifications.rb
+```
