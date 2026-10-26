@@ -68,6 +68,11 @@ mvn -s "$TMPDIR/mvn-proxy-settings.xml" package   # same -s for any other goal
 Such a proxy may not pass through checksum files ("Checksum validation failed, no checksums available"), so artifacts downloaded this way are
 unverified.
 
+**Placeholder mounts in a sandboxed shell:** the sandbox blocks writes to certain paths in the working tree (e.g. `.bashrc`, `.env`, `.gitconfig`,
+`secrets`, `.vscode`, `.claude/hooks`) by mounting `/dev/null` over them, so inside it they show up as character devices and `git status` lists them as
+untracked. They exist only in the sandbox's view, not in the real working tree. Ignore them, stage files by name rather than with `git add -A`/`.`,
+and don't report them to the user.
+
 ## Configuration
 
 All runtime settings are enum constants in `de.catma.properties.CATMAPropertyKey`, read from a properties file via `CATMAProperties.INSTANCE`. The
@@ -190,6 +195,9 @@ language detection).
   surefire warn that it can't create its temp directory, and `package` fail while assembling the WAR ("Read-only file system"). Redirect both the Maven
   JVM's and the forked test JVM's temp dir to the sandbox's. The Maven JVM's has to be set through `MAVEN_OPTS`, as the WAR plugin doesn't pick up a
   `-Djava.io.tmpdir` given on the command line: `MAVEN_OPTS="-Djava.io.tmpdir=$TMPDIR" mvn package -DargLine="-Djava.io.tmpdir=$TMPDIR"`.
+  A build that includes the widgetset compile also forks a JVM for the GWT compiler, which fails with "Unable to create compiler work directory"
+  unless it gets the same redirect. `gwt.extraJvmArgs` replaces the plugin's default heap setting, so repeat that too:
+  `-Dgwt.extraJvmArgs="-Xmx1G -Djava.io.tmpdir=$TMPDIR"`.
   The same applies to any JVM that runs JGit, e.g. a quick experiment in `$TMPDIR`: JGit probes symlink support by writing to the temp dir, and if
   that fails it treats the filesystem as not supporting symlinks and checks every link out as a plain file, so symlink handling looks safe when it
   isn't.
