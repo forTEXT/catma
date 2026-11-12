@@ -13,6 +13,10 @@ We choose to use [Eclipse Jetty](https://jetty.org/), but a modern alternative l
 CATMA requires Java 21 or later. If you run Jetty on Java 25 or later, you need Jetty 12.0.22 or later: some of the libraries that CATMA ships contain
 classes compiled for Java 25, which older Jetty versions can't read, so CATMA fails to start.
 
+If you put a reverse proxy in front of the servlet container, it needs to pass WebSocket upgrades through, and its read timeout needs to be longer than 45
+seconds, the interval at which CATMA sends keepalive messages over the WebSocket. For nginx, that means `proxy_http_version 1.1`, setting the `Upgrade` and
+`Connection` headers, and leaving `proxy_read_timeout` at its default of 60 seconds or higher.
+
 ## GitLab Server
 
 You will need to install the GitLab server using the [cloud native or Linux package installation methods](https://about.gitlab.com/install/#cloud-native) (full

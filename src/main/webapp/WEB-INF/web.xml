@@ -59,6 +59,16 @@
 			<param-name>org.atmosphere.container.JSR356AsyncSupport.mappingPath</param-name>
 			<param-value>/PUSH</param-value>
 		</init-param>
+		<init-param>
+			<!-- keeps the push WebSocket from going idle; must stay below the read timeout of any reverse proxy in front of CATMA -->
+			<param-name>org.atmosphere.interceptor.HeartbeatInterceptor.heartbeatFrequencyInSeconds</param-name>
+			<param-value>45</param-value>
+		</init-param>
+		<init-param>
+			<!-- in ms; must be well above the heartbeat interval, or the container's default (30 s in Jetty) closes push connections between heartbeats -->
+			<param-name>org.atmosphere.websocket.maxIdleTime</param-name>
+			<param-value>180000</param-value>
+		</init-param>
 		<load-on-startup>4</load-on-startup>
 		<async-supported>true</async-supported>
 	</servlet>
