@@ -24,6 +24,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.servlet.ServletException;
 
+import org.atmosphere.cpr.AtmosphereRequest;
+
 import com.vaadin.server.BootstrapFragmentResponse;
 import com.vaadin.server.BootstrapListener;
 import com.vaadin.server.BootstrapPageResponse;
@@ -39,6 +41,7 @@ import com.vaadin.server.SystemMessagesProvider;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinResponse;
 import com.vaadin.server.VaadinServlet;
+import com.vaadin.server.VaadinServletRequest;
 import com.vaadin.server.VaadinServletService;
 import com.vaadin.server.VaadinSession;
 
@@ -206,6 +209,21 @@ public class CatmaApplicationServlet extends VaadinServlet {
         		handlers.add(new DelegateRequestHandler());
         		return handlers;
         	};
+
+        	// A push request must never create a session: when its session is gone (closed as idle or on logout), the client has
+        	// to be told the session expired. Vaadin recognises push requests by path, but with the JSR356 mappingPath set in
+        	// web.xml, Atmosphere gives WebSocket push requests an empty path info, so Vaadin would create a session for them.
+        	// That creation also fails halfway behind Jetty's forwarded module (Atmosphere can't handle the unresolved remote
+        	// address it produces), leaving a session that answers every later request with a 404 until the cookie is gone.
+        	// Push requests are the only ones that reach Vaadin through Atmosphere, hence the check on the wrapped request.
+        	@Override
+        	protected boolean requestCanCreateSession(VaadinRequest request) {
+        		if (request instanceof VaadinServletRequest
+        				&& ((VaadinServletRequest) request).getRequest() instanceof AtmosphereRequest) {
+        			return false;
+        		}
+        		return super.requestCanCreateSession(request);
+        	}
         };
         service.init();
         return service;
