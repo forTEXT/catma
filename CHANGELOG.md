@@ -73,12 +73,12 @@ sudo gitlab-rails runner /path/to/disable_user_notifications.rb
 
 ### Docker (Standalone)
 
-The image is now based on GitLab 19.4.3 (`7.4.0-gl19.4.3`). It now uses OpenJDK instead of Oracle's JDK, and an updated version of Jetty.
+The image is now based on GitLab 19.4.6 (`7.4.0-gl19.4.6`). It now uses OpenJDK instead of Oracle's JDK, and an updated version of Jetty.
 
 Follow the usual [update process](docker/README.md#update-process). GitLab requires an intermediate step: update to `7.4.0-gl19.2.7` first, wait for all
-background migrations to finish, and only then update to `7.4.0-gl19.4.3`.
+background migrations to finish, and only then update to `7.4.0-gl19.4.6`.
 
-Once you are running `7.4.0-gl19.4.3`, complete the following steps. In the paths below, `/etc/gitlab/` corresponds to `$GITLAB_HOME/config/` on the host and
+Once you are running `7.4.0-gl19.4.6`, complete the following steps. In the paths below, `/etc/gitlab/` corresponds to `$GITLAB_HOME/config/` on the host and
 `/data/catma/` to `$CATMA_HOME/data/` if you use bind mounts as described under [Server Deployment](docker/README.md#server-deployment). Otherwise, edit the
 files within the container (e.g. after running `docker exec -it catma-standalone /bin/bash`).
 

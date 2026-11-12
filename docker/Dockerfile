@@ -8,22 +8,22 @@
 # https://docs.docker.com/engine/logging/configure/
 
 # syntax=docker/dockerfile:1
-FROM  gitlab/gitlab-ee:19.4.3-ee.0 AS base
+FROM  gitlab/gitlab-ee:19.4.6-ee.0 AS base
 LABEL maintainer="CATMA Team" \
-      version="1.2.4"
+      version="1.2.5"
 
 SHELL ["/bin/bash", "-c"]
 
 FROM base AS build-arm64
-ARG JDK_FILENAME=openjdk-27_linux-aarch64_bin.tar.gz
+ARG JDK_FILENAME=openjdk-27.0.1.0.3_linux-aarch64_bin.tar.gz
 
 FROM base AS build-amd64
-ARG JDK_FILENAME=openjdk-27_linux-x64_bin.tar.gz
+ARG JDK_FILENAME=openjdk-27.0.1.0.3_linux-x64_bin.tar.gz
 
 FROM build-${TARGETARCH} AS build
 
 # all of these can be overriden with '--build-arg <key>=<value>' at build time
-ARG JETTY_FILENAME=jetty-home-12.0.39.tar.gz
+ARG JETTY_FILENAME=jetty-home-12.0.40.tar.gz
 # some dirs owned by the jetty user are expected to be bind-mounted, therefore we default to a uid that is less likely to be in use on the host
 ARG JETTY_USER_UID=899
 ARG CATMA_WAR_FILENAME=catma-7.4-SNAPSHOT.war
