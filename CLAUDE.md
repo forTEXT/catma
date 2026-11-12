@@ -224,6 +224,15 @@ Unless you have been sent off to work unattended, agree the design before you bu
 - Don't commit on your own initiative while questions are open, or while it's likely you'll be asked to change what you've just done. In an active
   session, finish the work, report it, and let the user ask for the commit.
 
+Check, don't assume — no exceptions:
+
+- Before relying on how any code behaves — what a library method returns, the order a framework calls things in, what a setting does — read the code
+  that implements it. This includes methods whose name seems to make the answer obvious. Source jars for most dependencies are in `~/.m2/repository`;
+  `mvn dependency:sources` fetches missing ones, and `javap -c` works on any class file.
+- The same goes for test procedures you give the user: trace the code paths the test exercises, so that the result you tell them to expect is the one
+  that will actually happen.
+- If something can't be checked, say so and label it as unverified. Never present a guess as a fact.
+
 ### Where documentation belongs
 
 Put an explanation next to the thing it explains, at the narrowest scope that fits, and write it only once:
