@@ -17,6 +17,19 @@ If you put a reverse proxy in front of the servlet container, it needs to pass W
 seconds, the interval at which CATMA sends keepalive messages over the WebSocket. For nginx, that means `proxy_http_version 1.1`, setting the `Upgrade` and
 `Connection` headers, and leaving `proxy_read_timeout` at its default of 60 seconds or higher.
 
+The proxy also needs to overwrite the forwarding headers that clients send rather than append to them, otherwise clients can choose the IP address that CATMA
+logs: Jetty's `forwarded` module takes the client address from the leftmost `X-Forwarded-For` value, and also honours the `Forwarded`, `X-Forwarded-Host`,
+`X-Forwarded-Port` and `X-Forwarded-Server` headers. For nginx, if it's the only proxy in front of CATMA:
+
+```
+proxy_set_header X-Forwarded-For    $remote_addr;
+proxy_set_header X-Forwarded-Proto  $scheme;
+proxy_set_header X-Forwarded-Host   $host;
+proxy_set_header X-Forwarded-Port   $server_port;
+proxy_set_header Forwarded          "";
+proxy_set_header X-Forwarded-Server "";
+```
+
 ## GitLab Server
 
 You will need to install the GitLab server using the [cloud native or Linux package installation methods](https://about.gitlab.com/install/#cloud-native) (full

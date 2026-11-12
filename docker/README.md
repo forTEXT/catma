@@ -187,6 +187,10 @@ For exposure to the internet you should definitely set up a reverse proxy and te
 variables to the real, external URLs, and treat the `*_PORT` environment variables as the internal ports only. Also see the
 [Updates & Security](#updates--security) section.
 
+Your proxy also needs to pass WebSocket upgrades through to CATMA, with a read timeout longer than 45 seconds, and to overwrite rather than append to the
+forwarding headers – see [Java Web Server and Servlet Container](https://github.com/forTEXT/catma/blob/master/doc/SELF-HOSTING.md#java-web-server-and-servlet-container)
+for details.
+
 With our configuration, GitLab always serves plain HTTP on `GITLAB_PORT`, even with an `https://` URL. To have it log the real client IP addresses rather than
 that of the proxy, add the following to `$GITLAB_HOME/config/gitlab.rb` (or `/etc/gitlab/gitlab.rb` within the container) and restart the container:
 
