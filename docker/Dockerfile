@@ -10,15 +10,15 @@
 # syntax=docker/dockerfile:1
 FROM  gitlab/gitlab-ee:19.4.6-ee.0 AS base
 LABEL maintainer="CATMA Team" \
-      version="1.2.5"
+      version="1.2.6"
 
 SHELL ["/bin/bash", "-c"]
 
 FROM base AS build-arm64
-ARG JDK_FILENAME=openjdk-27.0.1.0.3_linux-aarch64_bin.tar.gz
+ARG JDK_FILENAME=openjdk-27.0.1.1_linux-aarch64_bin.tar.gz
 
 FROM base AS build-amd64
-ARG JDK_FILENAME=openjdk-27.0.1.0.3_linux-x64_bin.tar.gz
+ARG JDK_FILENAME=openjdk-27.0.1.1_linux-x64_bin.tar.gz
 
 FROM build-${TARGETARCH} AS build
 
