@@ -8,9 +8,9 @@
 # https://docs.docker.com/engine/logging/configure/
 
 # syntax=docker/dockerfile:1
-FROM  gitlab/gitlab-ee:19.4.6-ee.0 AS base
+FROM  gitlab/gitlab-ee:19.4.10-ee.0 AS base
 LABEL maintainer="CATMA Team" \
-      version="1.2.6"
+      version="1.2.7"
 
 SHELL ["/bin/bash", "-c"]
 
