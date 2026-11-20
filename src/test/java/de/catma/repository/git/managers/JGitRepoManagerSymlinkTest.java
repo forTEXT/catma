@@ -3,12 +3,20 @@ package de.catma.repository.git.managers;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.dircache.DirCache;
+import org.eclipse.jgit.dircache.DirCacheBuilder;
+import org.eclipse.jgit.dircache.DirCacheEntry;
 import org.eclipse.jgit.lib.ConfigConstants;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.FileMode;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectInserter;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +24,9 @@ import org.junit.jupiter.api.io.TempDir;
 
 import de.catma.user.User;
 
+// Where the test process can't create symlinks (Windows without Developer Mode or admin rights), JGit already sets core.symlinks=false when it creates
+// a repository, so the clone tests pass there even if JGitRepoManager stopped disabling symlinks; only openDisablesSymlinksInExistingClones, which
+// enables them explicitly, still catches a regression on such a machine.
 class JGitRepoManagerSymlinkTest {
 	@TempDir
 	Path tempDir;
@@ -36,8 +47,20 @@ class JGitRepoManagerSymlinkTest {
 	void cloneChecksOutCommittedSymlinksAsRegularFiles() throws Exception {
 		Path source = tempDir.resolve("source");
 		try (Git git = Git.init().setDirectory(source.toFile()).call()) {
-			Files.createSymbolicLink(source.resolve("link.txt"), Paths.get("/etc/hostname"));
-			git.add().addFilepattern("link.txt").call();
+			// staged directly rather than created on disk, as creating a symlink needs a privilege on Windows
+			Repository repository = git.getRepository();
+			ObjectId target;
+			try (ObjectInserter inserter = repository.newObjectInserter()) {
+				target = inserter.insert(Constants.OBJ_BLOB, "/etc/hostname".getBytes(StandardCharsets.UTF_8));
+				inserter.flush();
+			}
+			DirCache index = repository.lockDirCache();
+			DirCacheBuilder builder = index.builder();
+			DirCacheEntry entry = new DirCacheEntry("link.txt");
+			entry.setFileMode(FileMode.SYMLINK);
+			entry.setObjectId(target);
+			builder.add(entry);
+			builder.commit();
 			git.commit().setMessage("add symlink").setAuthor("test", "test@example.com").setCommitter("test", "test@example.com").call();
 		}
 
